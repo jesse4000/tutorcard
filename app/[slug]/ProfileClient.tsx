@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
 import type { TutorData } from "@/components/TutorCard";
@@ -18,13 +19,13 @@ export default function ProfileClient({ tutor }: { tutor: TutorData }) {
         </div>
       </div>
       <footer>
-        <a href="/" className="logo">
+        <Link href="/" className="logo">
           <div className="logo-mark">
             <LogoSvg />
           </div>
           <span className="logo-name">TutorCard</span>
           <span className="logo-sub">&nbsp;by StudySpaces</span>
-        </a>
+        </Link>
         <span className="footer-r">
           © 2025 StudySpaces · Free for every tutor
         </span>
