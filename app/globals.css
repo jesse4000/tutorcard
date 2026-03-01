@@ -741,12 +741,11 @@ footer {
 .left-panel {
   flex: 1;
   padding: 48px 56px 80px;
-  max-width: 580px;
   min-height: calc(100vh - 59px);
 }
 
 .right-panel {
-  width: 400px;
+  flex: 1;
   flex-shrink: 0;
   background: var(--navy);
   position: sticky;
@@ -1342,7 +1341,7 @@ footer {
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
   .right-panel { display: none; }
-  .left-panel { max-width: 100%; padding: 36px 24px 80px; }
+  .left-panel { padding: 36px 24px 80px; }
 }
 
 @media (max-width: 680px) {
