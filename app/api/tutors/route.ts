@@ -1,8 +1,30 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
+
+function sanitizeSlug(slug: string) {
+  return slug
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+
+    // Verify authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       firstName,
@@ -27,21 +49,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Sanitize slug
-    const cleanSlug = slug
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
+    const cleanSlug = sanitizeSlug(slug);
     if (!cleanSlug) {
       return NextResponse.json(
         { error: "Invalid card URL slug" },
         { status: 400 }
       );
     }
-
-    const supabase = createClient();
 
     // Check slug uniqueness
     const { data: existing } = await supabase
@@ -57,10 +71,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert tutor
+    // Insert tutor with user_id
     const { data, error } = await supabase
       .from("tutors")
       .insert({
+        user_id: user.id,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         title: title?.trim() || null,
@@ -88,6 +103,111 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Failed to create card" },
         { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, tutor: data });
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request" },
+      { status: 400 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { id, ...fields } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Tutor card ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const updateData: Record<string, unknown> = {};
+
+    if (fields.firstName !== undefined)
+      updateData.first_name = fields.firstName.trim();
+    if (fields.lastName !== undefined)
+      updateData.last_name = fields.lastName.trim();
+    if (fields.title !== undefined)
+      updateData.title = fields.title?.trim() || null;
+    if (fields.avatarColor !== undefined)
+      updateData.avatar_color = fields.avatarColor;
+    if (fields.exams !== undefined) updateData.exams = fields.exams;
+    if (fields.subjects !== undefined) updateData.subjects = fields.subjects;
+    if (fields.locations !== undefined) updateData.locations = fields.locations;
+    if (fields.links !== undefined) updateData.links = fields.links;
+    if (fields.openToReferrals !== undefined)
+      updateData.open_to_referrals = fields.openToReferrals;
+    if (fields.notifyOnMatch !== undefined)
+      updateData.notify_on_match = fields.notifyOnMatch;
+    if (fields.email !== undefined)
+      updateData.email = fields.email?.trim() || "";
+
+    // Handle slug change
+    if (fields.slug !== undefined) {
+      const cleanSlug = sanitizeSlug(fields.slug);
+      if (!cleanSlug) {
+        return NextResponse.json(
+          { error: "Invalid card URL slug" },
+          { status: 400 }
+        );
+      }
+      // Check uniqueness excluding current card
+      const { data: existing } = await supabase
+        .from("tutors")
+        .select("id")
+        .eq("slug", cleanSlug)
+        .neq("id", id)
+        .single();
+
+      if (existing) {
+        return NextResponse.json(
+          { error: "That slug is already taken." },
+          { status: 409 }
+        );
+      }
+      updateData.slug = cleanSlug;
+    }
+
+    // RLS enforces ownership, but double-check with user_id
+    const { data, error } = await supabase
+      .from("tutors")
+      .update(updateData)
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Tutor update error:", error);
+      return NextResponse.json(
+        { error: "Failed to update card" },
+        { status: 500 }
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: "Card not found or not owned by you" },
+        { status: 404 }
       );
     }
 

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import ProfileClient from "./ProfileClient";
 
 interface PageProps {
@@ -8,7 +8,7 @@ interface PageProps {
 }
 
 async function getTutor(slug: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tutors")
     .select("*")
