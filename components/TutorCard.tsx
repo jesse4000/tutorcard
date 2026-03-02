@@ -1,7 +1,5 @@
 "use client";
 
-import QrSvg from "./QrSvg";
-
 export interface TutorLink {
   type: string;
   url: string;
@@ -39,13 +37,12 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
   const initials =
     [data.firstName?.[0], data.lastName?.[0]].filter(Boolean).join("") || "?";
   const allTags = [
-    ...data.exams.slice(0, 2),
-    ...data.subjects.slice(0, 2),
-    ...data.locations.slice(0, 1),
+    ...data.exams,
+    ...data.subjects,
+    ...data.locations,
   ];
-  const urlDisplay = data.slug
-    ? `studyspaces.com/${data.slug}`
-    : "studyspaces.com/your-card";
+  const visibleTags = allTags.slice(0, 3);
+  const overflowCount = allTags.length - visibleTags.length;
   const isPreview = variant === "preview";
 
   return (
@@ -80,18 +77,25 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
             Subjects &amp; exams will appear here
           </span>
         ) : (
-          allTags.map((t, i) => (
-            <span
-              key={t + i}
-              className={
-                isPreview
-                  ? `lc-tag${i === 0 ? " accent" : ""}`
-                  : `tag${i === 0 ? " accent" : ""}`
-              }
-            >
-              {t}
-            </span>
-          ))
+          <>
+            {visibleTags.map((t, i) => (
+              <span
+                key={t + i}
+                className={
+                  isPreview
+                    ? `lc-tag${i === 0 ? " accent" : ""}`
+                    : `tag${i === 0 ? " accent" : ""}`
+                }
+              >
+                {t}
+              </span>
+            ))}
+            {overflowCount > 0 && (
+              <span className={isPreview ? "lc-tag" : "tag"}>
+                +{overflowCount}
+              </span>
+            )}
+          </>
         )}
       </div>
 
@@ -105,7 +109,7 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
             Your action buttons will appear here
           </div>
         ) : (
-          data.links.slice(0, 3).map((link, i) => {
+          data.links.map((link, i) => {
             const icon = LINK_ICONS[link.type] || "🔗";
             const label =
               link.label || link.url || link.type.replace(/^\S+\s/, "");
@@ -171,22 +175,6 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
         </div>
       </div>
 
-      <div style={{ height: isPreview ? 8 : 10 }} />
-
-      {/* QR row */}
-      <div className={isPreview ? "lc-qr-row" : "mc-qr"}>
-        <div className={isPreview ? "lc-qr-text" : undefined}>
-          <div className={isPreview ? "lc-qr-label" : "mc-qr-label"}>
-            Scan to view card
-          </div>
-          <div className={isPreview ? "lc-qr-url" : "mc-qr-sub"}>
-            {urlDisplay}
-          </div>
-        </div>
-        <div className={isPreview ? undefined : "mc-qr-svg"}>
-          <QrSvg size={isPreview ? 38 : 48} />
-        </div>
-      </div>
     </div>
   );
 }
