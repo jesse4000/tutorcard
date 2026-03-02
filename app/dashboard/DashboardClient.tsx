@@ -123,11 +123,11 @@ export default function DashboardClient({
             </button>
             <h2 className="qr-heading">Your QR Code</h2>
             <p className="qr-sub">
-              Scan to open your live card at studyspaces.com/{tutor.slug}
+              Scan to open your live card
             </p>
             <div className="qr-code-wrap">
               <QRCodeSVG
-                value={`https://studyspaces.com/${tutor.slug}`}
+                value={`${window.location.origin}/${tutor.slug}`}
                 size={200}
                 level="M"
               />
@@ -138,7 +138,7 @@ export default function DashboardClient({
               target="_blank"
               rel="noopener noreferrer"
             >
-              studyspaces.com/{tutor.slug}
+              {window.location.host}/{tutor.slug}
             </a>
           </div>
         </div>
