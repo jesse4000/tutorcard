@@ -2015,72 +2015,37 @@ footer {
 .mc-ref.clickable, .lc-ref.clickable { cursor: pointer; transition: opacity 0.15s; }
 .mc-ref.clickable:hover, .lc-ref.clickable:hover { opacity: 0.85; }
 
-/* Opportunity variant of the referral block */
-.mc-ref.opp { background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border: 1px solid #bfdbfe; }
-.mc-ref.opp .mc-ref-n { background: #2563eb; color: white; }
-
-/* ── OPPORTUNITIES MODAL ── */
-.opp-overlay {
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
-  display: flex; align-items: flex-end; justify-content: center;
-  animation: fadeIn 0.15s ease;
+/* ── OPPORTUNITIES PAGE ── */
+.opp-page { max-width: 500px; width: 100%; }
+.opp-page-header { margin-bottom: 8px; }
+.opp-back-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; color: var(--dim);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  padding: 6px 2px; border-radius: 8px;
+  transition: color 0.15s;
 }
-@media (min-width: 681px) {
-  .opp-overlay { align-items: center; }
-}
-.opp-modal {
-  background: var(--card); border-radius: 18px 18px 0 0;
-  width: 100%; max-width: 500px; max-height: 85vh;
-  display: flex; flex-direction: column;
-  animation: slideUp 0.2s ease;
-}
-@media (min-width: 681px) {
-  .opp-modal { border-radius: 18px; max-height: 80vh; }
-}
-@keyframes slideUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.opp-modal-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px 0;
-}
-.opp-modal-title {
-  font-family: var(--serif); font-size: 20px; font-weight: 700;
-  color: var(--ink); margin: 0;
-}
-.opp-modal-close {
-  background: none; border: none; font-size: 28px; color: var(--dim);
-  cursor: pointer; line-height: 1; padding: 0; width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px;
-}
-.opp-modal-close:hover { background: var(--muted); }
-.opp-modal-sub {
-  padding: 4px 24px 16px; margin: 0;
-  font-size: 13px; color: var(--dim);
-  border-bottom: 1px solid var(--border);
+.opp-back-btn:hover { color: var(--ink); }
+.opp-page-sub {
+  font-size: 14px; color: var(--dim); margin: 4px 0 20px;
 }
 .opp-list {
-  flex: 1; overflow-y: auto; padding: 16px 24px 24px;
   display: flex; flex-direction: column; gap: 14px;
 }
 .opp-loading {
   text-align: center; padding: 40px 0;
   color: var(--dim); font-size: 14px;
 }
-.opp-empty {
-  text-align: center; padding: 40px 0;
-}
+.opp-empty { text-align: center; padding: 40px 0; }
 .opp-empty-text {
-  color: var(--dim); font-size: 14px; line-height: 1.5; max-width: 280px; margin: 0 auto;
+  color: var(--dim); font-size: 14px; line-height: 1.5;
+  max-width: 280px; margin: 0 auto;
 }
 
 /* Opportunity card */
 .opp-card {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 16px; position: relative;
+  border-radius: 14px; padding: 16px;
 }
 .opp-match-badge {
   display: inline-block; font-size: 11px; font-weight: 600;
@@ -2094,7 +2059,6 @@ footer {
   font-size: 13px; color: var(--dim); font-style: italic;
   margin-top: 6px; line-height: 1.4;
 }
-
 .opp-card-poster {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 0; border-top: 1px solid var(--border); margin-bottom: 12px;
@@ -2112,7 +2076,6 @@ footer {
   color: #2563eb; text-decoration: none; font-size: 12px;
 }
 .opp-poster-link:hover { text-decoration: underline; }
-
 .opp-card-actions { display: flex; gap: 8px; }
 
 .opp-apply-btn {
@@ -2123,6 +2086,10 @@ footer {
 }
 .opp-apply-btn:hover { opacity: 0.85; }
 .opp-apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.opp-apply-btn.secondary {
+  background: var(--muted); color: var(--ink);
+}
+.opp-apply-btn.secondary:hover { opacity: 0.85; }
 
 .opp-applied {
   display: block; width: 100%; text-align: center;
@@ -2131,7 +2098,6 @@ footer {
   font-size: 13px; font-weight: 600;
   border: 1px solid var(--green-border);
 }
-
 .opp-coffee-prompt { display: flex; gap: 8px; width: 100%; }
 .opp-coffee-btn {
   flex: 1; padding: 10px 12px; border-radius: 10px;
