@@ -158,46 +158,46 @@ export default function ProfileClient({
                       </div>
                     </div>
 
-                    {!isOwnCard && (
-                      <div className="profile-ref-actions">
-                        {hasApplied ? (
-                          <span className="profile-ref-applied">
-                            Applied ✓
-                          </span>
-                        ) : showCoffee === ref.id ? (
-                          <div className="profile-ref-coffee-prompt">
-                            <button
-                              className="profile-ref-apply-btn"
-                              onClick={() => handleApply(ref.id, false)}
-                              disabled={isApplying}
-                            >
-                              {isApplying ? "Applying..." : "Just apply"}
-                            </button>
-                            <button
-                              className="profile-ref-coffee-btn"
-                              onClick={() => handleApply(ref.id, true)}
-                              disabled={isApplying}
-                            >
-                              ☕ Apply + buy a coffee
-                            </button>
-                          </div>
-                        ) : (
+                    <div className="profile-ref-actions">
+                      {isOwnCard ? (
+                        <span className="profile-ref-own-label">Your referral</span>
+                      ) : hasApplied ? (
+                        <span className="profile-ref-applied">
+                          Applied ✓
+                        </span>
+                      ) : showCoffee === ref.id ? (
+                        <div className="profile-ref-coffee-prompt">
                           <button
                             className="profile-ref-apply-btn"
-                            onClick={() => {
-                              if (!currentTutorId) {
-                                handleApply(ref.id);
-                              } else {
-                                setShowCoffee(ref.id);
-                              }
-                            }}
+                            onClick={() => handleApply(ref.id, false)}
                             disabled={isApplying}
                           >
-                            Apply
+                            {isApplying ? "Applying..." : "Just apply"}
                           </button>
-                        )}
-                      </div>
-                    )}
+                          <button
+                            className="profile-ref-coffee-btn"
+                            onClick={() => handleApply(ref.id, true)}
+                            disabled={isApplying}
+                          >
+                            ☕ Apply + buy a coffee
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="profile-ref-apply-btn"
+                          onClick={() => {
+                            if (!currentTutorId) {
+                              handleApply(ref.id);
+                            } else {
+                              setShowCoffee(ref.id);
+                            }
+                          }}
+                          disabled={isApplying}
+                        >
+                          Apply
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
