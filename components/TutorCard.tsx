@@ -105,7 +105,7 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
             Your action buttons will appear here
           </div>
         ) : (
-          data.links.slice(0, 3).map((link, i) => {
+          data.links.map((link, i) => {
             const icon = LINK_ICONS[link.type] || "🔗";
             const label =
               link.label || link.url || link.type.replace(/^\S+\s/, "");
