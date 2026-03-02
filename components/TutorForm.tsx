@@ -346,7 +346,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                           background: "var(--bg)",
                         }}
                       >
-                        studyspaces.com/
+                        {typeof window !== "undefined" ? window.location.host : "studyspaces.com"}/
                       </span>
                       <input
                         style={{

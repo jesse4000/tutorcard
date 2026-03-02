@@ -56,7 +56,7 @@ export default function ProfileClient({ tutor }: { tutor: TutorData }) {
             <span className="vcard-icon">👤</span> Save Contact
           </button>
           <div className="card-url" style={{ marginTop: 12 }}>
-            studyspaces.com/{tutor.slug}
+            {typeof window !== "undefined" ? window.location.host : ""}/{tutor.slug}
           </div>
         </div>
       </div>
