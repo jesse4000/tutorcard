@@ -1,7 +1,5 @@
 "use client";
 
-import QrSvg from "./QrSvg";
-
 export interface TutorLink {
   type: string;
   url: string;
@@ -45,9 +43,6 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
   ];
   const visibleTags = allTags.slice(0, 3);
   const overflowCount = allTags.length - visibleTags.length;
-  const urlDisplay = data.slug
-    ? `studyspaces.com/${data.slug}`
-    : "studyspaces.com/your-card";
   const isPreview = variant === "preview";
 
   return (
@@ -180,22 +175,6 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
         </div>
       </div>
 
-      <div style={{ height: isPreview ? 8 : 10 }} />
-
-      {/* QR row */}
-      <div className={isPreview ? "lc-qr-row" : "mc-qr"}>
-        <div className={isPreview ? "lc-qr-text" : undefined}>
-          <div className={isPreview ? "lc-qr-label" : "mc-qr-label"}>
-            Scan to view card
-          </div>
-          <div className={isPreview ? "lc-qr-url" : "mc-qr-sub"}>
-            {urlDisplay}
-          </div>
-        </div>
-        <div className={isPreview ? undefined : "mc-qr-svg"}>
-          <QrSvg size={isPreview ? 38 : 48} />
-        </div>
-      </div>
     </div>
   );
 }
