@@ -43,6 +43,8 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
     ...data.subjects,
     ...data.locations,
   ];
+  const visibleTags = allTags.slice(0, 3);
+  const overflowCount = allTags.length - visibleTags.length;
   const urlDisplay = data.slug
     ? `studyspaces.com/${data.slug}`
     : "studyspaces.com/your-card";
@@ -80,18 +82,25 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
             Subjects &amp; exams will appear here
           </span>
         ) : (
-          allTags.map((t, i) => (
-            <span
-              key={t + i}
-              className={
-                isPreview
-                  ? `lc-tag${i === 0 ? " accent" : ""}`
-                  : `tag${i === 0 ? " accent" : ""}`
-              }
-            >
-              {t}
-            </span>
-          ))
+          <>
+            {visibleTags.map((t, i) => (
+              <span
+                key={t + i}
+                className={
+                  isPreview
+                    ? `lc-tag${i === 0 ? " accent" : ""}`
+                    : `tag${i === 0 ? " accent" : ""}`
+                }
+              >
+                {t}
+              </span>
+            ))}
+            {overflowCount > 0 && (
+              <span className={isPreview ? "lc-tag" : "tag"}>
+                +{overflowCount}
+              </span>
+            )}
+          </>
         )}
       </div>
 
