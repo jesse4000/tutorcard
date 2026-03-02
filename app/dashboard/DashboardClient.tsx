@@ -90,30 +90,30 @@ export default function DashboardClient({
         onSignOut={handleSignOut}
       />
       <div className="dashboard-page">
-        <div className="dashboard-header">
-          <h1 className="dashboard-title">Your card</h1>
-          <div className="dashboard-actions">
-            <Link href="/dashboard/edit" className="dash-icon-btn" title="Edit card">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11.3 1.7a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3L5.7 13.3 2 14l.7-3.7z" />
-              </svg>
-            </Link>
-            <a
-              href={`/${tutor.slug}`}
-              className="dash-icon-btn"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="View live"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 3H3v10h10v-3" />
-                <path d="M9 1h6v6" />
-                <path d="M15 1 7 9" />
-              </svg>
-            </a>
-          </div>
-        </div>
         <div className="dashboard-card-wrap">
+          <div className="dashboard-header">
+            <h1 className="dashboard-title">Your card</h1>
+            <div className="dashboard-actions">
+              <Link href="/dashboard/edit" className="dash-icon-btn" title="Edit card">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11.3 1.7a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3L5.7 13.3 2 14l.7-3.7z" />
+                </svg>
+              </Link>
+              <a
+                href={`/${tutor.slug}`}
+                className="dash-icon-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View live"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 3H3v10h10v-3" />
+                  <path d="M9 1h6v6" />
+                  <path d="M15 1 7 9" />
+                </svg>
+              </a>
+            </div>
+          </div>
           <TutorCard data={tutorData} variant="full" />
 
           {/* QR banner below card */}
