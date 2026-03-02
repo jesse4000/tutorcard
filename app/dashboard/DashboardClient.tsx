@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
+import ReferralManager from "@/components/ReferralManager";
 import { createClient } from "@/lib/supabase/client";
 import type { TutorLink } from "@/components/TutorCard";
 
@@ -116,7 +117,7 @@ export default function DashboardClient({
           </div>
           <TutorCard data={tutorData} variant="full" />
 
-          {/* QR banner below card */}
+          {/* QR banner */}
           <div className="qr-banner" onClick={() => setShowQR(true)}>
             <div className="qr-banner-info">
               <span className="qr-banner-label">Show QR code</span>
@@ -130,6 +131,11 @@ export default function DashboardClient({
               level="M"
             />
           </div>
+        </div>
+
+        {/* Referral Manager */}
+        <div className="dashboard-referrals">
+          <ReferralManager />
         </div>
       </div>
 
