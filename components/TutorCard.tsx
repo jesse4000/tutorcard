@@ -33,12 +33,11 @@ interface TutorCardProps {
   data: TutorData;
   variant?: "preview" | "full";
   referralCount?: number;
+  referralLabel?: string;
   onReferralClick?: () => void;
-  opportunityCount?: number;
-  onOpportunityClick?: () => void;
 }
 
-export default function TutorCard({ data, variant = "preview", referralCount, onReferralClick, opportunityCount, onOpportunityClick }: TutorCardProps) {
+export default function TutorCard({ data, variant = "preview", referralCount, referralLabel, onReferralClick }: TutorCardProps) {
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(" ");
   const initials =
     [data.firstName?.[0], data.lastName?.[0]].filter(Boolean).join("") || "?";
@@ -168,41 +167,35 @@ export default function TutorCard({ data, variant = "preview", referralCount, on
         )}
       </div>
 
-      {/* Referral / Opportunity block */}
-      {onOpportunityClick ? (
-        <div className="mc-ref opp clickable" onClick={onOpportunityClick}>
-          <div>
-            <div className="mc-ref-lbl">Referral opportunities</div>
-            <div className="mc-ref-val">
-              {(opportunityCount ?? 0) > 0
-                ? `${opportunityCount} available · Tap to browse`
-                : "Browse referral opportunities"}
-            </div>
+      {/* Referral block */}
+      <div
+        className={`${isPreview ? "lc-ref" : "mc-ref"}${onReferralClick ? " clickable" : ""}`}
+        onClick={onReferralClick}
+      >
+        <div>
+          <div className={isPreview ? "lc-ref-lbl" : "mc-ref-lbl"}>
+            {isPreview
+              ? "Active referral"
+              : referralLabel
+                ? referralLabel
+                : (referralCount ?? 0) > 0 ? "Active referrals" : "Referrals"}
           </div>
-          <div className="mc-ref-n opp">{String(opportunityCount ?? 0)}</div>
-        </div>
-      ) : (
-        <div
-          className={`${isPreview ? "lc-ref" : "mc-ref"}${onReferralClick ? " clickable" : ""}`}
-          onClick={onReferralClick}
-        >
-          <div>
-            <div className={isPreview ? "lc-ref-lbl" : "mc-ref-lbl"}>
-              {isPreview ? "Active referral" : (referralCount ?? 0) > 0 ? "Active referrals" : "Referrals"}
-            </div>
-            <div className={isPreview ? "lc-ref-val" : "mc-ref-val"}>
-              {isPreview
-                ? "Add referrals after creating your card"
+          <div className={isPreview ? "lc-ref-val" : "mc-ref-val"}>
+            {isPreview
+              ? "Add referrals after creating your card"
+              : referralLabel
+                ? (referralCount ?? 0) > 0
+                  ? `${referralCount} available · Tap to browse`
+                  : "Tap to browse"
                 : (referralCount ?? 0) > 0
                   ? `${referralCount} open · Tap to view`
                   : "No active referrals"}
-            </div>
-          </div>
-          <div className={isPreview ? "lc-ref-n" : "mc-ref-n"}>
-            {isPreview ? "0" : String(referralCount ?? 0)}
           </div>
         </div>
-      )}
+        <div className={isPreview ? "lc-ref-n" : "mc-ref-n"}>
+          {isPreview ? "0" : String(referralCount ?? 0)}
+        </div>
+      </div>
 
     </div>
   );

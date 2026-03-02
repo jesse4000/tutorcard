@@ -56,7 +56,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
-  const [showOpportunities, setShowOpportunities] = useState(false);
+  const [view, setView] = useState<"card" | "opportunities">("card");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [oppLoading, setOppLoading] = useState(false);
   const [oppFetched, setOppFetched] = useState(false);
@@ -84,7 +84,10 @@ export default function DashboardClient({
     }
   }, [tutor, fetchOpportunities]);
 
-  async function handleApplyToOpportunity(referralId: string, boughtCoffee = false) {
+  async function handleApplyToOpportunity(
+    referralId: string,
+    boughtCoffee = false
+  ) {
     setApplyingTo(referralId);
     try {
       const res = await fetch("/api/referrals/apply", {
@@ -130,7 +133,11 @@ export default function DashboardClient({
               You don&apos;t have a tutor card yet. Create one to start sharing
               your profile with parents and students.
             </p>
-            <Link href="/create" className="btn-next" style={{ display: "inline-flex" }}>
+            <Link
+              href="/create"
+              className="btn-next"
+              style={{ display: "inline-flex" }}
+            >
               Create my card
             </Link>
           </div>
@@ -152,6 +159,8 @@ export default function DashboardClient({
     openToReferrals: tutor.open_to_referrals || false,
   };
 
+  const oppCount = oppFetched ? opportunities.length : 0;
+
   return (
     <>
       <Navbar
@@ -160,96 +169,116 @@ export default function DashboardClient({
         onSignOut={handleSignOut}
       />
       <div className="dashboard-page">
-        <div className="dashboard-card-wrap">
-          <div className="dashboard-header">
-            <h1 className="dashboard-title">Your card</h1>
-            <div className="dashboard-actions">
-              <Link href="/dashboard/edit" className="dash-icon-btn" title="Edit card">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11.3 1.7a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3L5.7 13.3 2 14l.7-3.7z" />
-                </svg>
-              </Link>
-              <a
-                href={`/${tutor.slug}`}
-                className="dash-icon-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View live"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3H3v10h10v-3" />
-                  <path d="M9 1h6v6" />
-                  <path d="M15 1 7 9" />
-                </svg>
-              </a>
-            </div>
-          </div>
-          <TutorCard
-            data={tutorData}
-            variant="full"
-            opportunityCount={oppFetched ? opportunities.length : undefined}
-            onOpportunityClick={() => setShowOpportunities(true)}
-          />
-
-          {/* QR banner */}
-          <div className="qr-banner" onClick={() => setShowQR(true)}>
-            <div className="qr-banner-info">
-              <span className="qr-banner-label">Show QR code</span>
-              <span className="qr-banner-url">
-                {typeof window !== "undefined" ? window.location.host : ""}/{tutor.slug}
-              </span>
-            </div>
-            <QRCodeSVG
-              value={typeof window !== "undefined" ? `${window.location.origin}/${tutor.slug}` : `/${tutor.slug}`}
-              size={56}
-              level="M"
-            />
-          </div>
-        </div>
-
-        {/* Referral Manager */}
-        <div className="dashboard-referrals">
-          <ReferralManager />
-        </div>
-      </div>
-
-      {/* QR Code Modal */}
-      {showQR && (
-        <div className="qr-overlay" onClick={() => setShowQR(false)}>
-          <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="qr-close" onClick={() => setShowQR(false)}>
-              &times;
-            </button>
-            <h2 className="qr-heading">Scan to view card</h2>
-            <p className="qr-sub">
-              {typeof window !== "undefined" ? window.location.host : ""}/{tutor.slug}
-            </p>
-            <div className="qr-code-wrap">
-              <QRCodeSVG
-                value={typeof window !== "undefined" ? `${window.location.origin}/${tutor.slug}` : `/${tutor.slug}`}
-                size={220}
-                level="M"
+        {view === "card" ? (
+          <>
+            <div className="dashboard-card-wrap">
+              <div className="dashboard-header">
+                <h1 className="dashboard-title">Your card</h1>
+                <div className="dashboard-actions">
+                  <Link
+                    href="/dashboard/edit"
+                    className="dash-icon-btn"
+                    title="Edit card"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M11.3 1.7a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3L5.7 13.3 2 14l.7-3.7z" />
+                    </svg>
+                  </Link>
+                  <a
+                    href={`/${tutor.slug}`}
+                    className="dash-icon-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View live"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M6 3H3v10h10v-3" />
+                      <path d="M9 1h6v6" />
+                      <path d="M15 1 7 9" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+              <TutorCard
+                data={tutorData}
+                variant="full"
+                referralLabel="Referral opportunities"
+                referralCount={oppCount}
+                onReferralClick={() => setView("opportunities")}
               />
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Opportunities Modal */}
-      {showOpportunities && (
-        <div className="opp-overlay" onClick={() => setShowOpportunities(false)}>
-          <div className="opp-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="opp-modal-header">
-              <h2 className="opp-modal-title">Referral Opportunities</h2>
+              {/* QR banner */}
+              <div className="qr-banner" onClick={() => setShowQR(true)}>
+                <div className="qr-banner-info">
+                  <span className="qr-banner-label">Show QR code</span>
+                  <span className="qr-banner-url">
+                    {typeof window !== "undefined"
+                      ? window.location.host
+                      : ""}
+                    /{tutor.slug}
+                  </span>
+                </div>
+                <QRCodeSVG
+                  value={
+                    typeof window !== "undefined"
+                      ? `${window.location.origin}/${tutor.slug}`
+                      : `/${tutor.slug}`
+                  }
+                  size={56}
+                  level="M"
+                />
+              </div>
+            </div>
+
+            {/* Referral Manager */}
+            <div className="dashboard-referrals">
+              <ReferralManager />
+            </div>
+          </>
+        ) : (
+          /* ── Opportunities screen ── */
+          <div className="opp-page">
+            <div className="opp-page-header">
               <button
-                className="opp-modal-close"
-                onClick={() => setShowOpportunities(false)}
+                className="opp-back-btn"
+                onClick={() => setView("card")}
               >
-                &times;
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4 6 9l5 5" />
+                </svg>
+                Back
               </button>
             </div>
-            <p className="opp-modal-sub">
-              Referrals posted by other tutors looking for help
+            <h1 className="dashboard-title">Referral Opportunities</h1>
+            <p className="opp-page-sub">
+              Active referrals from other tutors that match your skills
             </p>
 
             <div className="opp-list">
@@ -282,42 +311,45 @@ export default function DashboardClient({
                   return (
                     <div key={opp.id} className="opp-card">
                       {opp.skillMatch && (
-                        <div className="opp-match-badge">Matches your skills</div>
+                        <div className="opp-match-badge">
+                          Matches your skills
+                        </div>
                       )}
                       <div className="opp-card-top">
-                        <div className="opp-card-info">
-                          <div className="opp-card-subject">{opp.subject}</div>
-                          <div className="opp-card-meta">
-                            {[opp.location, opp.grade_level]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </div>
-                          {opp.notes && (
-                            <div className="opp-card-notes">
-                              &quot;{opp.notes}&quot;
-                            </div>
-                          )}
+                        <div className="opp-card-subject">{opp.subject}</div>
+                        <div className="opp-card-meta">
+                          {[opp.location, opp.grade_level]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </div>
+                        {opp.notes && (
+                          <div className="opp-card-notes">
+                            &quot;{opp.notes}&quot;
+                          </div>
+                        )}
                       </div>
 
                       <div className="opp-card-poster">
                         <div
                           className="opp-poster-av"
                           style={{
-                            background: opp.tutor.avatar_color || "#0f172a",
+                            background:
+                              opp.tutor.avatar_color || "#0f172a",
                           }}
                         >
                           {posterInitials}
                         </div>
                         <div className="opp-poster-info">
-                          <span className="opp-poster-name">{posterName}</span>
+                          <span className="opp-poster-name">
+                            {posterName}
+                          </span>
                           <a
                             href={`/${opp.tutor.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="opp-poster-link"
                           >
-                            View card
+                            View card ↗
                           </a>
                         </div>
                       </div>
@@ -328,7 +360,7 @@ export default function DashboardClient({
                         ) : showCoffee === opp.id ? (
                           <div className="opp-coffee-prompt">
                             <button
-                              className="opp-apply-btn"
+                              className="opp-apply-btn secondary"
                               onClick={() =>
                                 handleApplyToOpportunity(opp.id, false)
                               }
@@ -343,7 +375,7 @@ export default function DashboardClient({
                               }
                               disabled={isApplying}
                             >
-                              ☕ Apply + buy a coffee
+                              ☕ Apply + coffee
                             </button>
                           </div>
                         ) : (
@@ -360,6 +392,33 @@ export default function DashboardClient({
                   );
                 })
               )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* QR Code Modal */}
+      {showQR && (
+        <div className="qr-overlay" onClick={() => setShowQR(false)}>
+          <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="qr-close" onClick={() => setShowQR(false)}>
+              &times;
+            </button>
+            <h2 className="qr-heading">Scan to view card</h2>
+            <p className="qr-sub">
+              {typeof window !== "undefined" ? window.location.host : ""}/
+              {tutor.slug}
+            </p>
+            <div className="qr-code-wrap">
+              <QRCodeSVG
+                value={
+                  typeof window !== "undefined"
+                    ? `${window.location.origin}/${tutor.slug}`
+                    : `/${tutor.slug}`
+                }
+                size={220}
+                level="M"
+              />
             </div>
           </div>
         </div>
