@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
 import { createClient } from "@/lib/supabase/client";
@@ -33,6 +35,7 @@ export default function DashboardClient({
   userEmail,
 }: DashboardClientProps) {
   const router = useRouter();
+  const [showQR, setShowQR] = useState(false);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -101,12 +104,45 @@ export default function DashboardClient({
             >
               View live →
             </a>
+            <button className="btn-back" onClick={() => setShowQR(true)}>
+              Show QR Code
+            </button>
           </div>
         </div>
         <div className="dashboard-card-wrap">
           <TutorCard data={tutorData} variant="full" />
         </div>
       </div>
+
+      {/* QR Code Modal */}
+      {showQR && (
+        <div className="qr-overlay" onClick={() => setShowQR(false)}>
+          <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="qr-close" onClick={() => setShowQR(false)}>
+              ×
+            </button>
+            <h2 className="qr-heading">Your QR Code</h2>
+            <p className="qr-sub">
+              Scan to open your live card at studyspaces.com/{tutor.slug}
+            </p>
+            <div className="qr-code-wrap">
+              <QRCodeSVG
+                value={`https://studyspaces.com/${tutor.slug}`}
+                size={200}
+                level="M"
+              />
+            </div>
+            <a
+              href={`/${tutor.slug}`}
+              className="qr-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              studyspaces.com/{tutor.slug}
+            </a>
+          </div>
+        </div>
+      )}
     </>
   );
 }
