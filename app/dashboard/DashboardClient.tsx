@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
@@ -34,6 +35,7 @@ export default function DashboardClient({
   userEmail,
 }: DashboardClientProps) {
   const router = useRouter();
+  const [showQR, setShowQR] = useState(false);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -115,17 +117,12 @@ export default function DashboardClient({
           <TutorCard data={tutorData} variant="full" />
 
           {/* QR banner below card */}
-          <div className="qr-banner">
+          <div className="qr-banner" onClick={() => setShowQR(true)}>
             <div className="qr-banner-info">
               <span className="qr-banner-label">Show QR code</span>
-              <a
-                href={`/${tutor.slug}`}
-                className="qr-banner-url"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <span className="qr-banner-url">
                 {typeof window !== "undefined" ? window.location.host : ""}/{tutor.slug}
-              </a>
+              </span>
             </div>
             <QRCodeSVG
               value={typeof window !== "undefined" ? `${window.location.origin}/${tutor.slug}` : `/${tutor.slug}`}
@@ -135,6 +132,28 @@ export default function DashboardClient({
           </div>
         </div>
       </div>
+
+      {/* QR Code Modal */}
+      {showQR && (
+        <div className="qr-overlay" onClick={() => setShowQR(false)}>
+          <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="qr-close" onClick={() => setShowQR(false)}>
+              &times;
+            </button>
+            <h2 className="qr-heading">Scan to view card</h2>
+            <p className="qr-sub">
+              {typeof window !== "undefined" ? window.location.host : ""}/{tutor.slug}
+            </p>
+            <div className="qr-code-wrap">
+              <QRCodeSVG
+                value={typeof window !== "undefined" ? `${window.location.origin}/${tutor.slug}` : `/${tutor.slug}`}
+                size={220}
+                level="M"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
