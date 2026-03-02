@@ -32,9 +32,11 @@ const LINK_ICONS: Record<string, string> = {
 interface TutorCardProps {
   data: TutorData;
   variant?: "preview" | "full";
+  referralCount?: number;
+  onReferralClick?: () => void;
 }
 
-export default function TutorCard({ data, variant = "preview" }: TutorCardProps) {
+export default function TutorCard({ data, variant = "preview", referralCount, onReferralClick }: TutorCardProps) {
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(" ");
   const initials =
     [data.firstName?.[0], data.lastName?.[0]].filter(Boolean).join("") || "?";
@@ -165,19 +167,24 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
       </div>
 
       {/* Referral block */}
-      <div className={isPreview ? "lc-ref" : "mc-ref"}>
+      <div
+        className={`${isPreview ? "lc-ref" : "mc-ref"}${onReferralClick ? " clickable" : ""}`}
+        onClick={onReferralClick}
+      >
         <div>
           <div className={isPreview ? "lc-ref-lbl" : "mc-ref-lbl"}>
-            Active referral
+            {isPreview ? "Active referral" : (referralCount ?? 0) > 0 ? "Active referrals" : "Referrals"}
           </div>
           <div className={isPreview ? "lc-ref-val" : "mc-ref-val"}>
             {isPreview
               ? "Add referrals after creating your card"
-              : "SAT Math · New Jersey · 10th grade"}
+              : (referralCount ?? 0) > 0
+                ? `${referralCount} open · Tap to view`
+                : "No active referrals"}
           </div>
         </div>
         <div className={isPreview ? "lc-ref-n" : "mc-ref-n"}>
-          {isPreview ? "0" : "4"}
+          {isPreview ? "0" : String(referralCount ?? 0)}
         </div>
       </div>
 
