@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 export interface TutorLink {
   type: string;
   url: string;
@@ -41,8 +43,9 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
     ...data.subjects,
     ...data.locations,
   ];
-  const visibleTags = allTags.slice(0, 3);
-  const overflowCount = allTags.length - visibleTags.length;
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+  const visibleTags = tagsExpanded ? allTags : allTags.slice(0, 3);
+  const overflowCount = allTags.length - 3;
   const isPreview = variant === "preview";
 
   return (
@@ -91,8 +94,11 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
               </span>
             ))}
             {overflowCount > 0 && (
-              <span className={isPreview ? "lc-tag" : "tag"}>
-                +{overflowCount}
+              <span
+                className={`${isPreview ? "lc-tag" : "tag"} tag-toggle`}
+                onClick={() => setTagsExpanded(!tagsExpanded)}
+              >
+                {tagsExpanded ? "Show less" : `+${overflowCount}`}
               </span>
             )}
           </>
