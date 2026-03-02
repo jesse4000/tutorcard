@@ -331,6 +331,8 @@ h1.hero-title em {
   color: var(--amber);
   font-weight: 600;
 }
+.tag-toggle { cursor: pointer; user-select: none; }
+.tag-toggle:hover { border-color: var(--ink-2); color: var(--ink); }
 
 .mc-rule {
   height: 1px;
@@ -1337,6 +1339,26 @@ footer {
   max-width: 420px;
   width: 100%;
 }
+.vcard-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.vcard-btn:hover { border-color: var(--ink-2); color: var(--ink); }
+.vcard-icon { font-size: 15px; }
 
 /* ── AUTH PAGES ── */
 .auth-page {
