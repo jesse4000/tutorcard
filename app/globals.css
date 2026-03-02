@@ -1488,12 +1488,42 @@ footer {
 
 .dashboard-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
+
+.dash-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: white;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dash-icon-btn:hover { border-color: var(--ink); color: var(--ink); }
 
 .dashboard-card-wrap {
   max-width: 420px;
 }
+
+/* QR banner */
+.qr-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.qr-banner:hover { border-color: var(--ink-2); }
+.qr-banner-info { display: flex; flex-direction: column; gap: 2px; }
+.qr-banner-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.qr-banner-url { font-size: 12px; color: var(--ink-2); }
 
 /* QR modal */
 .qr-overlay {
@@ -1519,12 +1549,7 @@ footer {
 .qr-close:hover { color: var(--ink); }
 .qr-heading { font-size: 18px; font-weight: 700; margin: 0 0 4px; color: var(--ink); }
 .qr-sub { font-size: 13px; color: var(--ink-2); margin: 0 0 20px; }
-.qr-code-wrap { display: flex; justify-content: center; margin-bottom: 16px; }
-.qr-link {
-  font-size: 13px; color: var(--ink-2);
-  text-decoration: underline; text-underline-offset: 2px;
-}
-.qr-link:hover { color: var(--ink); }
+.qr-code-wrap { display: flex; justify-content: center; }
 
 .dashboard-empty {
   text-align: center;
