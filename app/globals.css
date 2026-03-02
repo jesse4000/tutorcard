@@ -2001,6 +2001,17 @@ footer {
   border: 1px solid var(--green-border);
 }
 
+.profile-ref-own-label {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: 9px;
+  background: var(--muted);
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .mc-ref.clickable, .lc-ref.clickable { cursor: pointer; transition: opacity 0.15s; }
 .mc-ref.clickable:hover, .lc-ref.clickable:hover { opacity: 0.85; }
 
