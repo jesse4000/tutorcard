@@ -39,9 +39,9 @@ export default function TutorCard({ data, variant = "preview" }: TutorCardProps)
   const initials =
     [data.firstName?.[0], data.lastName?.[0]].filter(Boolean).join("") || "?";
   const allTags = [
-    ...data.exams.slice(0, 2),
-    ...data.subjects.slice(0, 2),
-    ...data.locations.slice(0, 1),
+    ...data.exams,
+    ...data.subjects,
+    ...data.locations,
   ];
   const urlDisplay = data.slug
     ? `studyspaces.com/${data.slug}`

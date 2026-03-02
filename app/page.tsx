@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
-import QrSvg from "@/components/QrSvg";
+
 import LogoSvg from "@/components/LogoSvg";
 
 export default function LandingPage() {
@@ -233,16 +233,6 @@ function MockCard() {
         </div>
         <div className="mc-ref-n">4</div>
       </div>
-      <div style={{ height: 10 }} />
-      <div className="mc-qr">
-        <div>
-          <div className="mc-qr-label">Scan to view card</div>
-          <div className="mc-qr-sub">studyspaces.com/sarah-chen</div>
-        </div>
-        <div className="mc-qr-svg">
-          <QrSvg size={48} />
-        </div>
-      </div>
     </div>
   );
 }
@@ -388,14 +378,6 @@ function Step1Visual() {
           <div className="s1-ref-val">SAT Math · New Jersey</div>
         </div>
         <div className="s1-ref-n">4</div>
-      </div>
-      <div style={{ height: 7 }} />
-      <div className="s1-qr">
-        <div className="s1-qr-text">
-          <div className="s1-qr-label">Scan to view card</div>
-          <div className="s1-qr-url">studyspaces.com/sarah-chen</div>
-        </div>
-        <QrSvg size={40} />
       </div>
     </div>
   );
