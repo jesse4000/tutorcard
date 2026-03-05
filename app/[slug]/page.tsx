@@ -19,28 +19,6 @@ async function getTutor(slug: string) {
   return data;
 }
 
-async function getReferrals(tutorId: string) {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("referrals")
-    .select("id, subject, location, grade_level, notes, created_at, referral_applications(id)")
-    .eq("tutor_id", tutorId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-  return data || [];
-}
-
-async function getCurrentTutorId() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: tutor } = await supabase
-    .from("tutors")
-    .select("id")
-    .eq("user_id", user.id)
-    .single();
-  return tutor?.id || null;
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -77,15 +55,9 @@ export default async function ProfilePage({ params }: PageProps) {
     openToReferrals: tutor.open_to_referrals || false,
   };
 
-  const referrals = await getReferrals(tutor.id);
-  const currentTutorId = await getCurrentTutorId();
-
   return (
     <ProfileClient
       tutor={tutorData}
-      referrals={referrals}
-      currentTutorId={currentTutorId}
-      profileTutorId={tutor.id}
     />
   );
 }
