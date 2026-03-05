@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, avatarColor } = body;
+    const { name, description, avatarColor, applicationQuestions } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Name required" }, { status: 400 });
@@ -93,6 +93,8 @@ export async function POST(request: Request) {
         avatar_color: avatarColor || "#0f172a",
         created_by: tutor.id,
         is_public: true,
+        require_approval: true,
+        application_questions: applicationQuestions || null,
       })
       .select()
       .single();

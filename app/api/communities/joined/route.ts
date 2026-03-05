@@ -32,7 +32,18 @@ export async function GET() {
       return c ? { id: c.id, name: c.name, description: c.description, avatar_color: c.avatar_color } : null;
     }).filter(Boolean);
 
-    return NextResponse.json({ communities });
+    // Also fetch pending join request community IDs
+    const { data: pendingReqs } = await supabase
+      .from("community_join_requests")
+      .select("community_id")
+      .eq("tutor_id", tutor.id)
+      .eq("status", "pending");
+
+    const pendingCommunityIds = (pendingReqs || []).map(
+      (r: Record<string, unknown>) => r.community_id as string
+    );
+
+    return NextResponse.json({ communities, pendingCommunityIds });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

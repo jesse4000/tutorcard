@@ -8,10 +8,12 @@ interface Community {
   description: string;
   avatar_color: string;
   memberCount?: number;
+  hasApplicationForm?: boolean;
 }
 
 interface CommunityPickerProps {
   joined: string[];
+  pending?: string[];
   onJoin: (communityId: string) => void;
   onLeave: (communityId: string) => void;
   onCreate: (name: string, description: string) => Promise<void> | void;
@@ -20,6 +22,7 @@ interface CommunityPickerProps {
 
 export default function CommunityPicker({
   joined,
+  pending = [],
   onJoin,
   onLeave,
   onCreate,
@@ -147,6 +150,36 @@ export default function CommunityPicker({
         <div className="community-list">
           {communities.map((c) => {
             const isJoined = joined.includes(c.id);
+            const isPending = pending.includes(c.id);
+            const hasForm = c.hasApplicationForm;
+
+            let btnLabel = "Join";
+            let btnClass = "btn-join-community";
+            if (isJoined) {
+              btnLabel = "Joined";
+              btnClass = "btn-join-community joined";
+            } else if (isPending) {
+              btnLabel = "Pending";
+              btnClass = "btn-join-community pending";
+            } else if (hasForm) {
+              btnLabel = "Apply";
+              btnClass = "btn-join-community apply";
+            }
+
+            function handleClick() {
+              if (isJoined) {
+                onLeave(c.id);
+              } else if (isPending) {
+                // Already pending — open detail to see status
+                if (onOpen) onOpen(c.id);
+              } else if (hasForm && onOpen) {
+                // Has custom questions — open detail form
+                onOpen(c.id);
+              } else {
+                onJoin(c.id);
+              }
+            }
+
             return (
               <div key={c.id} className="community-item">
                 <div
@@ -173,11 +206,11 @@ export default function CommunityPicker({
                   </div>
                 </div>
                 <button
-                  className={`btn-join-community ${isJoined ? "joined" : ""}`}
-                  onClick={() => (isJoined ? onLeave(c.id) : onJoin(c.id))}
+                  className={btnClass}
+                  onClick={handleClick}
                   type="button"
                 >
-                  {isJoined ? "Joined" : "Join"}
+                  {btnLabel}
                 </button>
               </div>
             );

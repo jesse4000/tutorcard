@@ -76,6 +76,7 @@ export default function DashboardClient({
 
   // Communities state
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
   const [openCommunityId, setOpenCommunityId] = useState<string | null>(null);
 
   const fetchOpportunities = useCallback(async () => {
@@ -126,28 +127,42 @@ export default function DashboardClient({
   }
 
   async function handleJoinCommunity(communityId: string) {
-    setJoinedCommunities((prev) =>
-      prev.includes(communityId) ? prev : [...prev, communityId]
-    );
     try {
-      await fetch("/api/communities/join", {
+      const res = await fetch("/api/communities/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ communityId }),
       });
+      const data = await res.json();
+      if (data.status === "requires_form") {
+        // Community has custom questions — open the detail view
+        setOpenCommunityId(communityId);
+      } else if (data.status === "pending") {
+        setPendingCommunities((prev) =>
+          prev.includes(communityId) ? prev : [...prev, communityId]
+        );
+      } else if (data.status === "joined") {
+        setJoinedCommunities((prev) =>
+          prev.includes(communityId) ? prev : [...prev, communityId]
+        );
+      }
     } catch {
-      setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
+      // ignore
     }
   }
 
   async function handleLeaveCommunity(communityId: string) {
+    const wasJoined = joinedCommunities.includes(communityId);
     setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
+    setPendingCommunities((prev) => prev.filter((id) => id !== communityId));
     try {
       await fetch(`/api/communities/join?communityId=${communityId}`, {
         method: "DELETE",
       });
     } catch {
-      setJoinedCommunities((prev) => [...prev, communityId]);
+      if (wasJoined) {
+        setJoinedCommunities((prev) => [...prev, communityId]);
+      }
     }
   }
 
@@ -167,7 +182,7 @@ export default function DashboardClient({
     }
   }
 
-  // Fetch joined communities on mount
+  // Fetch joined communities and pending requests on mount
   useEffect(() => {
     if (!tutor) return;
     async function fetchJoined() {
@@ -178,6 +193,7 @@ export default function DashboardClient({
           setJoinedCommunities(
             (data.communities || []).map((c: { id: string }) => c.id)
           );
+          setPendingCommunities(data.pendingCommunityIds || []);
         }
       } catch {
         // ignore
@@ -519,6 +535,7 @@ export default function DashboardClient({
               </p>
               <CommunityPicker
                 joined={joinedCommunities}
+                pending={pendingCommunities}
                 onJoin={handleJoinCommunity}
                 onLeave={handleLeaveCommunity}
                 onCreate={handleCreateCommunity}
