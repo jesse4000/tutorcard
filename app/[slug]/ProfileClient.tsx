@@ -23,6 +23,8 @@ function buildVCard(tutor: TutorData): string {
     `N:${escape(tutor.lastName || "")};${escape(tutor.firstName || "")};;;`,
   ];
   if (tutor.title) lines.push(`TITLE:${escape(tutor.title)}`);
+  if (tutor.businessName) lines.push(`ORG:${escape(tutor.businessName)}`);
+  if (tutor.phone) lines.push(`TEL:${tutor.phone}`);
   if (emailLink?.url) lines.push(`EMAIL:${emailLink.url}`);
   if (websiteLink?.url) {
     const url = websiteLink.url.startsWith("http")

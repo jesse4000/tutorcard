@@ -21,6 +21,13 @@ interface TutorRow {
   title: string | null;
   slug: string;
   avatar_color: string;
+  profile_image: string | null;
+  business_name: string | null;
+  years_in_business: number | null;
+  phone: string | null;
+  facebook: string | null;
+  linkedin: string | null;
+  instagram: string | null;
   exams: string[];
   subjects: string[];
   locations: string[];
@@ -225,6 +232,13 @@ export default function DashboardClient({
     title: tutor.title || "",
     slug: tutor.slug,
     avatarColor: tutor.avatar_color || "#0f172a",
+    profileImage: tutor.profile_image || undefined,
+    businessName: tutor.business_name || undefined,
+    yearsInBusiness: tutor.years_in_business || undefined,
+    phone: tutor.phone || undefined,
+    facebook: tutor.facebook || undefined,
+    linkedin: tutor.linkedin || undefined,
+    instagram: tutor.instagram || undefined,
     exams: tutor.exams || [],
     subjects: tutor.subjects || [],
     locations: tutor.locations || [],
