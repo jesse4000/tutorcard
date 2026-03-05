@@ -8,6 +8,7 @@ const LINK_TYPES = [
   "📋 Resource",
   "📧 Email",
   "💬 WhatsApp",
+  "📞 Phone",
 ];
 
 interface LinkBuilderProps {

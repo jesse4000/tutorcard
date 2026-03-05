@@ -65,6 +65,13 @@ export interface TutorFormData {
   title: string;
   slug: string;
   avatarColor: string;
+  profileImage?: string;
+  businessName?: string;
+  yearsInBusiness?: number;
+  phone?: string;
+  facebook?: string;
+  linkedin?: string;
+  instagram?: string;
   exams: string[];
   subjects: string[];
   locations: string[];
@@ -92,6 +99,15 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
   const [avatarColor, setAvatarColor] = useState(
     initialData?.avatarColor || COLORS[0]
   );
+  const [profileImage, setProfileImage] = useState(
+    initialData?.profileImage || ""
+  );
+  const [businessName, setBusinessName] = useState(
+    initialData?.businessName || ""
+  );
+  const [yearsInBusiness, setYearsInBusiness] = useState<number | undefined>(
+    initialData?.yearsInBusiness
+  );
 
   // Step 2
   const [exams, setExams] = useState<string[]>(initialData?.exams || []);
@@ -108,6 +124,10 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
       ? initialData.links
       : [{ type: "🌐 Website", url: "", label: "" }]
   );
+  const [phone, setPhone] = useState(initialData?.phone || "");
+  const [facebook, setFacebook] = useState(initialData?.facebook || "");
+  const [linkedin, setLinkedin] = useState(initialData?.linkedin || "");
+  const [instagram, setInstagram] = useState(initialData?.instagram || "");
 
   // Step 4 — Friends
   const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
@@ -135,6 +155,13 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
     title,
     slug,
     avatarColor,
+    profileImage: profileImage || undefined,
+    businessName: businessName || undefined,
+    yearsInBusiness,
+    phone: phone || undefined,
+    facebook: facebook || undefined,
+    linkedin: linkedin || undefined,
+    instagram: instagram || undefined,
     exams,
     subjects,
     locations,
@@ -218,6 +245,13 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
         title: title.trim(),
         slug: slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-"),
         avatarColor,
+        profileImage: profileImage || null,
+        businessName: businessName.trim() || null,
+        yearsInBusiness: yearsInBusiness || null,
+        phone: phone.trim() || null,
+        facebook: facebook.trim() || null,
+        linkedin: linkedin.trim() || null,
+        instagram: instagram.trim() || null,
         exams,
         subjects,
         locations,
@@ -343,11 +377,42 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                   <div className="avatar-row">
                     <div
                       className="avatar-preview"
-                      style={{ background: avatarColor }}
+                      style={{ background: profileImage ? "transparent" : avatarColor }}
                     >
-                      {firstName?.[0]?.toUpperCase() || "?"}
+                      {profileImage ? (
+                        <img src={profileImage} alt="Profile" className="av-img" />
+                      ) : (
+                        firstName?.[0]?.toUpperCase() || "?"
+                      )}
+                      <label className="avatar-upload-overlay">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 2 * 1024 * 1024) {
+                              alert("Image must be under 2 MB");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setProfileImage(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      </label>
                     </div>
                     <div>
+                      <div className="field-label" style={{ marginBottom: 6 }}>
+                        Profile photo or logo
+                      </div>
+                      <div className="field-hint" style={{ marginTop: 0, marginBottom: 8 }}>
+                        Click the avatar to upload an image
+                      </div>
                       <div className="field-label" style={{ marginBottom: 6 }}>
                         Your card color
                       </div>
@@ -383,6 +448,35 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                         placeholder="Chen"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="field-row">
+                    <div className="field">
+                      <label className="field-label">Business name</label>
+                      <input
+                        className="field-input"
+                        type="text"
+                        placeholder="Chen Tutoring LLC"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field-label">Years of experience</label>
+                      <input
+                        className="field-input"
+                        type="number"
+                        min="0"
+                        max="99"
+                        placeholder="5"
+                        value={yearsInBusiness ?? ""}
+                        onChange={(e) =>
+                          setYearsInBusiness(
+                            e.target.value ? parseInt(e.target.value, 10) : undefined
+                          )
+                        }
                       />
                     </div>
                   </div>
@@ -539,6 +633,55 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                   </div>
 
                   <LinkBuilder links={links} onChange={setLinks} />
+
+                  <div style={{ marginTop: 28, marginBottom: 4 }}>
+                    <div className="field-label" style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>
+                      Contact &amp; Social
+                    </div>
+                    <div className="field">
+                      <label className="field-label">Phone number</label>
+                      <div className="field-hint">
+                        Tapping this on your card will trigger a call.
+                      </div>
+                      <input
+                        className="field-input"
+                        type="tel"
+                        placeholder="+1 (555) 123-4567"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field-label">Facebook</label>
+                      <input
+                        className="field-input"
+                        type="url"
+                        placeholder="https://facebook.com/yourpage"
+                        value={facebook}
+                        onChange={(e) => setFacebook(e.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field-label">LinkedIn</label>
+                      <input
+                        className="field-input"
+                        type="url"
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        value={linkedin}
+                        onChange={(e) => setLinkedin(e.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field-label">Instagram</label>
+                      <input
+                        className="field-input"
+                        type="url"
+                        placeholder="https://instagram.com/yourhandle"
+                        value={instagram}
+                        onChange={(e) => setInstagram(e.target.value)}
+                      />
+                    </div>
+                  </div>
 
                   <div className="step-nav" style={{ marginTop: 28 }}>
                     <button className="btn-back" onClick={prevStep}>
