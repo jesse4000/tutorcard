@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
 import TagPicker from "@/components/TagPicker";
@@ -796,10 +797,14 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                   </div>
                   <span className="nsi-arr">→</span>
                 </a>
-                <a
+                <Link
                   href="/dashboard"
                   className="next-step-item"
                   style={{ textDecoration: "none" }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = "/dashboard";
+                  }}
                 >
                   <span className="nsi-icon">📋</span>
                   <div>
@@ -809,7 +814,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                     </div>
                   </div>
                   <span className="nsi-arr">→</span>
-                </a>
+                </Link>
               </div>
             </div>
           )}
