@@ -167,35 +167,37 @@ export default function TutorCard({ data, variant = "preview", referralCount, re
         )}
       </div>
 
-      {/* Referral block */}
-      <div
-        className={`${isPreview ? "lc-ref" : "mc-ref"}${onReferralClick ? " clickable" : ""}`}
-        onClick={onReferralClick}
-      >
-        <div>
-          <div className={isPreview ? "lc-ref-lbl" : "mc-ref-lbl"}>
-            {isPreview
-              ? "Active referral"
-              : referralLabel
-                ? referralLabel
-                : (referralCount ?? 0) > 0 ? "Active referrals" : "Referrals"}
+      {/* Referral block — only shown in preview or when referral props are provided */}
+      {(isPreview || referralCount !== undefined || onReferralClick) && (
+        <div
+          className={`${isPreview ? "lc-ref" : "mc-ref"}${onReferralClick ? " clickable" : ""}`}
+          onClick={onReferralClick}
+        >
+          <div>
+            <div className={isPreview ? "lc-ref-lbl" : "mc-ref-lbl"}>
+              {isPreview
+                ? "Active referral"
+                : referralLabel
+                  ? referralLabel
+                  : (referralCount ?? 0) > 0 ? "Active referrals" : "Referrals"}
+            </div>
+            <div className={isPreview ? "lc-ref-val" : "mc-ref-val"}>
+              {isPreview
+                ? "Add referrals after creating your card"
+                : referralLabel
+                  ? (referralCount ?? 0) > 0
+                    ? `${referralCount} available · Tap to browse`
+                    : "Tap to browse"
+                  : (referralCount ?? 0) > 0
+                    ? `${referralCount} open · Tap to view`
+                    : "No active referrals"}
+            </div>
           </div>
-          <div className={isPreview ? "lc-ref-val" : "mc-ref-val"}>
-            {isPreview
-              ? "Add referrals after creating your card"
-              : referralLabel
-                ? (referralCount ?? 0) > 0
-                  ? `${referralCount} available · Tap to browse`
-                  : "Tap to browse"
-                : (referralCount ?? 0) > 0
-                  ? `${referralCount} open · Tap to view`
-                  : "No active referrals"}
+          <div className={isPreview ? "lc-ref-n" : "mc-ref-n"}>
+            {isPreview ? "0" : String(referralCount ?? 0)}
           </div>
         </div>
-        <div className={isPreview ? "lc-ref-n" : "mc-ref-n"}>
-          {isPreview ? "0" : String(referralCount ?? 0)}
-        </div>
-      </div>
+      )}
 
     </div>
   );
