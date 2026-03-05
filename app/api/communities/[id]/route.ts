@@ -26,7 +26,7 @@ export async function GET(
     // Fetch community
     const { data: community, error } = await supabase
       .from("communities")
-      .select("id, name, description, avatar_color, created_by, is_public, created_at")
+      .select("id, name, description, avatar_color, created_by, is_public, require_approval, application_questions, created_at")
       .eq("id", id)
       .single();
 
@@ -77,12 +77,25 @@ export async function GET(
 
     // Current user's membership
     let userRole: string | null = null;
+    let hasPendingRequest = false;
     if (tutor) {
       const membership = (members || []).find(
         (m: Record<string, unknown>) => m.tutor_id === tutor.id
       );
       if (membership) {
         userRole = membership.role as string;
+      }
+
+      // Check if user has a pending join request
+      if (!userRole) {
+        const { data: pendingReq } = await supabase
+          .from("community_join_requests")
+          .select("id")
+          .eq("community_id", id)
+          .eq("tutor_id", tutor.id)
+          .eq("status", "pending")
+          .maybeSingle();
+        hasPendingRequest = !!pendingReq;
       }
     }
 
@@ -94,6 +107,7 @@ export async function GET(
         pendingRequests,
         userRole,
         isOwnerOrAdmin,
+        hasPendingRequest,
       },
       members: (members || []).map((m: Record<string, unknown>) => ({
         tutorId: m.tutor_id,

@@ -44,7 +44,7 @@ export async function GET(
 
     const { data: requests } = await supabase
       .from("community_join_requests")
-      .select("id, tutor_id, message, status, created_at, tutors(id, first_name, last_name, avatar_color, slug)")
+      .select("id, tutor_id, message, answers, status, created_at, tutors(id, first_name, last_name, avatar_color, slug)")
       .eq("community_id", id)
       .eq("status", status)
       .order("created_at", { ascending: false });
@@ -54,6 +54,7 @@ export async function GET(
         id: r.id,
         tutorId: r.tutor_id,
         message: r.message,
+        answers: r.answers,
         status: r.status,
         createdAt: r.created_at,
         tutor: r.tutors,
@@ -115,19 +116,25 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { message } = body;
+    const { message, answers } = body;
 
     if (existingReq) {
       // Update existing declined request to pending
       await supabase
         .from("community_join_requests")
-        .update({ status: "pending", message: message?.trim() || "", updated_at: new Date().toISOString() })
+        .update({
+          status: "pending",
+          message: message?.trim() || "",
+          answers: answers || null,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", existingReq.id);
     } else {
       await supabase.from("community_join_requests").insert({
         community_id: id,
         tutor_id: tutor.id,
         message: message?.trim() || "",
+        answers: answers || null,
       });
     }
 

@@ -42,6 +42,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Already a member" }, { status: 409 });
     }
 
+    // Fetch community to check approval settings
+    const { data: community } = await supabase
+      .from("communities")
+      .select("require_approval, application_questions")
+      .eq("id", communityId)
+      .single();
+
+    if (!community) {
+      return NextResponse.json({ error: "Community not found" }, { status: 404 });
+    }
+
+    // If community has custom questions, tell frontend to redirect to detail form
+    const hasQuestions =
+      Array.isArray(community.application_questions) &&
+      community.application_questions.length > 0;
+
+    if (community.require_approval) {
+      if (hasQuestions) {
+        return NextResponse.json({
+          success: true,
+          status: "requires_form",
+          questions: community.application_questions,
+        });
+      }
+
+      // No custom questions — create a pending join request directly
+      const { data: existingReq } = await supabase
+        .from("community_join_requests")
+        .select("id, status")
+        .eq("community_id", communityId)
+        .eq("tutor_id", tutor.id)
+        .maybeSingle();
+
+      if (existingReq?.status === "pending") {
+        return NextResponse.json({ error: "Request already pending" }, { status: 409 });
+      }
+
+      if (existingReq) {
+        await supabase
+          .from("community_join_requests")
+          .update({ status: "pending", message: "", updated_at: new Date().toISOString() })
+          .eq("id", existingReq.id);
+      } else {
+        await supabase.from("community_join_requests").insert({
+          community_id: communityId,
+          tutor_id: tutor.id,
+          message: "",
+        });
+      }
+
+      return NextResponse.json({ success: true, status: "pending" });
+    }
+
+    // No approval required — join directly
     const { error } = await supabase.from("community_members").insert({
       community_id: communityId,
       tutor_id: tutor.id,
@@ -52,7 +106,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to join" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, status: "joined" });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

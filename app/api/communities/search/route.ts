@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("communities")
-      .select("id, name, description, avatar_color, created_at")
+      .select("id, name, description, avatar_color, application_questions, created_at")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -44,7 +44,10 @@ export async function GET(request: Request) {
           .from("community_members")
           .select("*", { count: "exact", head: true })
           .eq("community_id", c.id);
-        return { ...c, memberCount: count || 0 };
+        const hasApplicationForm =
+          Array.isArray(c.application_questions) && c.application_questions.length > 0;
+        const { application_questions: _aq, ...rest } = c;
+        return { ...rest, memberCount: count || 0, hasApplicationForm };
       })
     );
 

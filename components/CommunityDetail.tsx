@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+interface AppQuestion {
+  id: string;
+  text: string;
+  required: boolean;
+}
+
 interface CommunityData {
   id: string;
   name: string;
@@ -13,6 +19,9 @@ interface CommunityData {
   pendingRequests: number;
   userRole: string | null;
   isOwnerOrAdmin: boolean;
+  require_approval: boolean;
+  application_questions: AppQuestion[] | null;
+  hasPendingRequest: boolean;
 }
 
 interface MemberInfo {
@@ -32,6 +41,7 @@ interface JoinRequest {
   id: string;
   tutorId: string;
   message: string;
+  answers: Record<string, string> | null;
   status: string;
   createdAt: string;
   tutor: {
@@ -56,7 +66,7 @@ export default function CommunityDetail({
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"overview" | "members" | "requests" | "form">(
+  const [tab, setTab] = useState<"overview" | "members" | "requests" | "form" | "settings">(
     "overview"
   );
   const [requestsLoading, setRequestsLoading] = useState(false);
@@ -64,8 +74,15 @@ export default function CommunityDetail({
 
   // Join request form state
   const [joinMessage, setJoinMessage] = useState("");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+
+  // Settings state
+  const [settingsQuestions, setSettingsQuestions] = useState<AppQuestion[]>([]);
+  const [settingsRequireApproval, setSettingsRequireApproval] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
 
   const fetchCommunity = useCallback(async () => {
     setLoading(true);
@@ -144,21 +161,84 @@ export default function CommunityDetail({
   }
 
   async function handleSubmitJoinRequest() {
+    // Validate required questions
+    const questions = community?.application_questions || [];
+    for (const q of questions) {
+      if (q.required && !answers[q.id]?.trim()) {
+        return;
+      }
+    }
+
     setSubmittingRequest(true);
     try {
       const res = await fetch(`/api/communities/${communityId}/join-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: joinMessage }),
+        body: JSON.stringify({
+          message: joinMessage,
+          answers: Object.keys(answers).length > 0 ? answers : null,
+        }),
       });
       if (res.ok) {
         setRequestSent(true);
         setJoinMessage("");
+        setAnswers({});
       }
     } catch {
       // ignore
     }
     setSubmittingRequest(false);
+  }
+
+  // Load settings when settings tab is opened
+  useEffect(() => {
+    if (community && tab === "settings") {
+      setSettingsQuestions(community.application_questions || []);
+      setSettingsRequireApproval(community.require_approval);
+      setSettingsSaved(false);
+    }
+  }, [community, tab]);
+
+  async function handleSaveSettings() {
+    setSavingSettings(true);
+    setSettingsSaved(false);
+    try {
+      const res = await fetch(`/api/communities/${communityId}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requireApproval: settingsRequireApproval,
+          applicationQuestions: settingsQuestions.length > 0 ? settingsQuestions : null,
+        }),
+      });
+      if (res.ok) {
+        setSettingsSaved(true);
+        fetchCommunity();
+      }
+    } catch {
+      // ignore
+    }
+    setSavingSettings(false);
+  }
+
+  function addQuestion() {
+    setSettingsQuestions((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), text: "", required: false },
+    ]);
+    setSettingsSaved(false);
+  }
+
+  function removeQuestion(id: string) {
+    setSettingsQuestions((prev) => prev.filter((q) => q.id !== id));
+    setSettingsSaved(false);
+  }
+
+  function updateQuestion(id: string, field: "text" | "required", value: string | boolean) {
+    setSettingsQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, [field]: value } : q))
+    );
+    setSettingsSaved(false);
   }
 
   if (loading) {
@@ -270,7 +350,15 @@ export default function CommunityDetail({
             className={`cd-tab${tab === "form" ? " active" : ""}`}
             onClick={() => setTab("form")}
           >
-            Join
+            {community.hasPendingRequest ? "Application Sent" : "Join"}
+          </button>
+        )}
+        {community.isOwnerOrAdmin && (
+          <button
+            className={`cd-tab${tab === "settings" ? " active" : ""}`}
+            onClick={() => setTab("settings")}
+          >
+            Settings
           </button>
         )}
       </div>
@@ -382,6 +470,23 @@ export default function CommunityDetail({
                         </span>
                       </div>
                     </div>
+                    {/* Show answers to application questions */}
+                    {r.answers &&
+                      community.application_questions &&
+                      community.application_questions.length > 0 && (
+                        <div className="cd-request-answers">
+                          {community.application_questions.map((q) =>
+                            r.answers?.[q.id] ? (
+                              <div key={q.id} className="cd-answer-item">
+                                <span className="cd-answer-q">{q.text}</span>
+                                <span className="cd-answer-a">
+                                  {r.answers[q.id]}
+                                </span>
+                              </div>
+                            ) : null
+                          )}
+                        </div>
+                      )}
                     {r.message && (
                       <div className="cd-request-message">
                         &ldquo;{r.message}&rdquo;
@@ -423,32 +528,161 @@ export default function CommunityDetail({
         <div className="cd-section">
           <div className="cd-join-form">
             <h3 className="cd-section-title">Request to join</h3>
-            {requestSent ? (
+            {requestSent || community.hasPendingRequest ? (
               <div className="cd-request-sent">
-                Your request has been submitted! The community owner will review
-                it shortly.
+                Your application has been submitted! The community owner will
+                review it shortly.
               </div>
             ) : (
               <>
                 <p className="cd-form-desc">
-                  Introduce yourself to the community owner. Tell them why
-                  you&apos;d like to join.
+                  Fill out the application below. The community owner will
+                  review your request.
                 </p>
-                <textarea
-                  className="cd-join-textarea"
-                  placeholder="Hi! I'd love to join because..."
-                  value={joinMessage}
-                  onChange={(e) => setJoinMessage(e.target.value)}
-                  rows={4}
-                />
+
+                {/* Custom application questions */}
+                {community.application_questions &&
+                  community.application_questions.length > 0 && (
+                    <div className="cd-questions-list">
+                      {community.application_questions.map((q) => (
+                        <div key={q.id} className="cd-question-field">
+                          <label className="cd-question-label">
+                            {q.text}
+                            {q.required && (
+                              <span className="cd-required">*</span>
+                            )}
+                          </label>
+                          <textarea
+                            className="cd-join-textarea"
+                            placeholder="Your answer..."
+                            value={answers[q.id] || ""}
+                            onChange={(e) =>
+                              setAnswers((prev) => ({
+                                ...prev,
+                                [q.id]: e.target.value,
+                              }))
+                            }
+                            rows={3}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                {/* Freeform message */}
+                <div className="cd-question-field">
+                  <label className="cd-question-label">
+                    Additional message (optional)
+                  </label>
+                  <textarea
+                    className="cd-join-textarea"
+                    placeholder="Hi! I'd love to join because..."
+                    value={joinMessage}
+                    onChange={(e) => setJoinMessage(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
                 <button
                   className="cd-btn-submit"
                   onClick={handleSubmitJoinRequest}
                   disabled={submittingRequest}
                 >
-                  {submittingRequest ? "Submitting..." : "Submit request"}
+                  {submittingRequest ? "Submitting..." : "Submit application"}
                 </button>
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "settings" && community.isOwnerOrAdmin && (
+        <div className="cd-section">
+          <h3 className="cd-section-title">Community settings</h3>
+
+          {/* Require approval toggle */}
+          <div className="cd-settings-row">
+            <label className="cd-settings-label">
+              <input
+                type="checkbox"
+                checked={settingsRequireApproval}
+                onChange={(e) => {
+                  setSettingsRequireApproval(e.target.checked);
+                  setSettingsSaved(false);
+                }}
+              />
+              <span>Require approval for new members</span>
+            </label>
+            <p className="cd-settings-hint">
+              When enabled, people must submit an application that you approve
+              before they can join.
+            </p>
+          </div>
+
+          {/* Application questions editor */}
+          <div className="cd-settings-section">
+            <h4 className="cd-settings-subtitle">Application questions</h4>
+            <p className="cd-settings-hint">
+              Add custom questions that applicants must answer when requesting
+              to join.
+            </p>
+
+            {settingsQuestions.length > 0 && (
+              <div className="cd-questions-editor">
+                {settingsQuestions.map((q, idx) => (
+                  <div key={q.id} className="cd-question-edit-row">
+                    <span className="cd-question-num">{idx + 1}.</span>
+                    <input
+                      className="cd-question-input"
+                      type="text"
+                      placeholder="Enter your question..."
+                      value={q.text}
+                      onChange={(e) =>
+                        updateQuestion(q.id, "text", e.target.value)
+                      }
+                    />
+                    <label className="cd-question-req">
+                      <input
+                        type="checkbox"
+                        checked={q.required}
+                        onChange={(e) =>
+                          updateQuestion(q.id, "required", e.target.checked)
+                        }
+                      />
+                      Required
+                    </label>
+                    <button
+                      className="cd-question-remove"
+                      onClick={() => removeQuestion(q.id)}
+                      type="button"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              className="cd-btn-add-question"
+              onClick={addQuestion}
+              type="button"
+            >
+              + Add question
+            </button>
+          </div>
+
+          {/* Save button */}
+          <div className="cd-settings-actions">
+            <button
+              className="cd-btn-submit"
+              onClick={handleSaveSettings}
+              disabled={savingSettings}
+            >
+              {savingSettings ? "Saving..." : "Save settings"}
+            </button>
+            {settingsSaved && (
+              <span className="cd-settings-saved">Settings saved!</span>
             )}
           </div>
         </div>
