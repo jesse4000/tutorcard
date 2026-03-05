@@ -9,6 +9,7 @@ import TutorCard from "@/components/TutorCard";
 import ReferralManager from "@/components/ReferralManager";
 import InviteFriends from "@/components/InviteFriends";
 import CommunityPicker from "@/components/CommunityPicker";
+import CommunityDetail from "@/components/CommunityDetail";
 import { createClient } from "@/lib/supabase/client";
 import type { TutorLink } from "@/components/TutorCard";
 import type { FriendInvite } from "@/components/InviteFriends";
@@ -71,6 +72,7 @@ export default function DashboardClient({
 
   // Communities state
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [openCommunityId, setOpenCommunityId] = useState<string | null>(null);
 
   const fetchOpportunities = useCallback(async () => {
     setOppLoading(true);
@@ -506,25 +508,33 @@ export default function DashboardClient({
           </div>
         ) : view === "communities" ? (
           /* ── Communities screen ── */
-          <div className="dash-section">
-            <h1 className="dashboard-title">Communities</h1>
-            <p className="dashboard-sub">
-              Join groups of tutors who share referrals, resources, and support
-              each other.
-            </p>
-            <CommunityPicker
-              joined={joinedCommunities}
-              onJoin={handleJoinCommunity}
-              onLeave={handleLeaveCommunity}
-              onCreate={handleCreateCommunity}
+          openCommunityId ? (
+            <CommunityDetail
+              communityId={openCommunityId}
+              onBack={() => setOpenCommunityId(null)}
             />
-            {joinedCommunities.length > 0 && (
-              <div className="joined-summary" style={{ marginTop: 16 }}>
-                You&apos;ve joined {joinedCommunities.length} communit
-                {joinedCommunities.length === 1 ? "y" : "ies"}
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="dash-section">
+              <h1 className="dashboard-title">Communities</h1>
+              <p className="dashboard-sub">
+                Join groups of tutors who share referrals, resources, and support
+                each other.
+              </p>
+              <CommunityPicker
+                joined={joinedCommunities}
+                onJoin={handleJoinCommunity}
+                onLeave={handleLeaveCommunity}
+                onCreate={handleCreateCommunity}
+                onOpen={(id) => setOpenCommunityId(id)}
+              />
+              {joinedCommunities.length > 0 && (
+                <div className="joined-summary" style={{ marginTop: 16 }}>
+                  You&apos;ve joined {joinedCommunities.length} communit
+                  {joinedCommunities.length === 1 ? "y" : "ies"}
+                </div>
+              )}
+            </div>
+          )
         ) : null}
       </div>
 
