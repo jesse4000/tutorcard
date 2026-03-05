@@ -387,10 +387,11 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                           Profile photo
                         </label>
                         <input
+                          id="profile-image-input"
                           type="file"
                           accept="image/*"
                           disabled={uploading}
-                          style={{ fontSize: 13 }}
+                          style={{ display: "none" }}
                           onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
@@ -415,7 +416,23 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                             setUploading(false);
                           }}
                         />
-                        {uploading && <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 4 }}>Uploading...</div>}
+                        <button
+                          type="button"
+                          className="upload-photo-btn"
+                          disabled={uploading}
+                          onClick={() => document.getElementById("profile-image-input")?.click()}
+                        >
+                          {uploading ? "Uploading..." : profileImageUrl ? "Change photo" : "Upload photo"}
+                        </button>
+                        {profileImageUrl && !uploading && (
+                          <button
+                            type="button"
+                            className="upload-photo-remove"
+                            onClick={() => setProfileImageUrl("")}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

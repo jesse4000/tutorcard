@@ -103,6 +103,37 @@ export async function POST(request: Request) {
           { status: 409 }
         );
       }
+      // If new columns don't exist yet, retry without them
+      if (error.message?.includes("column") || error.code === "42703") {
+        const { data: retryData, error: retryError } = await supabase
+          .from("tutors")
+          .insert({
+            user_id: user.id,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            title: title?.trim() || null,
+            slug: cleanSlug,
+            avatar_color: avatarColor || "#0f172a",
+            exams: exams || [],
+            subjects: subjects || [],
+            locations: locations || [],
+            links: links || [],
+            open_to_referrals: openToReferrals || false,
+            notify_on_match: notifyOnMatch || false,
+            email: email?.trim() || "",
+          })
+          .select()
+          .single();
+
+        if (retryError) {
+          console.error("Tutor insert retry error:", retryError);
+          return NextResponse.json(
+            { error: "Failed to create card" },
+            { status: 500 }
+          );
+        }
+        return NextResponse.json({ success: true, tutor: retryData });
+      }
       return NextResponse.json(
         { error: "Failed to create card" },
         { status: 500 }
@@ -207,6 +238,25 @@ export async function PUT(request: Request) {
 
     if (error) {
       console.error("Tutor update error:", error);
+      // If new columns don't exist yet, retry without them
+      if (error.message?.includes("column") || error.code === "42703") {
+        const fallbackData = { ...updateData };
+        delete fallbackData.business_name;
+        delete fallbackData.years_experience;
+        delete fallbackData.profile_image_url;
+
+        const { data: retryData, error: retryError } = await supabase
+          .from("tutors")
+          .update(fallbackData)
+          .eq("id", id)
+          .eq("user_id", user.id)
+          .select()
+          .single();
+
+        if (!retryError && retryData) {
+          return NextResponse.json({ success: true, tutor: retryData });
+        }
+      }
       return NextResponse.json(
         { error: "Failed to update card" },
         { status: 500 }
