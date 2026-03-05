@@ -32,13 +32,6 @@ export async function POST(request: Request) {
       title,
       slug,
       avatarColor,
-      profileImage,
-      businessName,
-      yearsInBusiness,
-      phone,
-      facebook,
-      linkedin,
-      instagram,
       exams,
       subjects,
       locations,
@@ -88,13 +81,6 @@ export async function POST(request: Request) {
         title: title?.trim() || null,
         slug: cleanSlug,
         avatar_color: avatarColor || "#0f172a",
-        profile_image: profileImage || null,
-        business_name: businessName?.trim() || null,
-        years_in_business: yearsInBusiness || null,
-        phone: phone?.trim() || null,
-        facebook: facebook?.trim() || null,
-        linkedin: linkedin?.trim() || null,
-        instagram: instagram?.trim() || null,
         exams: exams || [],
         subjects: subjects || [],
         locations: locations || [],
@@ -102,6 +88,9 @@ export async function POST(request: Request) {
         open_to_referrals: openToReferrals || false,
         notify_on_match: notifyOnMatch || false,
         email: email?.trim() || "",
+        business_name: body.businessName?.trim() || null,
+        years_experience: body.yearsExperience ?? null,
+        profile_image_url: body.profileImageUrl || null,
       })
       .select()
       .single();
@@ -164,20 +153,6 @@ export async function PUT(request: Request) {
       updateData.title = fields.title?.trim() || null;
     if (fields.avatarColor !== undefined)
       updateData.avatar_color = fields.avatarColor;
-    if (fields.profileImage !== undefined)
-      updateData.profile_image = fields.profileImage || null;
-    if (fields.businessName !== undefined)
-      updateData.business_name = fields.businessName?.trim() || null;
-    if (fields.yearsInBusiness !== undefined)
-      updateData.years_in_business = fields.yearsInBusiness || null;
-    if (fields.phone !== undefined)
-      updateData.phone = fields.phone?.trim() || null;
-    if (fields.facebook !== undefined)
-      updateData.facebook = fields.facebook?.trim() || null;
-    if (fields.linkedin !== undefined)
-      updateData.linkedin = fields.linkedin?.trim() || null;
-    if (fields.instagram !== undefined)
-      updateData.instagram = fields.instagram?.trim() || null;
     if (fields.exams !== undefined) updateData.exams = fields.exams;
     if (fields.subjects !== undefined) updateData.subjects = fields.subjects;
     if (fields.locations !== undefined) updateData.locations = fields.locations;
@@ -188,6 +163,12 @@ export async function PUT(request: Request) {
       updateData.notify_on_match = fields.notifyOnMatch;
     if (fields.email !== undefined)
       updateData.email = fields.email?.trim() || "";
+    if (fields.businessName !== undefined)
+      updateData.business_name = fields.businessName?.trim() || null;
+    if (fields.yearsExperience !== undefined)
+      updateData.years_experience = fields.yearsExperience ?? null;
+    if (fields.profileImageUrl !== undefined)
+      updateData.profile_image_url = fields.profileImageUrl || null;
 
     // Handle slug change
     if (fields.slug !== undefined) {

@@ -7,8 +7,11 @@ const LINK_TYPES = [
   "📅 Booking",
   "📋 Resource",
   "📧 Email",
-  "💬 WhatsApp",
   "📞 Phone",
+  "💬 WhatsApp",
+  "📘 Facebook",
+  "📸 Instagram",
+  "💼 LinkedIn",
 ];
 
 interface LinkBuilderProps {
