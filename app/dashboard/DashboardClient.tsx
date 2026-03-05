@@ -61,6 +61,7 @@ export default function DashboardClient({
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
   const [view, setView] = useState<"card" | "referrals" | "friends" | "communities">("card");
+  const [referralTab, setReferralTab] = useState<"yours" | "opportunities">("yours");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [oppLoading, setOppLoading] = useState(false);
   const [oppFetched, setOppFetched] = useState(false);
@@ -349,25 +350,27 @@ export default function DashboardClient({
         ) : view === "referrals" ? (
           /* ── Referrals screen ── */
           <div className="dash-section">
-            <h1 className="dashboard-title">Referrals</h1>
-            <p className="dashboard-sub">
-              Post referrals for students you can&apos;t take, and browse
-              opportunities from other tutors.
-            </p>
-
-            {/* Your Referrals */}
-            <div className="dashboard-referrals">
-              <ReferralManager />
+            <div className="ref-sub-tabs">
+              <button
+                className={`ref-sub-tab${referralTab === "yours" ? " active" : ""}`}
+                onClick={() => setReferralTab("yours")}
+              >
+                Your Referrals
+              </button>
+              <button
+                className={`ref-sub-tab${referralTab === "opportunities" ? " active" : ""}`}
+                onClick={() => setReferralTab("opportunities")}
+              >
+                Opportunities
+              </button>
             </div>
 
-            {/* Referral Opportunities */}
-            <div style={{ marginTop: 24 }}>
-              <h2 className="dashboard-title" style={{ fontSize: 18 }}>
-                Opportunities from other tutors
-              </h2>
-              <p className="dashboard-sub" style={{ marginBottom: 16 }}>
-                Active referrals that match your skills
-              </p>
+            {referralTab === "yours" ? (
+              <div className="dashboard-referrals">
+                <ReferralManager />
+              </div>
+            ) : (
+              <div>
               {oppLoading && !oppFetched ? (
                 <div className="opp-loading">Loading opportunities...</div>
               ) : opportunities.length === 0 ? (
@@ -480,7 +483,8 @@ export default function DashboardClient({
                   })}
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </div>
         ) : view === "friends" ? (
           /* ── Friends screen ── */
