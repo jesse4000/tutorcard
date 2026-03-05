@@ -160,28 +160,14 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
     setStep((s) => Math.max(s - 1, 1));
   }
 
-  async function handleJoinCommunity(communityId: string) {
-    setJoinedCommunities((prev) => [...prev, communityId]);
-    try {
-      await fetch("/api/communities/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ communityId }),
-      });
-    } catch {
-      setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
-    }
+  function handleJoinCommunity(communityId: string) {
+    setJoinedCommunities((prev) =>
+      prev.includes(communityId) ? prev : [...prev, communityId]
+    );
   }
 
-  async function handleLeaveCommunity(communityId: string) {
+  function handleLeaveCommunity(communityId: string) {
     setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
-    try {
-      await fetch(`/api/communities/join?communityId=${communityId}`, {
-        method: "DELETE",
-      });
-    } catch {
-      setJoinedCommunities((prev) => [...prev, communityId]);
-    }
   }
 
   async function handleCreateCommunity(name: string, description: string) {
@@ -199,6 +185,20 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
       }
     } catch {
       // ignore
+    }
+  }
+
+  async function joinCommunitiesAfterCreate() {
+    for (const communityId of joinedCommunities) {
+      try {
+        await fetch("/api/communities/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ communityId }),
+        });
+      } catch {
+        // best effort
+      }
     }
   }
 
@@ -238,6 +238,11 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
         }
         setSubmitting(false);
         return;
+      }
+
+      // Join communities now that the tutor card exists
+      if (joinedCommunities.length > 0) {
+        await joinCommunitiesAfterCreate();
       }
 
       setDone(true);
@@ -549,6 +554,14 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                     onChange={setFriendInvites}
                   />
 
+                  {friendInvites.length > 0 && (
+                    <div className="joined-summary">
+                      {friendInvites.filter((i) => i.status === "sent").length > 0
+                        ? `${friendInvites.filter((i) => i.status === "sent").length} invite${friendInvites.filter((i) => i.status === "sent").length !== 1 ? "s" : ""} sent`
+                        : `${friendInvites.length} invite${friendInvites.length !== 1 ? "s" : ""} ready to send`}
+                    </div>
+                  )}
+
                   <div className="step-nav" style={{ marginTop: 28 }}>
                     <button className="btn-back" onClick={prevStep}>
                       &larr; Back
@@ -597,6 +610,13 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                     onLeave={handleLeaveCommunity}
                     onCreate={handleCreateCommunity}
                   />
+
+                  {joinedCommunities.length > 0 && (
+                    <div className="joined-summary">
+                      You&apos;ve joined {joinedCommunities.length} communit
+                      {joinedCommunities.length === 1 ? "y" : "ies"}
+                    </div>
+                  )}
 
                   <div className="step-nav" style={{ marginTop: 28 }}>
                     <button className="btn-back" onClick={prevStep}>
