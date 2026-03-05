@@ -631,33 +631,37 @@ export default function CommunityDetail({
               <div className="cd-questions-editor">
                 {settingsQuestions.map((q, idx) => (
                   <div key={q.id} className="cd-question-edit-row">
-                    <span className="cd-question-num">{idx + 1}.</span>
-                    <input
-                      className="cd-question-input"
-                      type="text"
-                      placeholder="Enter your question..."
-                      value={q.text}
-                      onChange={(e) =>
-                        updateQuestion(q.id, "text", e.target.value)
-                      }
-                    />
-                    <label className="cd-question-req">
-                      <input
-                        type="checkbox"
-                        checked={q.required}
+                    <div className="cd-question-edit-top">
+                      <span className="cd-question-num">{idx + 1}.</span>
+                      <textarea
+                        className="cd-question-input"
+                        rows={2}
+                        placeholder="Enter your question..."
+                        value={q.text}
                         onChange={(e) =>
-                          updateQuestion(q.id, "required", e.target.checked)
+                          updateQuestion(q.id, "text", e.target.value)
                         }
                       />
-                      Required
-                    </label>
-                    <button
-                      className="cd-question-remove"
-                      onClick={() => removeQuestion(q.id)}
-                      type="button"
-                    >
-                      &times;
-                    </button>
+                    </div>
+                    <div className="cd-question-edit-bottom">
+                      <label className="cd-question-req">
+                        <input
+                          type="checkbox"
+                          checked={q.required}
+                          onChange={(e) =>
+                            updateQuestion(q.id, "required", e.target.checked)
+                          }
+                        />
+                        Required
+                      </label>
+                      <button
+                        className="cd-question-remove"
+                        onClick={() => removeQuestion(q.id)}
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
