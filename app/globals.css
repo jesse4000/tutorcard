@@ -1459,7 +1459,7 @@ footer {
 .dashboard-page {
   min-height: 100vh;
   padding: 90px 36px 60px;
-  max-width: 600px;
+  max-width: 420px;
   margin: 0 auto;
 }
 
@@ -1576,6 +1576,7 @@ footer {
 .dash-icon-btn:hover { border-color: var(--ink); color: var(--ink); }
 
 .dashboard-card-wrap {
+  max-width: 420px;
 }
 
 /* QR banner */
@@ -1630,6 +1631,7 @@ footer {
 /* ── REFERRAL MANAGER (Dashboard) ── */
 .dashboard-referrals {
   margin-top: 36px;
+  max-width: 420px;
 }
 
 .ref-manager {
