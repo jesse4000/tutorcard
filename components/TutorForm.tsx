@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
 import TagPicker from "@/components/TagPicker";
@@ -114,6 +113,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
   // Step 5 — Communities
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [pendingCommunities, setPendingCommunities] = useState<{ name: string; description: string }[]>([]);
 
   // Step 6
   const [openToReferrals, setOpenToReferrals] = useState(
@@ -171,6 +171,11 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
   }
 
   async function handleCreateCommunity(name: string, description: string) {
+    if (mode === "create") {
+      // During onboarding, tutor doesn't exist yet — defer creation
+      setPendingCommunities((prev) => [...prev, { name, description }]);
+      return;
+    }
     try {
       const res = await fetch("/api/communities", {
         method: "POST",
@@ -238,6 +243,25 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
         }
         setSubmitting(false);
         return;
+      }
+
+      // Create any communities that were deferred during onboarding
+      for (const pc of pendingCommunities) {
+        try {
+          const cRes = await fetch("/api/communities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: pc.name, description: pc.description }),
+          });
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            if (cData.community?.id) {
+              joinedCommunities.push(cData.community.id);
+            }
+          }
+        } catch {
+          // best effort
+        }
       }
 
       // Join communities now that the tutor card exists
@@ -772,7 +796,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                   </div>
                   <span className="nsi-arr">→</span>
                 </a>
-                <Link
+                <a
                   href="/dashboard"
                   className="next-step-item"
                   style={{ textDecoration: "none" }}
@@ -785,7 +809,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                     </div>
                   </div>
                   <span className="nsi-arr">→</span>
-                </Link>
+                </a>
               </div>
             </div>
           )}
