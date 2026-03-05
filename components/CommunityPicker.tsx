@@ -15,6 +15,7 @@ interface CommunityPickerProps {
   onJoin: (communityId: string) => void;
   onLeave: (communityId: string) => void;
   onCreate: (name: string, description: string) => void;
+  onOpen?: (communityId: string) => void;
 }
 
 export default function CommunityPicker({
@@ -22,6 +23,7 @@ export default function CommunityPicker({
   onJoin,
   onLeave,
   onCreate,
+  onOpen,
 }: CommunityPickerProps) {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,8 +140,15 @@ export default function CommunityPicker({
                 >
                   {c.name[0].toUpperCase()}
                 </div>
-                <div className="community-info">
-                  <div className="community-name">{c.name}</div>
+                <div
+                  className="community-info"
+                  style={onOpen ? { cursor: "pointer" } : undefined}
+                  onClick={onOpen ? () => onOpen(c.id) : undefined}
+                >
+                  <div className="community-name">
+                    {c.name}
+                    {onOpen && <span className="community-open-hint">&rsaquo;</span>}
+                  </div>
                   {c.description && (
                     <div className="community-desc">{c.description}</div>
                   )}
