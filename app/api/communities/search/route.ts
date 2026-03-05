@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     if (queryError) {
       console.error("Community search error:", queryError);
       return NextResponse.json(
-        { error: "Failed to search communities. The communities table may not exist yet." },
+        { error: `Community query failed: ${queryError.message} (code: ${queryError.code})` },
         { status: 500 }
       );
     }
