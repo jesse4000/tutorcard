@@ -18,9 +18,7 @@ export interface TutorData {
   subjects: string[];
   locations: string[];
   links: TutorLink[];
-  openToReferrals: boolean;
   businessName?: string;
-  yearsExperience?: number;
   profileImageUrl?: string;
 }
 
@@ -85,20 +83,10 @@ export default function TutorCard({ data, variant = "preview", referralCount, re
               {data.businessName}
             </div>
           )}
-          <div className={isPreview ? "lc-title-text" : "mc-title"}>
-            {data.title || "Your title will appear here"}
-          </div>
         </div>
-        {data.yearsExperience != null && data.yearsExperience > 0 && (
-          <div className={isPreview ? "lc-exp" : "mc-exp"}>
-            {data.yearsExperience}+ yrs
-          </div>
-        )}
-        {data.openToReferrals && (
-          <div className={isPreview ? "lc-open" : "open-badge"}>
-            Open{!isPreview && " to referrals"}
-          </div>
-        )}
+      </div>
+      <div className={isPreview ? "lc-title-text" : "mc-title"}>
+        {data.title || "Your title will appear here"}
       </div>
 
       {/* Tags */}

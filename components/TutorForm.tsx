@@ -69,11 +69,9 @@ export interface TutorFormData {
   subjects: string[];
   locations: string[];
   links: TutorLink[];
-  openToReferrals: boolean;
   notifyOnMatch: boolean;
   email: string;
   businessName?: string;
-  yearsExperience?: number;
   profileImageUrl?: string;
 }
 
@@ -96,7 +94,6 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
     initialData?.avatarColor || COLORS[0]
   );
   const [businessName, setBusinessName] = useState(initialData?.businessName || "");
-  const [yearsExperience, setYearsExperience] = useState<number | undefined>(initialData?.yearsExperience);
   const [profileImageUrl, setProfileImageUrl] = useState(initialData?.profileImageUrl || "");
   const [uploading, setUploading] = useState(false);
 
@@ -124,9 +121,6 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
   const [pendingCommunities, setPendingCommunities] = useState<{ name: string; description: string }[]>([]);
 
   // Step 6
-  const [openToReferrals, setOpenToReferrals] = useState(
-    initialData?.openToReferrals || false
-  );
   const [notifyMe, setNotifyMe] = useState(
     initialData?.notifyOnMatch || false
   );
@@ -146,9 +140,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
     subjects,
     locations,
     links: links.filter((l) => l.url),
-    openToReferrals,
     businessName,
-    yearsExperience,
     profileImageUrl,
   };
 
@@ -232,11 +224,9 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
         subjects,
         locations,
         links: links.filter((l) => l.url),
-        openToReferrals,
         notifyOnMatch: notifyMe,
         email: email.trim(),
         businessName: businessName.trim(),
-        yearsExperience: yearsExperience ?? null,
         profileImageUrl: profileImageUrl || null,
       };
 
@@ -454,26 +444,6 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                       placeholder="Chen Tutoring LLC"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="field-label">Years of experience</label>
-                    <div className="field-hint">
-                      How long have you been tutoring?
-                    </div>
-                    <input
-                      className="field-input"
-                      type="number"
-                      min="0"
-                      max="99"
-                      placeholder="e.g. 5"
-                      value={yearsExperience ?? ""}
-                      onChange={(e) =>
-                        setYearsExperience(
-                          e.target.value ? parseInt(e.target.value, 10) : undefined
-                        )
-                      }
                     />
                   </div>
 
@@ -772,12 +742,6 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
                     share.
                   </div>
 
-                  <Toggle
-                    title="Open to referrals"
-                    subtitle="Other tutors can send you student referrals. You can turn this off anytime."
-                    checked={openToReferrals}
-                    onChange={setOpenToReferrals}
-                  />
                   <Toggle
                     title="Notify me of matching referrals"
                     subtitle="Get an email when a tutor posts a student that matches your subjects and location."
