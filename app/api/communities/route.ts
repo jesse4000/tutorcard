@@ -98,7 +98,11 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: "Failed to create" }, { status: 500 });
+      console.error("Community create error:", error);
+      return NextResponse.json(
+        { error: "Failed to create community. The communities table may not exist yet." },
+        { status: 500 }
+      );
     }
 
     // Auto-join as owner
