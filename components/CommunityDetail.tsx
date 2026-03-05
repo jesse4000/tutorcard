@@ -282,21 +282,21 @@ export default function CommunityDetail({
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="cd-tabs">
-        <button
-          className={`cd-tab${tab === "overview" ? " active" : ""}`}
-          onClick={() => setTab("overview")}
-        >
-          Overview
-        </button>
-        <button
-          className={`cd-tab${tab === "members" ? " active" : ""}`}
-          onClick={() => setTab("members")}
-        >
-          Members
-        </button>
-        {community.isOwnerOrAdmin && (
+      {/* Tabs (owner/admin only) */}
+      {community.isOwnerOrAdmin && (
+        <div className="cd-tabs">
+          <button
+            className={`cd-tab${tab === "overview" ? " active" : ""}`}
+            onClick={() => setTab("overview")}
+          >
+            Overview
+          </button>
+          <button
+            className={`cd-tab${tab === "members" ? " active" : ""}`}
+            onClick={() => setTab("members")}
+          >
+            Members
+          </button>
           <button
             className={`cd-tab${tab === "requests" ? " active" : ""}`}
             onClick={() => setTab("requests")}
@@ -306,19 +306,17 @@ export default function CommunityDetail({
               <span className="cd-tab-badge">{community.pendingRequests}</span>
             )}
           </button>
-        )}
-        {community.isOwnerOrAdmin && (
           <button
             className={`cd-tab${tab === "settings" ? " active" : ""}`}
             onClick={() => setTab("settings")}
           >
             Settings
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Tab Content */}
-      {tab === "overview" && (
+      {/* Tab Content (owner/admin only) */}
+      {tab === "overview" && community.isOwnerOrAdmin && (
         <div className="cd-section">
           <div className="cd-overview-card">
             <h3 className="cd-section-title">About this community</h3>
@@ -348,7 +346,7 @@ export default function CommunityDetail({
         </div>
       )}
 
-      {tab === "members" && (
+      {tab === "members" && community.isOwnerOrAdmin && (
         <div className="cd-section">
           {members.length === 0 ? (
             <div className="cd-empty">No members yet.</div>
