@@ -70,13 +70,10 @@ create policy "Delete own friend connections"
   );
 
 -- Communities policies
+-- All public communities are visible (no recursion: only checks communities.is_public)
 create policy "Anyone can view public communities"
   on communities for select
   using (is_public = true);
-
-create policy "Members can view their communities"
-  on communities for select
-  using (id in (select community_id from community_members where tutor_id in (select id from tutors where user_id = auth.uid())));
 
 create policy "Tutor can create communities"
   on communities for insert
@@ -91,18 +88,15 @@ create policy "Owner can delete community"
   using (created_by in (select id from tutors where user_id = auth.uid()));
 
 -- Community members policies
+-- Anyone authenticated can view members (avoids recursion by not referencing communities table)
 create policy "View community members"
   on community_members for select
-  using (
-    community_id in (select id from communities where is_public = true)
-    or tutor_id in (select id from tutors where user_id = auth.uid())
-  );
+  using (true);
 
 create policy "Join public community"
   on community_members for insert
   with check (
     tutor_id in (select id from tutors where user_id = auth.uid())
-    and community_id in (select id from communities where is_public = true)
   );
 
 create policy "Leave community"
