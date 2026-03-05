@@ -60,7 +60,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
-  const [view, setView] = useState<"card" | "opportunities" | "friends" | "communities">("card");
+  const [view, setView] = useState<"card" | "referrals" | "friends" | "communities">("card");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [oppLoading, setOppLoading] = useState(false);
   const [oppFetched, setOppFetched] = useState(false);
@@ -231,8 +231,6 @@ export default function DashboardClient({
     openToReferrals: tutor.open_to_referrals || false,
   };
 
-  const oppCount = oppFetched ? opportunities.length : 0;
-
   return (
     <>
       <Navbar
@@ -244,7 +242,7 @@ export default function DashboardClient({
         {/* Dashboard Tab Bar */}
         <div className="dash-tabs">
           <button
-            className={`dash-tab${view === "card" || view === "opportunities" ? " active" : ""}`}
+            className={`dash-tab${view === "card" ? " active" : ""}`}
             onClick={() => setView("card")}
           >
             Card
@@ -263,6 +261,12 @@ export default function DashboardClient({
             {joinedCommunities.length > 0 && (
               <span className="dash-tab-badge">{joinedCommunities.length}</span>
             )}
+          </button>
+          <button
+            className={`dash-tab${view === "referrals" ? " active" : ""}`}
+            onClick={() => setView("referrals")}
+          >
+            Referrals
           </button>
         </div>
 
@@ -317,9 +321,6 @@ export default function DashboardClient({
               <TutorCard
                 data={tutorData}
                 variant="full"
-                referralLabel="Referral opportunities"
-                referralCount={oppCount}
-                onReferralClick={() => setView("opportunities")}
               />
 
               {/* QR banner */}
@@ -344,41 +345,29 @@ export default function DashboardClient({
                 />
               </div>
             </div>
+          </>
+        ) : view === "referrals" ? (
+          /* ── Referrals screen ── */
+          <div className="dash-section">
+            <h1 className="dashboard-title">Referrals</h1>
+            <p className="dashboard-sub">
+              Post referrals for students you can&apos;t take, and browse
+              opportunities from other tutors.
+            </p>
 
-            {/* Referral Manager */}
+            {/* Your Referrals */}
             <div className="dashboard-referrals">
               <ReferralManager />
             </div>
-          </>
-        ) : view === "opportunities" ? (
-          /* ── Opportunities screen ── */
-          <div className="opp-page">
-            <div className="opp-page-header">
-              <button
-                className="opp-back-btn"
-                onClick={() => setView("card")}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 18 18"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M11 4 6 9l5 5" />
-                </svg>
-                Back
-              </button>
-            </div>
-            <h1 className="dashboard-title">Referral Opportunities</h1>
-            <p className="opp-page-sub">
-              Active referrals from other tutors that match your skills
-            </p>
 
-            <div className="opp-list">
+            {/* Referral Opportunities */}
+            <div style={{ marginTop: 24 }}>
+              <h2 className="dashboard-title" style={{ fontSize: 18 }}>
+                Opportunities from other tutors
+              </h2>
+              <p className="dashboard-sub" style={{ marginBottom: 16 }}>
+                Active referrals that match your skills
+              </p>
               {oppLoading && !oppFetched ? (
                 <div className="opp-loading">Loading opportunities...</div>
               ) : opportunities.length === 0 ? (
@@ -390,104 +379,106 @@ export default function DashboardClient({
                   </p>
                 </div>
               ) : (
-                opportunities.map((opp) => {
-                  const posterName = [
-                    opp.tutor.first_name,
-                    opp.tutor.last_name,
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-                  const posterInitials = [
-                    opp.tutor.first_name?.[0],
-                    opp.tutor.last_name?.[0],
-                  ]
-                    .filter(Boolean)
-                    .join("");
-                  const isApplying = applyingTo === opp.id;
+                <div className="opp-list">
+                  {opportunities.map((opp) => {
+                    const posterName = [
+                      opp.tutor.first_name,
+                      opp.tutor.last_name,
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const posterInitials = [
+                      opp.tutor.first_name?.[0],
+                      opp.tutor.last_name?.[0],
+                    ]
+                      .filter(Boolean)
+                      .join("");
+                    const isApplying = applyingTo === opp.id;
 
-                  return (
-                    <div key={opp.id} className="opp-card">
-                      {opp.skillMatch && (
-                        <div className="opp-match-badge">
-                          Matches your skills
-                        </div>
-                      )}
-                      <div className="opp-card-top">
-                        <div className="opp-card-subject">{opp.subject}</div>
-                        <div className="opp-card-meta">
-                          {[opp.location, opp.grade_level]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </div>
-                        {opp.notes && (
-                          <div className="opp-card-notes">
-                            &quot;{opp.notes}&quot;
+                    return (
+                      <div key={opp.id} className="opp-card">
+                        {opp.skillMatch && (
+                          <div className="opp-match-badge">
+                            Matches your skills
                           </div>
                         )}
-                      </div>
-
-                      <div className="opp-card-poster">
-                        <div
-                          className="opp-poster-av"
-                          style={{
-                            background:
-                              opp.tutor.avatar_color || "#0f172a",
-                          }}
-                        >
-                          {posterInitials}
-                        </div>
-                        <div className="opp-poster-info">
-                          <span className="opp-poster-name">
-                            {posterName}
-                          </span>
-                          <a
-                            href={`/${opp.tutor.slug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="opp-poster-link"
-                          >
-                            View card ↗
-                          </a>
-                        </div>
-                      </div>
-
-                      <div className="opp-card-actions">
-                        {opp.applied ? (
-                          <span className="opp-applied">Applied ✓</span>
-                        ) : showCoffee === opp.id ? (
-                          <div className="opp-coffee-prompt">
-                            <button
-                              className="opp-apply-btn secondary"
-                              onClick={() =>
-                                handleApplyToOpportunity(opp.id, false)
-                              }
-                              disabled={isApplying}
-                            >
-                              {isApplying ? "Applying..." : "Just apply"}
-                            </button>
-                            <button
-                              className="opp-coffee-btn"
-                              onClick={() =>
-                                handleApplyToOpportunity(opp.id, true)
-                              }
-                              disabled={isApplying}
-                            >
-                              ☕ Apply + coffee
-                            </button>
+                        <div className="opp-card-top">
+                          <div className="opp-card-subject">{opp.subject}</div>
+                          <div className="opp-card-meta">
+                            {[opp.location, opp.grade_level]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </div>
-                        ) : (
-                          <button
-                            className="opp-apply-btn"
-                            onClick={() => setShowCoffee(opp.id)}
-                            disabled={isApplying}
+                          {opp.notes && (
+                            <div className="opp-card-notes">
+                              &quot;{opp.notes}&quot;
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="opp-card-poster">
+                          <div
+                            className="opp-poster-av"
+                            style={{
+                              background:
+                                opp.tutor.avatar_color || "#0f172a",
+                            }}
                           >
-                            Apply
-                          </button>
-                        )}
+                            {posterInitials}
+                          </div>
+                          <div className="opp-poster-info">
+                            <span className="opp-poster-name">
+                              {posterName}
+                            </span>
+                            <a
+                              href={`/${opp.tutor.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="opp-poster-link"
+                            >
+                              View card ↗
+                            </a>
+                          </div>
+                        </div>
+
+                        <div className="opp-card-actions">
+                          {opp.applied ? (
+                            <span className="opp-applied">Applied ✓</span>
+                          ) : showCoffee === opp.id ? (
+                            <div className="opp-coffee-prompt">
+                              <button
+                                className="opp-apply-btn secondary"
+                                onClick={() =>
+                                  handleApplyToOpportunity(opp.id, false)
+                                }
+                                disabled={isApplying}
+                              >
+                                {isApplying ? "Applying..." : "Just apply"}
+                              </button>
+                              <button
+                                className="opp-coffee-btn"
+                                onClick={() =>
+                                  handleApplyToOpportunity(opp.id, true)
+                                }
+                                disabled={isApplying}
+                              >
+                                ☕ Apply + coffee
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="opp-apply-btn"
+                              onClick={() => setShowCoffee(opp.id)}
+                              disabled={isApplying}
+                            >
+                              Apply
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
