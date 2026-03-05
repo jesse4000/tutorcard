@@ -66,17 +66,11 @@ export default function CommunityDetail({
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"overview" | "members" | "requests" | "form" | "settings">(
+  const [tab, setTab] = useState<"overview" | "members" | "requests" | "settings">(
     "overview"
   );
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-
-  // Join request form state
-  const [joinMessage, setJoinMessage] = useState("");
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submittingRequest, setSubmittingRequest] = useState(false);
-  const [requestSent, setRequestSent] = useState(false);
 
   // Settings state
   const [settingsQuestions, setSettingsQuestions] = useState<AppQuestion[]>([]);
@@ -160,36 +154,6 @@ export default function CommunityDetail({
     setReviewingId(null);
   }
 
-  async function handleSubmitJoinRequest() {
-    // Validate required questions
-    const questions = community?.application_questions || [];
-    for (const q of questions) {
-      if (q.required && !answers[q.id]?.trim()) {
-        return;
-      }
-    }
-
-    setSubmittingRequest(true);
-    try {
-      const res = await fetch(`/api/communities/${communityId}/join-requests`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: joinMessage,
-          answers: Object.keys(answers).length > 0 ? answers : null,
-        }),
-      });
-      if (res.ok) {
-        setRequestSent(true);
-        setJoinMessage("");
-        setAnswers({});
-      }
-    } catch {
-      // ignore
-    }
-    setSubmittingRequest(false);
-  }
-
   // Load settings when settings tab is opened
   useEffect(() => {
     if (community && tab === "settings") {
@@ -269,8 +233,6 @@ export default function CommunityDetail({
     );
   }
 
-  const isMember = community.userRole !== null;
-
   return (
     <div className="cd-page">
       <button className="cd-back-btn" onClick={onBack}>
@@ -343,14 +305,6 @@ export default function CommunityDetail({
             {community.pendingRequests > 0 && (
               <span className="cd-tab-badge">{community.pendingRequests}</span>
             )}
-          </button>
-        )}
-        {!isMember && (
-          <button
-            className={`cd-tab${tab === "form" ? " active" : ""}`}
-            onClick={() => setTab("form")}
-          >
-            {community.hasPendingRequest ? "Application Sent" : "Join"}
           </button>
         )}
         {community.isOwnerOrAdmin && (
@@ -521,78 +475,6 @@ export default function CommunityDetail({
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {tab === "form" && !isMember && (
-        <div className="cd-section">
-          <div className="cd-join-form">
-            <h3 className="cd-section-title">Request to join</h3>
-            {requestSent || community.hasPendingRequest ? (
-              <div className="cd-request-sent">
-                Your application has been submitted! The community owner will
-                review it shortly.
-              </div>
-            ) : (
-              <>
-                <p className="cd-form-desc">
-                  Fill out the application below. The community owner will
-                  review your request.
-                </p>
-
-                {/* Custom application questions */}
-                {community.application_questions &&
-                  community.application_questions.length > 0 && (
-                    <div className="cd-questions-list">
-                      {community.application_questions.map((q) => (
-                        <div key={q.id} className="cd-question-field">
-                          <label className="cd-question-label">
-                            {q.text}
-                            {q.required && (
-                              <span className="cd-required">*</span>
-                            )}
-                          </label>
-                          <textarea
-                            className="cd-join-textarea"
-                            placeholder="Your answer..."
-                            value={answers[q.id] || ""}
-                            onChange={(e) =>
-                              setAnswers((prev) => ({
-                                ...prev,
-                                [q.id]: e.target.value,
-                              }))
-                            }
-                            rows={3}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                {/* Freeform message */}
-                <div className="cd-question-field">
-                  <label className="cd-question-label">
-                    Additional message (optional)
-                  </label>
-                  <textarea
-                    className="cd-join-textarea"
-                    placeholder="Hi! I'd love to join because..."
-                    value={joinMessage}
-                    onChange={(e) => setJoinMessage(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <button
-                  className="cd-btn-submit"
-                  onClick={handleSubmitJoinRequest}
-                  disabled={submittingRequest}
-                >
-                  {submittingRequest ? "Submitting..." : "Submit application"}
-                </button>
-              </>
-            )}
-          </div>
         </div>
       )}
 

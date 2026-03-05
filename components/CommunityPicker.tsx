@@ -19,6 +19,7 @@ interface CommunityPickerProps {
   onLeave: (communityId: string) => void;
   onCreate: (name: string, description: string) => Promise<void> | void;
   onOpen?: (communityId: string) => void;
+  onApply?: (communityId: string) => void;
 }
 
 export default function CommunityPicker({
@@ -29,6 +30,7 @@ export default function CommunityPicker({
   onLeave,
   onCreate,
   onOpen,
+  onApply,
 }: CommunityPickerProps) {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,30 +161,33 @@ export default function CommunityPicker({
             let btnLabel = "Join";
             let btnClass = "btn-join-community";
             if (isOwned) {
-              btnLabel = "Manage";
+              btnLabel = "Open";
               btnClass = "btn-join-community manage";
             } else if (isJoined) {
-              btnLabel = "Joined";
+              btnLabel = "Open";
               btnClass = "btn-join-community joined";
             } else if (isPending) {
               btnLabel = "Pending";
               btnClass = "btn-join-community pending";
             } else if (hasForm) {
-              btnLabel = "Apply";
+              btnLabel = "Join";
               btnClass = "btn-join-community apply";
             }
 
             function handleClick() {
               if (isOwned && onOpen) {
                 onOpen(c.id);
-              } else if (isJoined) {
-                onLeave(c.id);
-              } else if (isPending) {
-                if (onOpen) onOpen(c.id);
-              } else if (hasForm && onOpen) {
+              } else if (isJoined && onOpen) {
                 onOpen(c.id);
+              } else if (isPending) {
+                // Do nothing for pending
               } else {
-                onJoin(c.id);
+                // Not joined — trigger join/apply popup
+                if (onApply) {
+                  onApply(c.id);
+                } else {
+                  onJoin(c.id);
+                }
               }
             }
 
@@ -196,12 +201,12 @@ export default function CommunityPicker({
                 </div>
                 <div
                   className="community-info"
-                  style={onOpen ? { cursor: "pointer" } : undefined}
-                  onClick={onOpen ? () => onOpen(c.id) : undefined}
+                  style={onOpen && (isJoined || isOwned) ? { cursor: "pointer" } : undefined}
+                  onClick={onOpen && (isJoined || isOwned) ? () => onOpen(c.id) : undefined}
                 >
                   <div className="community-name">
                     {c.name}
-                    {onOpen && <span className="community-open-hint">&rsaquo;</span>}
+                    {onOpen && (isJoined || isOwned) && <span className="community-open-hint">&rsaquo;</span>}
                   </div>
                   {c.description && (
                     <div className="community-desc">{c.description}</div>

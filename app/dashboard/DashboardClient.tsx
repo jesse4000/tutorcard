@@ -10,6 +10,7 @@ import ReferralManager from "@/components/ReferralManager";
 import InviteFriends from "@/components/InviteFriends";
 import CommunityPicker from "@/components/CommunityPicker";
 import CommunityDetail from "@/components/CommunityDetail";
+import JoinCommunityPopup from "@/components/JoinCommunityPopup";
 import { createClient } from "@/lib/supabase/client";
 import type { TutorLink } from "@/components/TutorCard";
 import type { FriendInvite } from "@/components/InviteFriends";
@@ -79,6 +80,7 @@ export default function DashboardClient({
   const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
   const [ownedCommunities, setOwnedCommunities] = useState<string[]>([]);
   const [openCommunityId, setOpenCommunityId] = useState<string | null>(null);
+  const [joinPopupCommunityId, setJoinPopupCommunityId] = useState<string | null>(null);
 
   const fetchOpportunities = useCallback(async () => {
     setOppLoading(true);
@@ -127,29 +129,9 @@ export default function DashboardClient({
     setApplyingTo(null);
   }
 
-  async function handleJoinCommunity(communityId: string) {
-    try {
-      const res = await fetch("/api/communities/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ communityId }),
-      });
-      const data = await res.json();
-      if (data.status === "requires_form") {
-        // Community has custom questions — open the detail view
-        setOpenCommunityId(communityId);
-      } else if (data.status === "pending") {
-        setPendingCommunities((prev) =>
-          prev.includes(communityId) ? prev : [...prev, communityId]
-        );
-      } else if (data.status === "joined") {
-        setJoinedCommunities((prev) =>
-          prev.includes(communityId) ? prev : [...prev, communityId]
-        );
-      }
-    } catch {
-      // ignore
-    }
+  function handleJoinCommunity(communityId: string) {
+    // Always open the join popup — it handles both direct join and application forms
+    setJoinPopupCommunityId(communityId);
   }
 
   async function handleLeaveCommunity(communityId: string) {
@@ -544,6 +526,7 @@ export default function DashboardClient({
                 onLeave={handleLeaveCommunity}
                 onCreate={handleCreateCommunity}
                 onOpen={(id) => setOpenCommunityId(id)}
+                onApply={(id) => setJoinPopupCommunityId(id)}
               />
               {joinedCommunities.length > 0 && (
                 <div className="joined-summary" style={{ marginTop: 16 }}>
@@ -555,6 +538,25 @@ export default function DashboardClient({
           )
         ) : null}
       </div>
+
+      {/* Join Community Popup */}
+      {joinPopupCommunityId && (
+        <JoinCommunityPopup
+          communityId={joinPopupCommunityId}
+          onClose={() => setJoinPopupCommunityId(null)}
+          onJoined={(id) => {
+            setJoinedCommunities((prev) =>
+              prev.includes(id) ? prev : [...prev, id]
+            );
+            setJoinPopupCommunityId(null);
+          }}
+          onPending={(id) => {
+            setPendingCommunities((prev) =>
+              prev.includes(id) ? prev : [...prev, id]
+            );
+          }}
+        />
+      )}
 
       {/* QR Code Modal */}
       {showQR && (
