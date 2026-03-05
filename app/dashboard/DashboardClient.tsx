@@ -77,6 +77,7 @@ export default function DashboardClient({
   // Communities state
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
   const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
+  const [ownedCommunities, setOwnedCommunities] = useState<string[]>([]);
   const [openCommunityId, setOpenCommunityId] = useState<string | null>(null);
 
   const fetchOpportunities = useCallback(async () => {
@@ -176,6 +177,7 @@ export default function DashboardClient({
     if (res.ok) {
       if (data.community?.id) {
         setJoinedCommunities((prev) => [...prev, data.community.id]);
+        setOwnedCommunities((prev) => [...prev, data.community.id]);
       }
     } else {
       alert(data.error || "Failed to create community");
@@ -194,6 +196,7 @@ export default function DashboardClient({
             (data.communities || []).map((c: { id: string }) => c.id)
           );
           setPendingCommunities(data.pendingCommunityIds || []);
+          setOwnedCommunities(data.ownedCommunityIds || []);
         }
       } catch {
         // ignore
@@ -536,6 +539,7 @@ export default function DashboardClient({
               <CommunityPicker
                 joined={joinedCommunities}
                 pending={pendingCommunities}
+                owned={ownedCommunities}
                 onJoin={handleJoinCommunity}
                 onLeave={handleLeaveCommunity}
                 onCreate={handleCreateCommunity}

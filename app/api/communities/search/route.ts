@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("communities")
-      .select("id, name, description, avatar_color, application_questions, created_at")
+      .select("id, name, description, avatar_color, created_by, application_questions, created_at")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(20);

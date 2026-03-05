@@ -24,13 +24,17 @@ export async function GET() {
 
     const { data: memberships } = await supabase
       .from("community_members")
-      .select("community_id, communities(id, name, description, avatar_color)")
+      .select("community_id, role, communities(id, name, description, avatar_color)")
       .eq("tutor_id", tutor.id);
 
     const communities = (memberships || []).map((m: Record<string, unknown>) => {
       const c = m.communities as Record<string, unknown> | null;
-      return c ? { id: c.id, name: c.name, description: c.description, avatar_color: c.avatar_color } : null;
+      return c ? { id: c.id, name: c.name, description: c.description, avatar_color: c.avatar_color, role: m.role } : null;
     }).filter(Boolean);
+
+    const ownedCommunityIds = (memberships || [])
+      .filter((m: Record<string, unknown>) => m.role === "owner" || m.role === "admin")
+      .map((m: Record<string, unknown>) => m.community_id as string);
 
     // Also fetch pending join request community IDs
     const { data: pendingReqs } = await supabase
@@ -43,7 +47,7 @@ export async function GET() {
       (r: Record<string, unknown>) => r.community_id as string
     );
 
-    return NextResponse.json({ communities, pendingCommunityIds });
+    return NextResponse.json({ communities, pendingCommunityIds, ownedCommunityIds });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
