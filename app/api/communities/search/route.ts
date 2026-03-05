@@ -27,7 +27,15 @@ export async function GET(request: Request) {
       query = query.ilike("name", `%${q.trim()}%`);
     }
 
-    const { data: communities } = await query;
+    const { data: communities, error: queryError } = await query;
+
+    if (queryError) {
+      console.error("Community search error:", queryError);
+      return NextResponse.json(
+        { error: "Failed to search communities. The communities table may not exist yet." },
+        { status: 500 }
+      );
+    }
 
     // Get member counts
     const enriched = await Promise.all(
@@ -41,7 +49,8 @@ export async function GET(request: Request) {
     );
 
     return NextResponse.json({ communities: enriched });
-  } catch {
+  } catch (err) {
+    console.error("Community search exception:", err);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

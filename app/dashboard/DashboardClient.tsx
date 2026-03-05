@@ -148,20 +148,18 @@ export default function DashboardClient({
   }
 
   async function handleCreateCommunity(name: string, description: string) {
-    try {
-      const res = await fetch("/api/communities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.community?.id) {
-          setJoinedCommunities((prev) => [...prev, data.community.id]);
-        }
+    const res = await fetch("/api/communities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, description }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.community?.id) {
+        setJoinedCommunities((prev) => [...prev, data.community.id]);
       }
-    } catch {
-      // ignore
+    } else {
+      alert(data.error || "Failed to create community");
     }
   }
 

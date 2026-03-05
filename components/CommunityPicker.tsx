@@ -14,7 +14,7 @@ interface CommunityPickerProps {
   joined: string[];
   onJoin: (communityId: string) => void;
   onLeave: (communityId: string) => void;
-  onCreate: (name: string, description: string) => void;
+  onCreate: (name: string, description: string) => Promise<void> | void;
   onOpen?: (communityId: string) => void;
 }
 
@@ -32,9 +32,11 @@ export default function CommunityPicker({
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCommunities = useCallback(async (q: string) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(
         `/api/communities/search?q=${encodeURIComponent(q)}`
@@ -42,9 +44,12 @@ export default function CommunityPicker({
       if (res.ok) {
         const data = await res.json();
         setCommunities(data.communities || []);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Failed to load communities (${res.status})`);
       }
     } catch {
-      // ignore
+      setError("Network error loading communities");
     }
     setLoading(false);
   }, []);
@@ -63,13 +68,17 @@ export default function CommunityPicker({
   async function handleCreate() {
     if (!newName.trim()) return;
     setCreating(true);
-    onCreate(newName.trim(), newDesc.trim());
+    try {
+      await onCreate(newName.trim(), newDesc.trim());
+    } catch {
+      // ignore
+    }
     setNewName("");
     setNewDesc("");
     setShowCreate(false);
     setCreating(false);
-    // Refresh list after a short delay
-    setTimeout(() => fetchCommunities(searchQuery), 500);
+    // Refresh list after creation completes
+    await fetchCommunities(searchQuery);
   }
 
   return (
@@ -120,9 +129,15 @@ export default function CommunityPicker({
         </div>
       )}
 
+      {error && (
+        <div className="community-empty" style={{ color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca" }}>
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="community-loading">Loading communities...</div>
-      ) : communities.length === 0 ? (
+      ) : communities.length === 0 && !error ? (
         <div className="community-empty">
           {searchQuery
             ? "No communities found. Try a different search or create one!"
