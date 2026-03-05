@@ -44,7 +44,7 @@ export async function GET(
 
     const { data: requests } = await supabase
       .from("community_join_requests")
-      .select("id, tutor_id, message, answers, status, created_at, tutors(id, first_name, last_name, avatar_color, slug)")
+      .select("id, tutor_id, message, answers, status, created_at, tutors!tutor_id(id, first_name, last_name, avatar_color, slug)")
       .eq("community_id", id)
       .eq("status", status)
       .order("created_at", { ascending: false });
