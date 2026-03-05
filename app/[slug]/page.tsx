@@ -52,9 +52,7 @@ export default async function ProfilePage({ params }: PageProps) {
     subjects: tutor.subjects || [],
     locations: tutor.locations || [],
     links: tutor.links || [],
-    openToReferrals: tutor.open_to_referrals || false,
     businessName: tutor.business_name || "",
-    yearsExperience: tutor.years_experience ?? undefined,
     profileImageUrl: tutor.profile_image_url || "",
   };
 

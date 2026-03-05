@@ -38,11 +38,9 @@ export default function EditClient({ tutor }: { tutor: TutorRow }) {
       tutor.links?.length > 0
         ? tutor.links
         : [{ type: "🌐 Website", url: "", label: "" }],
-    openToReferrals: tutor.open_to_referrals || false,
     notifyOnMatch: tutor.notify_on_match || false,
     email: tutor.email || "",
     businessName: tutor.business_name || "",
-    yearsExperience: tutor.years_experience ?? undefined,
     profileImageUrl: tutor.profile_image_url || "",
   };
 
