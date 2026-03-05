@@ -14,6 +14,7 @@ interface Community {
 interface CommunityPickerProps {
   joined: string[];
   pending?: string[];
+  owned?: string[];
   onJoin: (communityId: string) => void;
   onLeave: (communityId: string) => void;
   onCreate: (name: string, description: string) => Promise<void> | void;
@@ -23,6 +24,7 @@ interface CommunityPickerProps {
 export default function CommunityPicker({
   joined,
   pending = [],
+  owned = [],
   onJoin,
   onLeave,
   onCreate,
@@ -151,11 +153,15 @@ export default function CommunityPicker({
           {communities.map((c) => {
             const isJoined = joined.includes(c.id);
             const isPending = pending.includes(c.id);
+            const isOwned = owned.includes(c.id);
             const hasForm = c.hasApplicationForm;
 
             let btnLabel = "Join";
             let btnClass = "btn-join-community";
-            if (isJoined) {
+            if (isOwned) {
+              btnLabel = "Manage";
+              btnClass = "btn-join-community manage";
+            } else if (isJoined) {
               btnLabel = "Joined";
               btnClass = "btn-join-community joined";
             } else if (isPending) {
@@ -167,13 +173,13 @@ export default function CommunityPicker({
             }
 
             function handleClick() {
-              if (isJoined) {
+              if (isOwned && onOpen) {
+                onOpen(c.id);
+              } else if (isJoined) {
                 onLeave(c.id);
               } else if (isPending) {
-                // Already pending — open detail to see status
                 if (onOpen) onOpen(c.id);
               } else if (hasForm && onOpen) {
-                // Has custom questions — open detail form
                 onOpen(c.id);
               } else {
                 onJoin(c.id);

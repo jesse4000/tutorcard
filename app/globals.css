@@ -2561,6 +2561,17 @@ footer {
   color: var(--blue);
 }
 
+.btn-join-community.manage {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-join-community.manage:hover {
+  opacity: 0.85;
+}
+
 .community-loading,
 .community-empty {
   margin-top: 16px;
