@@ -7,8 +7,11 @@ import { QRCodeSVG } from "qrcode.react";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
 import ReferralManager from "@/components/ReferralManager";
+import InviteFriends from "@/components/InviteFriends";
+import CommunityPicker from "@/components/CommunityPicker";
 import { createClient } from "@/lib/supabase/client";
 import type { TutorLink } from "@/components/TutorCard";
+import type { FriendInvite } from "@/components/InviteFriends";
 
 interface TutorRow {
   id: string;
@@ -56,12 +59,18 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
-  const [view, setView] = useState<"card" | "opportunities">("card");
+  const [view, setView] = useState<"card" | "opportunities" | "friends" | "communities">("card");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [oppLoading, setOppLoading] = useState(false);
   const [oppFetched, setOppFetched] = useState(false);
   const [applyingTo, setApplyingTo] = useState<string | null>(null);
   const [showCoffee, setShowCoffee] = useState<string | null>(null);
+
+  // Friends state
+  const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
+
+  // Communities state
+  const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
 
   const fetchOpportunities = useCallback(async () => {
     setOppLoading(true);
@@ -109,6 +118,69 @@ export default function DashboardClient({
     }
     setApplyingTo(null);
   }
+
+  async function handleJoinCommunity(communityId: string) {
+    setJoinedCommunities((prev) =>
+      prev.includes(communityId) ? prev : [...prev, communityId]
+    );
+    try {
+      await fetch("/api/communities/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ communityId }),
+      });
+    } catch {
+      setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
+    }
+  }
+
+  async function handleLeaveCommunity(communityId: string) {
+    setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
+    try {
+      await fetch(`/api/communities/join?communityId=${communityId}`, {
+        method: "DELETE",
+      });
+    } catch {
+      setJoinedCommunities((prev) => [...prev, communityId]);
+    }
+  }
+
+  async function handleCreateCommunity(name: string, description: string) {
+    try {
+      const res = await fetch("/api/communities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.community?.id) {
+          setJoinedCommunities((prev) => [...prev, data.community.id]);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Fetch joined communities on mount
+  useEffect(() => {
+    if (!tutor) return;
+    async function fetchJoined() {
+      try {
+        const res = await fetch("/api/communities/joined");
+        if (res.ok) {
+          const data = await res.json();
+          setJoinedCommunities(
+            (data.communities || []).map((c: { id: string }) => c.id)
+          );
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchJoined();
+  }, [tutor]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -169,6 +241,31 @@ export default function DashboardClient({
         onSignOut={handleSignOut}
       />
       <div className="dashboard-page">
+        {/* Dashboard Tab Bar */}
+        <div className="dash-tabs">
+          <button
+            className={`dash-tab${view === "card" || view === "opportunities" ? " active" : ""}`}
+            onClick={() => setView("card")}
+          >
+            Card
+          </button>
+          <button
+            className={`dash-tab${view === "friends" ? " active" : ""}`}
+            onClick={() => setView("friends")}
+          >
+            Friends
+          </button>
+          <button
+            className={`dash-tab${view === "communities" ? " active" : ""}`}
+            onClick={() => setView("communities")}
+          >
+            Communities
+            {joinedCommunities.length > 0 && (
+              <span className="dash-tab-badge">{joinedCommunities.length}</span>
+            )}
+          </button>
+        </div>
+
         {view === "card" ? (
           <>
             <div className="dashboard-card-wrap">
@@ -253,7 +350,7 @@ export default function DashboardClient({
               <ReferralManager />
             </div>
           </>
-        ) : (
+        ) : view === "opportunities" ? (
           /* ── Opportunities screen ── */
           <div className="opp-page">
             <div className="opp-page-header">
@@ -394,7 +491,41 @@ export default function DashboardClient({
               )}
             </div>
           </div>
-        )}
+        ) : view === "friends" ? (
+          /* ── Friends screen ── */
+          <div className="dash-section">
+            <h1 className="dashboard-title">Invite fellow tutors</h1>
+            <p className="dashboard-sub">
+              Add tutors you know. They&apos;ll get an invite to connect with you
+              and can send or receive referrals.
+            </p>
+            <InviteFriends
+              invites={friendInvites}
+              onChange={setFriendInvites}
+            />
+          </div>
+        ) : view === "communities" ? (
+          /* ── Communities screen ── */
+          <div className="dash-section">
+            <h1 className="dashboard-title">Communities</h1>
+            <p className="dashboard-sub">
+              Join groups of tutors who share referrals, resources, and support
+              each other.
+            </p>
+            <CommunityPicker
+              joined={joinedCommunities}
+              onJoin={handleJoinCommunity}
+              onLeave={handleLeaveCommunity}
+              onCreate={handleCreateCommunity}
+            />
+            {joinedCommunities.length > 0 && (
+              <div className="joined-summary" style={{ marginTop: 16 }}>
+                You&apos;ve joined {joinedCommunities.length} communit
+                {joinedCommunities.length === 1 ? "y" : "ies"}
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* QR Code Modal */}
