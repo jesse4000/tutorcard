@@ -2287,6 +2287,18 @@ footer {
   text-align: center;
 }
 
+.joined-summary {
+  margin-top: 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .step-skip {
   text-align: center;
   margin-top: 10px;
