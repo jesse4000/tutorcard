@@ -7,7 +7,10 @@ import TutorCard from "@/components/TutorCard";
 import TagPicker from "@/components/TagPicker";
 import LinkBuilder from "@/components/LinkBuilder";
 import Toggle from "@/components/Toggle";
+import InviteFriends from "@/components/InviteFriends";
+import CommunityPicker from "@/components/CommunityPicker";
 import type { TutorLink } from "@/components/TutorCard";
+import type { FriendInvite } from "@/components/InviteFriends";
 
 const EXAM_PRESETS = [
   "SAT Math",
@@ -53,7 +56,7 @@ const COLORS = [
   "#92400e",
 ];
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 6;
 
 export interface TutorFormData {
   id?: string;
@@ -106,7 +109,13 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
       : [{ type: "🌐 Website", url: "", label: "" }]
   );
 
-  // Step 4
+  // Step 4 — Friends
+  const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
+
+  // Step 5 — Communities
+  const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+
+  // Step 6
   const [openToReferrals, setOpenToReferrals] = useState(
     initialData?.openToReferrals || false
   );
@@ -149,6 +158,48 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
   function prevStep() {
     setStep((s) => Math.max(s - 1, 1));
+  }
+
+  async function handleJoinCommunity(communityId: string) {
+    setJoinedCommunities((prev) => [...prev, communityId]);
+    try {
+      await fetch("/api/communities/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ communityId }),
+      });
+    } catch {
+      setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
+    }
+  }
+
+  async function handleLeaveCommunity(communityId: string) {
+    setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
+    try {
+      await fetch(`/api/communities/join?communityId=${communityId}`, {
+        method: "DELETE",
+      });
+    } catch {
+      setJoinedCommunities((prev) => [...prev, communityId]);
+    }
+  }
+
+  async function handleCreateCommunity(name: string, description: string) {
+    try {
+      const res = await fetch("/api/communities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.community?.id) {
+          setJoinedCommunities((prev) => [...prev, data.community.id]);
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 
   async function handleSubmit() {
@@ -243,7 +294,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
             <>
               {step === 1 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 1 of 4</div>
+                  <div className="step-eyebrow">Step 1 of 6</div>
                   <div className="step-title">
                     {mode === "edit" ? (
                       "Edit the basics."
@@ -394,7 +445,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
               {step === 2 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 2 of 4</div>
+                  <div className="step-eyebrow">Step 2 of 6</div>
                   <div className="step-title">
                     What do you
                     <br />
@@ -450,7 +501,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
               {step === 3 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 3 of 4</div>
+                  <div className="step-eyebrow">Step 3 of 6</div>
                   <div className="step-title">Add your links.</div>
                   <div className="step-sub">
                     These become action buttons on your card. Parents and
@@ -482,7 +533,104 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
               {step === 4 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 4 of 4</div>
+                  <div className="step-eyebrow">Step 4 of 6</div>
+                  <div className="step-title">
+                    Invite fellow
+                    <br />
+                    tutors.
+                  </div>
+                  <div className="step-sub">
+                    Add tutors you know. They&apos;ll get an invite to connect
+                    with you and can send or receive referrals.
+                  </div>
+
+                  <InviteFriends
+                    invites={friendInvites}
+                    onChange={setFriendInvites}
+                  />
+
+                  <div className="step-nav" style={{ marginTop: 28 }}>
+                    <button className="btn-back" onClick={prevStep}>
+                      &larr; Back
+                    </button>
+                    <button className="btn-next" onClick={nextStep}>
+                      Continue
+                      <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="step-skip">
+                    <button
+                      className="btn-skip"
+                      onClick={nextStep}
+                      type="button"
+                    >
+                      Skip for now
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 5 && (
+                <div style={{ animation: "stepIn 0.4s ease both" }}>
+                  <div className="step-eyebrow">Step 5 of 6</div>
+                  <div className="step-title">
+                    Join a<br />
+                    community.
+                  </div>
+                  <div className="step-sub">
+                    Communities are groups of tutors who share referrals,
+                    resources, and support each other.
+                  </div>
+
+                  <CommunityPicker
+                    joined={joinedCommunities}
+                    onJoin={handleJoinCommunity}
+                    onLeave={handleLeaveCommunity}
+                    onCreate={handleCreateCommunity}
+                  />
+
+                  <div className="step-nav" style={{ marginTop: 28 }}>
+                    <button className="btn-back" onClick={prevStep}>
+                      &larr; Back
+                    </button>
+                    <button className="btn-next" onClick={nextStep}>
+                      Continue
+                      <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="step-skip">
+                    <button
+                      className="btn-skip"
+                      onClick={nextStep}
+                      type="button"
+                    >
+                      Skip for now
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 6 && (
+                <div style={{ animation: "stepIn 0.4s ease both" }}>
+                  <div className="step-eyebrow">Step 6 of 6</div>
                   <div className="step-title">Almost done.</div>
                   <div className="step-sub">
                     Set your referral preferences and your card is ready to
