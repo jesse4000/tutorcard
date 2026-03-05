@@ -14,6 +14,7 @@ function buildVCard(tutor: TutorData): string {
   const fullName = [tutor.firstName, tutor.lastName].filter(Boolean).join(" ");
   const emailLink = tutor.links.find((l) => l.type === "📧 Email");
   const websiteLink = tutor.links.find((l) => l.type === "🌐 Website");
+  const phoneLink = tutor.links.find((l) => l.type === "📞 Phone");
   const escape = (s: string) => s.replace(/[;,\\]/g, (c) => "\\" + c);
 
   const lines = [
@@ -22,9 +23,9 @@ function buildVCard(tutor: TutorData): string {
     `FN:${escape(fullName)}`,
     `N:${escape(tutor.lastName || "")};${escape(tutor.firstName || "")};;;`,
   ];
-  if (tutor.title) lines.push(`TITLE:${escape(tutor.title)}`);
   if (tutor.businessName) lines.push(`ORG:${escape(tutor.businessName)}`);
-  if (tutor.phone) lines.push(`TEL:${tutor.phone}`);
+  if (tutor.title) lines.push(`TITLE:${escape(tutor.title)}`);
+  if (phoneLink?.url) lines.push(`TEL:${phoneLink.url.replace(/[^+\d]/g, "")}`);
   if (emailLink?.url) lines.push(`EMAIL:${emailLink.url}`);
   if (websiteLink?.url) {
     const url = websiteLink.url.startsWith("http")
@@ -32,6 +33,7 @@ function buildVCard(tutor: TutorData): string {
       : `https://${websiteLink.url}`;
     lines.push(`URL:${url}`);
   }
+  if (tutor.profileImageUrl) lines.push(`PHOTO;VALUE=URI:${tutor.profileImageUrl}`);
   lines.push(`NOTE:${escape([...tutor.exams, ...tutor.subjects].join(", "))}`);
   lines.push("END:VCARD");
   return lines.join("\r\n");
