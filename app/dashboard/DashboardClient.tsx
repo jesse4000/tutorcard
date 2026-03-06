@@ -382,7 +382,10 @@ export default function DashboardClient({
           <div className="dash-section">
             {referralTab === "home" ? (
               <>
-                <h1 className="dashboard-title">Your listings</h1>
+                <h1 className="dashboard-title">Your Referrals</h1>
+                <p className="dashboard-sub">
+                  Manage your referral listings and discover opportunities from other tutors.
+                </p>
                 <div className="listings-widgets">
                   <div
                     className="listings-widget"
@@ -392,7 +395,7 @@ export default function DashboardClient({
                       📋
                     </div>
                     <div className="listings-widget-info">
-                      <div className="listings-widget-name">Your Referrals</div>
+                      <div className="listings-widget-name">Your Listings</div>
                       <div className="listings-widget-desc">Manage your referral listings</div>
                     </div>
                     <span className="listings-widget-arrow">&rsaquo;</span>
