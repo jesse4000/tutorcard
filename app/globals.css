@@ -2596,30 +2596,123 @@ footer {
   padding-top: 4px;
 }
 
-.cd-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: none;
-  background: none;
-  color: var(--ink-2);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 6px 2px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  transition: color 0.15s;
-}
-
-.cd-back-btn:hover {
-  color: var(--ink);
-}
-
 .cd-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 16px;
+  margin-top: 8px;
+}
+
+.cd-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.cd-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cd-menu-btn:hover {
+  background: var(--bg-2);
+  color: var(--ink);
+}
+
+.cd-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+
+.cd-menu-popup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  width: 260px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cd-menu-section {}
+
+.cd-menu-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.cd-menu-desc {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.cd-menu-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.cd-menu-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cd-menu-stat-num {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cd-menu-stat-label {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.cd-menu-leave {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ef4444;
+  background: none;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cd-menu-leave:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.cd-menu-leave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cd-avatar {
