@@ -113,7 +113,7 @@ export async function GET() {
 
         // Check if viewer is a friend of the poster
         if (sharedWithFriends) {
-          const tutor = ref.tutor as { id: string } | null;
+          const tutor = ref.tutor as unknown as { id: string } | null;
           if (tutor && friendTutorIds.has(tutor.id)) return true;
         }
 

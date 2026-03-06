@@ -69,7 +69,7 @@ export default async function ReferralPage({ params }: PageProps) {
     }
   }
 
-  const tutor = referral.tutor as {
+  const tutor = referral.tutor as unknown as {
     id: string;
     first_name: string;
     last_name: string;
