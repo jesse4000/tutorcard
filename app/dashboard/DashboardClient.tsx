@@ -396,27 +396,29 @@ export default function DashboardClient({
                     <span className="qr-banner-label">
                       {linkCopied ? "Link copied!" : "Share card link"}
                     </span>
-                    <span className="qr-banner-url">
-                      {typeof window !== "undefined"
-                        ? window.location.host
-                        : ""}
-                      /{tutor.slug}
+                    <span className="qr-banner-url" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span>
+                        {typeof window !== "undefined"
+                          ? window.location.host
+                          : ""}
+                        /{tutor.slug}
+                      </span>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ flexShrink: 0, color: "var(--ink-2)" }}
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
                     </span>
                   </div>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ flexShrink: 0, color: "var(--ink-2)" }}
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
                 </div>
               </div>
             </div>

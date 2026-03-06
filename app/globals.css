@@ -2472,13 +2472,17 @@ footer {
   }
 
   .dashboard-card-sidebar .qr-banner {
+    margin-top: 0;
+  }
+
+  .dashboard-card-sidebar .qr-banner:first-child {
     flex-direction: column;
     text-align: center;
     gap: 16px;
     padding: 24px 20px;
   }
 
-  .dashboard-card-sidebar .qr-banner-info {
+  .dashboard-card-sidebar .qr-banner:first-child .qr-banner-info {
     align-items: center;
   }
 
