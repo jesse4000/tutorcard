@@ -67,7 +67,7 @@ export default function DashboardClient({
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
   const [view, setView] = useState<"card" | "referrals" | "friends" | "communities">("card");
-  const [referralTab, setReferralTab] = useState<"yours" | "opportunities">("yours");
+  const [referralTab, setReferralTab] = useState<"home" | "yours" | "opportunities">("home");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [oppLoading, setOppLoading] = useState(false);
   const [oppFetched, setOppFetched] = useState(false);
@@ -380,136 +380,167 @@ export default function DashboardClient({
         ) : view === "referrals" ? (
           /* ── Referrals screen ── */
           <div className="dash-section">
-            {referralView === "list" && (
-              <div className="ref-sub-tabs">
-                <button
-                  className={`ref-sub-tab${referralTab === "yours" ? " active" : ""}`}
-                  onClick={() => setReferralTab("yours")}
-                >
-                  Your Referrals
-                </button>
-                <button
-                  className={`ref-sub-tab${referralTab === "opportunities" ? " active" : ""}`}
-                  onClick={() => setReferralTab("opportunities")}
-                >
-                  Opportunities
-                </button>
-              </div>
-            )}
-
-            {referralTab === "yours" ? (
-              <div className="dashboard-referrals">
-                <ReferralManager onViewChange={setReferralView} communities={joinedCommunityDetails} />
-              </div>
-            ) : (
-              <div>
-              {oppLoading && !oppFetched ? (
-                <div className="opp-loading">Loading opportunities...</div>
-              ) : opportunities.length === 0 ? (
-                <div className="opp-empty">
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
-                  <p className="opp-empty-text">
-                    No referral opportunities right now. Check back later as
-                    more tutors post referrals.
-                  </p>
+            {referralTab === "home" ? (
+              <>
+                <h1 className="dashboard-title">Your listings</h1>
+                <div className="listings-widgets">
+                  <div
+                    className="listings-widget"
+                    onClick={() => setReferralTab("yours")}
+                  >
+                    <div className="listings-widget-icon" style={{ background: "#0f172a" }}>
+                      📋
+                    </div>
+                    <div className="listings-widget-info">
+                      <div className="listings-widget-name">Your Referrals</div>
+                      <div className="listings-widget-desc">Manage your referral listings</div>
+                    </div>
+                    <span className="listings-widget-arrow">&rsaquo;</span>
+                  </div>
+                  <div
+                    className="listings-widget"
+                    onClick={() => setReferralTab("opportunities")}
+                  >
+                    <div className="listings-widget-icon" style={{ background: "#16a34a" }}>
+                      🔍
+                    </div>
+                    <div className="listings-widget-info">
+                      <div className="listings-widget-name">Opportunities</div>
+                      <div className="listings-widget-desc">Browse referrals from other tutors</div>
+                    </div>
+                    <span className="listings-widget-arrow">&rsaquo;</span>
+                  </div>
                 </div>
-              ) : (
-                <div className="opp-list">
-                  {opportunities.map((opp) => {
-                    const posterName = [
-                      opp.tutor.first_name,
-                      opp.tutor.last_name,
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
-                    const posterInitials = [
-                      opp.tutor.first_name?.[0],
-                      opp.tutor.last_name?.[0],
-                    ]
-                      .filter(Boolean)
-                      .join("");
-                    const isApplying = applyingTo === opp.id;
+              </>
+            ) : referralTab === "yours" ? (
+              <>
+                <button
+                  className="listings-back-btn"
+                  onClick={() => { setReferralTab("home"); setReferralView("list"); }}
+                >
+                  ← Back to listings
+                </button>
+                <div className="dashboard-referrals">
+                  <ReferralManager onViewChange={setReferralView} communities={joinedCommunityDetails} />
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  className="listings-back-btn"
+                  onClick={() => setReferralTab("home")}
+                >
+                  ← Back to listings
+                </button>
+                <div>
+                {oppLoading && !oppFetched ? (
+                  <div className="opp-loading">Loading opportunities...</div>
+                ) : opportunities.length === 0 ? (
+                  <div className="opp-empty">
+                    <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+                    <p className="opp-empty-text">
+                      No referral opportunities right now. Check back later as
+                      more tutors post referrals.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="opp-list">
+                    {opportunities.map((opp) => {
+                      const posterName = [
+                        opp.tutor.first_name,
+                        opp.tutor.last_name,
+                      ]
+                        .filter(Boolean)
+                        .join(" ");
+                      const posterInitials = [
+                        opp.tutor.first_name?.[0],
+                        opp.tutor.last_name?.[0],
+                      ]
+                        .filter(Boolean)
+                        .join("");
+                      const isApplying = applyingTo === opp.id;
 
-                    return (
-                      <div key={opp.id} className="opp-card">
-                        {opp.skillMatch && (
-                          <div className="opp-match-badge">
-                            Matches your skills
-                          </div>
-                        )}
-                        <div className="opp-card-top">
-                          <div className="opp-card-subject">{opp.subject}</div>
-                          <div className="opp-card-meta">
-                            {[opp.location, opp.grade_level]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </div>
-                          {opp.notes && (
-                            <div className="opp-card-notes">
-                              &quot;{opp.notes}&quot;
+                      return (
+                        <div key={opp.id} className="opp-card">
+                          {opp.skillMatch && (
+                            <div className="opp-match-badge">
+                              Matches your skills
                             </div>
                           )}
-                        </div>
-
-                        <div className="opp-card-poster">
-                          <div
-                            className="opp-poster-av"
-                            style={{
-                              background:
-                                opp.tutor.avatar_color || "#0f172a",
-                            }}
-                          >
-                            {posterInitials}
+                          <div className="opp-card-top">
+                            <div className="opp-card-subject">{opp.subject}</div>
+                            <div className="opp-card-meta">
+                              {[opp.location, opp.grade_level]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </div>
+                            {opp.notes && (
+                              <div className="opp-card-notes">
+                                &quot;{opp.notes}&quot;
+                              </div>
+                            )}
                           </div>
-                          <div className="opp-poster-info">
-                            <span className="opp-poster-name">
-                              {posterName}
-                            </span>
-                            <a
-                              href={`/${opp.tutor.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="opp-poster-link"
+
+                          <div className="opp-card-poster">
+                            <div
+                              className="opp-poster-av"
+                              style={{
+                                background:
+                                  opp.tutor.avatar_color || "#0f172a",
+                              }}
                             >
-                              View card ↗
-                            </a>
+                              {posterInitials}
+                            </div>
+                            <div className="opp-poster-info">
+                              <span className="opp-poster-name">
+                                {posterName}
+                              </span>
+                              <a
+                                href={`/${opp.tutor.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="opp-poster-link"
+                              >
+                                View card ↗
+                              </a>
+                            </div>
                           </div>
-                        </div>
 
-                        {opp.applicationStatus === "accepted" && opp.message && (
-                          <div className="opp-message-reveal">
-                            <div className="opp-message-label">Message from {opp.tutor.first_name}:</div>
-                            <div className="opp-message-text">{opp.message}</div>
-                          </div>
-                        )}
-
-                        <div className="opp-card-actions">
-                          {opp.applied ? (
-                            <span className={`opp-applied${opp.applicationStatus === "accepted" ? " accepted" : opp.applicationStatus === "declined" ? " declined" : ""}`}>
-                              {opp.applicationStatus === "accepted"
-                                ? "Accepted"
-                                : opp.applicationStatus === "declined"
-                                ? "Declined"
-                                : "Applied"}
-                            </span>
-                          ) : (
-                            <button
-                              className="opp-apply-btn"
-                              onClick={() =>
-                                handleApplyToOpportunity(opp.id, false)
-                              }
-                              disabled={isApplying}
-                            >
-                              {isApplying ? "Applying..." : "Apply"}
-                            </button>
+                          {opp.applicationStatus === "accepted" && opp.message && (
+                            <div className="opp-message-reveal">
+                              <div className="opp-message-label">Message from {opp.tutor.first_name}:</div>
+                              <div className="opp-message-text">{opp.message}</div>
+                            </div>
                           )}
+
+                          <div className="opp-card-actions">
+                            {opp.applied ? (
+                              <span className={`opp-applied${opp.applicationStatus === "accepted" ? " accepted" : opp.applicationStatus === "declined" ? " declined" : ""}`}>
+                                {opp.applicationStatus === "accepted"
+                                  ? "Accepted"
+                                  : opp.applicationStatus === "declined"
+                                  ? "Declined"
+                                  : "Applied"}
+                              </span>
+                            ) : (
+                              <button
+                                className="opp-apply-btn"
+                                onClick={() =>
+                                  handleApplyToOpportunity(opp.id, false)
+                                }
+                                disabled={isApplying}
+                              >
+                                {isApplying ? "Applying..." : "Apply"}
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                )}
                 </div>
-              )}
-              </div>
+              </>
             )}
           </div>
         ) : view === "friends" ? (
