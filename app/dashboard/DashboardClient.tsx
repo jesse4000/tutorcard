@@ -245,36 +245,47 @@ export default function DashboardClient({
         onSignOut={handleSignOut}
       />
       <div className="dashboard-page">
-        {/* Dashboard Tab Bar */}
-        <div className="dash-tabs">
-          <button
-            className={`dash-tab${view === "card" ? " active" : ""}`}
-            onClick={() => setView("card")}
-          >
-            Card
-          </button>
-          <button
-            className={`dash-tab${view === "friends" ? " active" : ""}`}
-            onClick={() => setView("friends")}
-          >
-            Friends
-          </button>
-          <button
-            className={`dash-tab${view === "communities" ? " active" : ""}`}
-            onClick={() => setView("communities")}
-          >
-            Communities
-            {joinedCommunities.length > 0 && (
-              <span className="dash-tab-badge">{joinedCommunities.length}</span>
-            )}
-          </button>
-          <button
-            className={`dash-tab${view === "referrals" ? " active" : ""}`}
-            onClick={() => setView("referrals")}
-          >
-            Referrals
-          </button>
-        </div>
+        {/* Dashboard Tab Bar (hidden when community detail is open) */}
+        {view === "communities" && openCommunityId ? (
+          <div className="dash-back-bar">
+            <button
+              className="dash-back-btn"
+              onClick={() => setOpenCommunityId(null)}
+            >
+              ← Communities
+            </button>
+          </div>
+        ) : (
+          <div className="dash-tabs">
+            <button
+              className={`dash-tab${view === "card" ? " active" : ""}`}
+              onClick={() => setView("card")}
+            >
+              Card
+            </button>
+            <button
+              className={`dash-tab${view === "friends" ? " active" : ""}`}
+              onClick={() => setView("friends")}
+            >
+              Friends
+            </button>
+            <button
+              className={`dash-tab${view === "communities" ? " active" : ""}`}
+              onClick={() => setView("communities")}
+            >
+              Communities
+              {joinedCommunities.length > 0 && (
+                <span className="dash-tab-badge">{joinedCommunities.length}</span>
+              )}
+            </button>
+            <button
+              className={`dash-tab${view === "referrals" ? " active" : ""}`}
+              onClick={() => setView("referrals")}
+            >
+              Referrals
+            </button>
+          </div>
+        )}
 
         {view === "card" ? (
           <>

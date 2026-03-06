@@ -1491,6 +1491,31 @@ footer {
   margin: 0 auto;
 }
 
+.dash-back-bar {
+  margin-bottom: 28px;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.dash-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.dash-back-btn:hover {
+  color: var(--ink);
+}
+
 .dash-tabs {
   display: flex;
   margin-bottom: 28px;
