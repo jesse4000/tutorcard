@@ -1330,6 +1330,43 @@ footer {
 .vcard-btn:hover { border-color: var(--ink-2); color: var(--ink); }
 .vcard-icon { font-size: 15px; }
 
+/* ── VOUCH ── */
+.vouch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1.5px solid var(--amber-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.vouch-btn:hover { border-color: var(--amber-light); }
+.vouch-btn:disabled { opacity: 0.6; cursor: default; }
+.vouch-btn.vouched {
+  color: var(--green);
+  background: var(--green-bg);
+  border-color: var(--green-border);
+}
+.vouch-btn.vouched:hover { border-color: var(--green); }
+.vouch-icon { font-size: 15px; }
+
+.vouch-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green);
+  margin-top: 4px;
+  padding: 0 4px;
+}
+
 /* ── AUTH PAGES ── */
 .auth-page {
   min-height: 100vh;
