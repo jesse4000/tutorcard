@@ -77,6 +77,8 @@ export default function CommunityDetail({
   const [settingsRequireApproval, setSettingsRequireApproval] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const fetchCommunity = useCallback(async () => {
     setLoading(true);
@@ -185,6 +187,23 @@ export default function CommunityDetail({
     setSavingSettings(false);
   }
 
+  async function handleLeaveCommunity() {
+    if (!confirm("Are you sure you want to leave this community?")) return;
+    setLeaving(true);
+    try {
+      const res = await fetch(
+        `/api/communities/join?communityId=${communityId}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        onBack();
+      }
+    } catch {
+      // ignore
+    }
+    setLeaving(false);
+  }
+
   function addQuestion() {
     setSettingsQuestions((prev) => [
       ...prev,
@@ -208,12 +227,6 @@ export default function CommunityDetail({
   if (loading) {
     return (
       <div className="cd-page">
-        <button className="cd-back-btn" onClick={onBack}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4 6 9l5 5" />
-          </svg>
-          Back
-        </button>
         <div className="cd-loading">Loading community...</div>
       </div>
     );
@@ -222,12 +235,6 @@ export default function CommunityDetail({
   if (!community) {
     return (
       <div className="cd-page">
-        <button className="cd-back-btn" onClick={onBack}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4 6 9l5 5" />
-          </svg>
-          Back
-        </button>
         <div className="cd-empty">Community not found.</div>
       </div>
     );
@@ -235,13 +242,6 @@ export default function CommunityDetail({
 
   return (
     <div className="cd-page">
-      <button className="cd-back-btn" onClick={onBack}>
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M11 4 6 9l5 5" />
-        </svg>
-        Back
-      </button>
-
       {/* Community Header */}
       <div className="cd-header">
         <div className="cd-avatar" style={{ background: community.avatar_color }}>
@@ -256,6 +256,55 @@ export default function CommunityDetail({
             <span className={`cd-role-badge cd-role-${community.userRole}`}>
               {community.userRole}
             </span>
+          )}
+        </div>
+        <div className="cd-menu-wrap">
+          <button
+            className="cd-menu-btn"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Community menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <circle cx="10" cy="4" r="1.8" />
+              <circle cx="10" cy="10" r="1.8" />
+              <circle cx="10" cy="16" r="1.8" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <>
+              <div className="cd-menu-backdrop" onClick={() => setMenuOpen(false)} />
+              <div className="cd-menu-popup">
+                <div className="cd-menu-section">
+                  <h4 className="cd-menu-label">Community Overview</h4>
+                  <p className="cd-menu-desc">
+                    {community.description || "No description provided."}
+                  </p>
+                </div>
+                <div className="cd-menu-stats">
+                  <div className="cd-menu-stat">
+                    <span className="cd-menu-stat-num">{community.memberCount}</span>
+                    <span className="cd-menu-stat-label">
+                      Member{community.memberCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <div className="cd-menu-stat">
+                    <span className="cd-menu-stat-num">{community.referralCount}</span>
+                    <span className="cd-menu-stat-label">
+                      Total Referral{community.referralCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </div>
+                {!community.isOwnerOrAdmin && (
+                  <button
+                    className="cd-menu-leave"
+                    onClick={handleLeaveCommunity}
+                    disabled={leaving}
+                  >
+                    {leaving ? "Leaving..." : "Leave Community"}
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
