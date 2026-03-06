@@ -267,7 +267,7 @@ export default function DashboardClient({
               ← Communities
             </button>
           </div>
-        ) : view === "referrals" && referralView !== "list" ? (
+        ) : view === "referrals" && (referralView !== "list" || referralTab !== "home") ? (
           null
         ) : (
           <div className="dash-tabs">
@@ -418,7 +418,7 @@ export default function DashboardClient({
                   className="listings-back-btn"
                   onClick={() => { setReferralTab("home"); setReferralView("list"); }}
                 >
-                  ← Back to listings
+                  ← Back to referrals
                 </button>
                 <div className="dashboard-referrals">
                   <ReferralManager onViewChange={setReferralView} communities={joinedCommunityDetails} />
@@ -430,7 +430,7 @@ export default function DashboardClient({
                   className="listings-back-btn"
                   onClick={() => setReferralTab("home")}
                 >
-                  ← Back to listings
+                  ← Back to referrals
                 </button>
                 <div>
                 {oppLoading && !oppFetched ? (
