@@ -75,6 +75,7 @@ export default function DashboardClient({
   const [applyingTo, setApplyingTo] = useState<string | null>(null);
   const [showCoffee, setShowCoffee] = useState<string | null>(null);
   const [referralView, setReferralView] = useState<string>("list");
+  const [pendingApplicants, setPendingApplicants] = useState(0);
 
   // Friends state
   const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
@@ -107,6 +108,26 @@ export default function DashboardClient({
       fetchOpportunities();
     }
   }, [tutor, fetchOpportunities]);
+
+  useEffect(() => {
+    if (!tutor) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/referrals?mine=true");
+        if (res.ok) {
+          const data = await res.json();
+          const pending = (data.referrals || []).reduce(
+            (sum: number, r: { referral_applications?: { status: string }[] }) =>
+              sum + (r.referral_applications?.filter((a) => a.status === "pending").length || 0),
+            0
+          );
+          setPendingApplicants(pending);
+        }
+      } catch {
+        // silently fail
+      }
+    })();
+  }, [tutor]);
 
   async function handleApplyToOpportunity(
     referralId: string,
@@ -289,15 +310,17 @@ export default function DashboardClient({
               onClick={() => setView("communities")}
             >
               Communities
-              {joinedCommunities.length > 0 && (
-                <span className="dash-tab-badge">{joinedCommunities.length}</span>
-              )}
             </button>
             <button
               className={`dash-tab${view === "referrals" ? " active" : ""}`}
               onClick={() => setView("referrals")}
             >
               Referrals
+              {(pendingApplicants + opportunities.length) > 0 && (
+                <span className="dash-tab-badge">
+                  {(pendingApplicants + opportunities.length) > 99 ? "99+" : pendingApplicants + opportunities.length}
+                </span>
+              )}
             </button>
           </div>
         )}
@@ -444,6 +467,11 @@ export default function DashboardClient({
                       <div className="listings-widget-name">Your Listings</div>
                       <div className="listings-widget-desc">Manage your referral listings</div>
                     </div>
+                    {pendingApplicants > 0 && (
+                      <span className="listings-widget-badge">
+                        {pendingApplicants > 99 ? "99+" : pendingApplicants}
+                      </span>
+                    )}
                     <span className="listings-widget-arrow">&rsaquo;</span>
                   </div>
                   <div
@@ -457,6 +485,11 @@ export default function DashboardClient({
                       <div className="listings-widget-name">Opportunities</div>
                       <div className="listings-widget-desc">Browse referrals from other tutors</div>
                     </div>
+                    {opportunities.length > 0 && (
+                      <span className="listings-widget-badge">
+                        {opportunities.length > 99 ? "99+" : opportunities.length}
+                      </span>
+                    )}
                     <span className="listings-widget-arrow">&rsaquo;</span>
                   </div>
                 </div>
