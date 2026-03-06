@@ -90,12 +90,6 @@ export default function TutorCard({ data, variant = "preview", referralCount, re
         {data.title || "Your title will appear here"}
       </div>
 
-      {!isPreview && vouchCount !== undefined && vouchCount > 0 && (
-        <div className="vouch-count">
-          Vouched by {vouchCount} {vouchCount === 1 ? "tutor" : "tutors"}
-        </div>
-      )}
-
       {/* Tags */}
       <div className={isPreview ? "lc-tags" : "mc-tags"}>
         {allTags.length === 0 ? (
@@ -189,6 +183,14 @@ export default function TutorCard({ data, variant = "preview", referralCount, re
           })
         )}
       </div>
+
+      {/* Vouch count badge */}
+      {!isPreview && vouchCount !== undefined && vouchCount > 0 && (
+        <div className="vouch-badge">
+          <span className="vouch-badge-icon">🤝</span>
+          Vouched by {vouchCount} {vouchCount === 1 ? "tutor" : "tutors"}
+        </div>
+      )}
 
       {/* Referral block — only shown in preview or when referral props are provided */}
       {(isPreview || referralCount !== undefined || onReferralClick) && (

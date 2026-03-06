@@ -1359,13 +1359,21 @@ footer {
 .vouch-btn.vouched:hover { border-color: var(--green); }
 .vouch-icon { font-size: 15px; }
 
-.vouch-count {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--green);
-  margin-top: 4px;
-  padding: 0 4px;
+.vouch-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1.5px solid var(--amber-border);
+  border-radius: 20px;
 }
+.vouch-badge-icon { font-size: 14px; }
 
 /* ── AUTH PAGES ── */
 .auth-page {
