@@ -162,7 +162,7 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Create referral error:", error);
       return NextResponse.json(
-        { error: "Failed to create referral" },
+        { error: `Failed to create referral: ${error.message}` },
         { status: 500 }
       );
     }
