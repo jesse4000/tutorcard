@@ -100,8 +100,8 @@ export async function GET() {
         const sharedWithFriends = !!(ref as Record<string, unknown>).shared_with_friends;
         const hasAnySharing = hasCommunityShares || sharedWithFriends;
 
-        // If no sharing restrictions set, it's a public referral (backward compat)
-        if (!hasAnySharing) return true;
+        // Referrals with no sharing target are not shown in the feed
+        if (!hasAnySharing) return false;
 
         // Check if viewer is in one of the shared communities
         if (hasCommunityShares) {

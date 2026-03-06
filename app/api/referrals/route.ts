@@ -9,6 +9,28 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tutorId = searchParams.get("tutor_id");
     const mine = searchParams.get("mine");
+    const referralId = searchParams.get("id");
+
+    // Public single-referral fetch (for /referral/[id] page)
+    if (referralId && mine !== "true") {
+      const { data: referral, error } = await supabase
+        .from("referrals")
+        .select(
+          `id, subject, location, grade_level, notes, status, created_at,
+           tutor:tutors!referrals_tutor_id_fkey(id, first_name, last_name, avatar_color, slug)`
+        )
+        .eq("id", referralId)
+        .single();
+
+      if (error || !referral) {
+        return NextResponse.json(
+          { error: "Referral not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ referral });
+    }
 
     if (mine === "true") {
       const {

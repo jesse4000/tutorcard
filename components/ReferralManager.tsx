@@ -41,7 +41,7 @@ interface Community {
   avatar_color: string;
 }
 
-type View = "list" | "create" | "detail";
+type View = "list" | "create" | "detail" | "success";
 
 const SUBJECT_PRESETS = [
   "SAT Math",
@@ -102,6 +102,9 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
   const [sharedWithFriends, setSharedWithFriends] = useState(false);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
+  const [createdReferral, setCreatedReferral] = useState<{ id: string; subject: string; location: string; grade_level: string } | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [detailLinkCopied, setDetailLinkCopied] = useState(false);
 
   const fetchReferrals = useCallback(async () => {
     try {
@@ -137,6 +140,13 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
         }),
       });
       if (res.ok) {
+        const data = await res.json();
+        setCreatedReferral({
+          id: data.referral.id,
+          subject: subject.trim(),
+          location: location.trim() || "Online",
+          grade_level: gradeLevel.trim(),
+        });
         setSubject("");
         setLocation("");
         setGradeLevel("");
@@ -144,7 +154,8 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
         setMessage("");
         setSharedWithFriends(false);
         setSelectedCommunityIds([]);
-        setView("list");
+        setLinkCopied(false);
+        setView("success");
         await fetchReferrals();
       }
     } catch {
@@ -323,7 +334,7 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
         <div className="field">
           <label className="field-label">Share with</label>
           <div className="field-hint">
-            Choose who can see this referral. If nothing is selected, it will be visible to all tutors.
+            Choose who can see this referral. At least one option is required.
           </div>
           <div className="ref-share-options">
             <label className="ref-share-option">
@@ -357,8 +368,8 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
             ))}
           </div>
           {!sharedWithFriends && selectedCommunityIds.length === 0 && (
-            <div className="ref-share-hint">
-              Visible to all tutors on the platform
+            <div className="ref-share-hint ref-share-required">
+              Select at least one option to post your referral
             </div>
           )}
           {(sharedWithFriends || selectedCommunityIds.length > 0) && (
@@ -380,10 +391,59 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
           <button
             className="btn-next"
             onClick={handleCreate}
-            disabled={creating || !subject.trim()}
+            disabled={creating || !subject.trim() || (!sharedWithFriends && selectedCommunityIds.length === 0)}
           >
             {creating ? "Posting..." : "Post referral"}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // SUCCESS VIEW
+  if (view === "success" && createdReferral) {
+    const referralUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/referral/${createdReferral.id}`
+      : `/referral/${createdReferral.id}`;
+
+    return (
+      <div className="ref-manager">
+        <div className="ref-success">
+          <div className="ref-success-icon">&#10003;</div>
+          <h3 className="ref-section-title">Referral posted!</h3>
+          <p className="ref-section-sub">
+            Your referral for <strong>{createdReferral.subject}</strong> is now visible to the people you selected.
+          </p>
+          <div className="ref-detail-meta" style={{ marginBottom: 20 }}>
+            {[createdReferral.location, createdReferral.grade_level]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
+          <div className="ref-success-actions">
+            <button
+              className="btn-next ref-copy-link-btn"
+              onClick={() => {
+                navigator.clipboard.writeText(referralUrl);
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              }}
+            >
+              {linkCopied ? "Link copied!" : "Copy referral link"}
+            </button>
+            <p className="ref-share-hint" style={{ textAlign: "center", marginTop: 4 }}>
+              Anyone with this link can view and apply to your referral
+            </p>
+            <button
+              className="btn-back"
+              style={{ marginTop: 8 }}
+              onClick={() => {
+                setCreatedReferral(null);
+                setView("list");
+              }}
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -437,6 +497,17 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
 
         {isActive && (
           <div className="ref-detail-actions">
+            <button
+              className="ref-copy-link-btn"
+              onClick={() => {
+                const url = `${window.location.origin}/referral/${selectedReferral.id}`;
+                navigator.clipboard.writeText(url);
+                setDetailLinkCopied(true);
+                setTimeout(() => setDetailLinkCopied(false), 2000);
+              }}
+            >
+              {detailLinkCopied ? "Copied!" : "Copy link"}
+            </button>
             <button
               className="ref-close-btn"
               onClick={() => handleClose(selectedReferral.id)}
