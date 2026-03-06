@@ -119,6 +119,7 @@ export default function CommunityDetail({
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [appliedOpps, setAppliedOpps] = useState<Set<string>>(new Set());
 
   const fetchCommunity = useCallback(async () => {
     setLoading(true);
@@ -394,7 +395,16 @@ export default function CommunityDetail({
                     </div>
                   </div>
                   <div className="opp-card-actions">
-                    <button className="opp-apply-btn">Apply</button>
+                    {appliedOpps.has(opp.id) ? (
+                      <span className="opp-applied">Applied</span>
+                    ) : (
+                      <button
+                        className="opp-apply-btn"
+                        onClick={() => setAppliedOpps((prev) => new Set(prev).add(opp.id))}
+                      >
+                        Apply
+                      </button>
+                    )}
                   </div>
                 </div>
               );
