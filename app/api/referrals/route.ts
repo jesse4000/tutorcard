@@ -9,6 +9,28 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tutorId = searchParams.get("tutor_id");
     const mine = searchParams.get("mine");
+    const referralId = searchParams.get("id");
+
+    // Public single-referral fetch (for /referral/[id] page)
+    if (referralId && mine !== "true") {
+      const { data: referral, error } = await supabase
+        .from("referrals")
+        .select(
+          `id, subject, location, grade_level, notes, status, created_at,
+           tutor:tutors!referrals_tutor_id_fkey(id, first_name, last_name, avatar_color, slug)`
+        )
+        .eq("id", referralId)
+        .single();
+
+      if (error || !referral) {
+        return NextResponse.json(
+          { error: "Referral not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ referral });
+    }
 
     if (mine === "true") {
       const {
@@ -114,7 +136,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { subject, location, gradeLevel, notes, message } = body;
+    const { subject, location, gradeLevel, notes, message, sharedWithFriends, communityIds } = body;
 
     if (!subject) {
       return NextResponse.json(
@@ -132,6 +154,7 @@ export async function POST(request: Request) {
         grade_level: (gradeLevel || "").trim(),
         notes: (notes || "").trim(),
         message: (message || "").trim(),
+        shared_with_friends: !!sharedWithFriends,
       })
       .select()
       .single();
@@ -142,6 +165,20 @@ export async function POST(request: Request) {
         { error: "Failed to create referral" },
         { status: 500 }
       );
+    }
+
+    // Insert community shares if any communities selected
+    if (Array.isArray(communityIds) && communityIds.length > 0 && data) {
+      const shares = communityIds.map((cid: string) => ({
+        referral_id: data.id,
+        community_id: cid,
+      }));
+      const { error: shareError } = await supabase
+        .from("referral_community_shares")
+        .insert(shares);
+      if (shareError) {
+        console.error("Insert community shares error:", shareError);
+      }
     }
 
     return NextResponse.json({ success: true, referral: data });
