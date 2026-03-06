@@ -66,6 +66,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [view, setView] = useState<"card" | "referrals" | "friends" | "communities">("card");
   const [referralTab, setReferralTab] = useState<"home" | "yours" | "opportunities">("home");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -376,6 +377,46 @@ export default function DashboardClient({
                     size={56}
                     level="M"
                   />
+                </div>
+                {/* Share link banner */}
+                <div
+                  className="qr-banner"
+                  onClick={() => {
+                    const url =
+                      typeof window !== "undefined"
+                        ? `${window.location.origin}/${tutor.slug}`
+                        : `/${tutor.slug}`;
+                    navigator.clipboard.writeText(url).then(() => {
+                      setLinkCopied(true);
+                      setTimeout(() => setLinkCopied(false), 2000);
+                    });
+                  }}
+                >
+                  <div className="qr-banner-info">
+                    <span className="qr-banner-label">
+                      {linkCopied ? "Link copied!" : "Share card link"}
+                    </span>
+                    <span className="qr-banner-url">
+                      {typeof window !== "undefined"
+                        ? window.location.host
+                        : ""}
+                      /{tutor.slug}
+                    </span>
+                  </div>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ flexShrink: 0, color: "var(--ink-2)" }}
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
                 </div>
               </div>
             </div>
