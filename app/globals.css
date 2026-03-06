@@ -2442,6 +2442,55 @@ footer {
 .opp-coffee-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── RESPONSIVE ── */
+/* ── DESKTOP DASHBOARD ── */
+@media (min-width: 768px) {
+  .dashboard-page {
+    max-width: 840px;
+    padding: 90px 48px 60px;
+  }
+
+  .dash-tab {
+    flex: none;
+    padding: 10px 24px;
+  }
+
+  .dashboard-card-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .dashboard-card-wrap {
+    max-width: none;
+  }
+
+  .dashboard-card-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dashboard-card-sidebar .qr-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 24px 20px;
+  }
+
+  .dashboard-card-sidebar .qr-banner-info {
+    align-items: center;
+  }
+
+  .dash-section {
+    max-width: 760px;
+  }
+
+  .dashboard-referrals {
+    max-width: 760px;
+  }
+}
+
 @media (max-width: 860px) {
   .right-panel { display: none; }
   .left-panel { padding: 36px 24px 80px; }
