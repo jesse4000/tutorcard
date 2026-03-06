@@ -582,7 +582,7 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
   return (
     <div className="ref-manager">
       <div className="ref-header">
-        <h3 className="ref-section-title">Your referrals</h3>
+        <h3 className="ref-section-title">Your listings</h3>
         <button
           className="btn-next ref-create-btn"
           onClick={() => setView("create")}
