@@ -30,7 +30,7 @@ export async function GET() {
     const { data: referrals, error } = await supabase
       .from("referrals")
       .select(
-        `id, subject, location, grade_level, notes, created_at,
+        `id, subject, location, grade_level, notes, message, created_at,
          tutor:tutors!referrals_tutor_id_fkey(id, first_name, last_name, avatar_color, slug, subjects, exams)`
       )
       .eq("status", "active")
@@ -45,13 +45,15 @@ export async function GET() {
       );
     }
 
-    // Get current tutor's applications to know which they've already applied to
+    // Get current tutor's applications to know which they've already applied to and their status
     const { data: myApps } = await supabase
       .from("referral_applications")
-      .select("referral_id")
+      .select("referral_id, status")
       .eq("applicant_tutor_id", currentTutor.id);
 
-    const appliedSet = new Set((myApps || []).map((a) => a.referral_id));
+    const appMap = new Map(
+      (myApps || []).map((a) => [a.referral_id, a.status])
+    );
 
     // Build skill match set (lowercase for comparison)
     const mySkills = [
@@ -73,9 +75,15 @@ export async function GET() {
           (l) => locationLower.includes(l) || l.includes(locationLower)
         );
 
+      const appStatus = appMap.get(ref.id) || null;
+      const isAccepted = appStatus === "accepted";
+
       return {
         ...ref,
-        applied: appliedSet.has(ref.id),
+        // Only reveal the private message to accepted applicants
+        message: isAccepted ? ((ref as Record<string, unknown>).message || "") : undefined,
+        applied: !!appStatus,
+        applicationStatus: appStatus,
         skillMatch,
       };
     });

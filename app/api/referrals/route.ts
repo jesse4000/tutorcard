@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { subject, location, gradeLevel, notes } = body;
+    const { subject, location, gradeLevel, notes, message } = body;
 
     if (!subject) {
       return NextResponse.json(
@@ -131,6 +131,7 @@ export async function POST(request: Request) {
         location: (location || "Online").trim(),
         grade_level: (gradeLevel || "").trim(),
         notes: (notes || "").trim(),
+        message: (message || "").trim(),
       })
       .select()
       .single();
@@ -196,6 +197,7 @@ export async function PUT(request: Request) {
     if (fields.location !== undefined) updateData.location = fields.location.trim();
     if (fields.gradeLevel !== undefined) updateData.grade_level = fields.gradeLevel.trim();
     if (fields.notes !== undefined) updateData.notes = fields.notes.trim();
+    if (fields.message !== undefined) updateData.message = fields.message.trim();
     if (fields.status !== undefined) updateData.status = fields.status;
     updateData.updated_at = new Date().toISOString();
 

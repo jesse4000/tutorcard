@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const { data: application } = await supabase
       .from("referral_applications")
       .select(
-        `id, referral_id, applicant_tutor_id, referrals!inner(tutor_id, subject)`
+        `id, referral_id, applicant_tutor_id, referrals!inner(tutor_id, subject, message)`
       )
       .eq("id", applicationId)
       .single();
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     const referral = application.referrals as unknown as {
       tutor_id: string;
       subject: string;
+      message: string;
     };
 
     if (referral.tutor_id !== ownerTutor.id) {
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
         subject: referral.subject,
         action,
         origin,
+        message: referral.message || "",
       }).catch((err) => console.error("Email send error:", err));
     }
 
@@ -122,13 +124,21 @@ async function sendResponseEmail(params: {
   subject: string;
   action: string;
   origin: string;
+  message: string;
 }) {
-  const { to, applicantName, ownerName, subject, action, origin } = params;
+  const { to, applicantName, ownerName, subject, action, origin, message } = params;
   const isAccepted = action === "accepted";
   const emoji = isAccepted ? "🎉" : "😔";
   const statusText = isAccepted ? "accepted" : "declined";
-  const message = isAccepted
-    ? `Great news! <strong>${ownerName}</strong> accepted your application for their <strong>${subject}</strong> referral. They'll be reaching out to connect you with the student.`
+  const messageNote =
+    isAccepted && message
+      ? `<div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 12px 0;">
+           <div style="font-size: 12px; font-weight: 600; color: #166534; margin-bottom: 4px;">Message from ${ownerName}:</div>
+           <div style="font-size: 14px; color: #14532d; white-space: pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+         </div>`
+      : "";
+  const emailBody = isAccepted
+    ? `Great news! <strong>${ownerName}</strong> accepted your application for their <strong>${subject}</strong> referral. They'll be reaching out to connect you with the student.${messageNote}`
     : `<strong>${ownerName}</strong> has decided to go with another tutor for their <strong>${subject}</strong> referral. Don't worry — more referrals are posted regularly!`;
 
   try {
@@ -141,7 +151,7 @@ async function sendResponseEmail(params: {
         html: `
           <div style="font-family: 'Helvetica Neue', sans-serif; max-width: 480px; margin: 0 auto;">
             <p>Hi ${applicantName},</p>
-            <p>${message}</p>
+            <p>${emailBody}</p>
             <p><a href="${origin}/dashboard" style="display: inline-block; background: #18181b; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to Dashboard</a></p>
             <p style="color: #a1a1aa; font-size: 13px; margin-top: 24px;">— TutorCard by StudySpaces</p>
           </div>

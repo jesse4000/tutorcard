@@ -52,9 +52,11 @@ interface Opportunity {
   location: string;
   grade_level: string;
   notes: string;
+  message?: string;
   created_at: string;
   tutor: OpportunityTutor;
   applied: boolean;
+  applicationStatus?: string | null;
   skillMatch: boolean;
 }
 
@@ -460,9 +462,22 @@ export default function DashboardClient({
                           </div>
                         </div>
 
+                        {opp.applicationStatus === "accepted" && opp.message && (
+                          <div className="opp-message-reveal">
+                            <div className="opp-message-label">Message from {opp.tutor.first_name}:</div>
+                            <div className="opp-message-text">{opp.message}</div>
+                          </div>
+                        )}
+
                         <div className="opp-card-actions">
                           {opp.applied ? (
-                            <span className="opp-applied">Applied</span>
+                            <span className={`opp-applied${opp.applicationStatus === "accepted" ? " accepted" : opp.applicationStatus === "declined" ? " declined" : ""}`}>
+                              {opp.applicationStatus === "accepted"
+                                ? "Accepted"
+                                : opp.applicationStatus === "declined"
+                                ? "Declined"
+                                : "Applied"}
+                            </span>
                           ) : (
                             <button
                               className="opp-apply-btn"
