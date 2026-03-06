@@ -139,8 +139,8 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
           communityIds: selectedCommunityIds,
         }),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setCreatedReferral({
           id: data.referral.id,
           subject: subject.trim(),
@@ -157,6 +157,8 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
         setLinkCopied(false);
         setView("success");
         await fetchReferrals();
+      } else {
+        alert(data.error || "Failed to create referral");
       }
     } catch {
       alert("Failed to create referral");
