@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
@@ -8,6 +10,10 @@ import LogoSvg from "@/components/LogoSvg";
 
 interface ProfileClientProps {
   tutor: TutorData;
+  vouchCount: number;
+  hasVouched: boolean;
+  currentTutorId: string | null;
+  viewedTutorId: string;
 }
 
 function buildVCard(tutor: TutorData): string {
@@ -52,7 +58,55 @@ function downloadVCard(tutor: TutorData) {
 
 export default function ProfileClient({
   tutor,
+  vouchCount,
+  hasVouched,
+  currentTutorId,
+  viewedTutorId,
 }: ProfileClientProps) {
+  const router = useRouter();
+  const [localVouched, setLocalVouched] = useState(hasVouched);
+  const [localVouchCount, setLocalVouchCount] = useState(vouchCount);
+  const [isVouching, setIsVouching] = useState(false);
+
+  const isOwnCard = currentTutorId === viewedTutorId;
+
+  async function handleVouch() {
+    if (!currentTutorId) {
+      router.push(`/login?redirect=/${tutor.slug}`);
+      return;
+    }
+    if (isVouching) return;
+
+    setIsVouching(true);
+    const prevVouched = localVouched;
+    const prevCount = localVouchCount;
+
+    // Optimistic update
+    setLocalVouched(!localVouched);
+    setLocalVouchCount(localVouched ? localVouchCount - 1 : localVouchCount + 1);
+
+    try {
+      const res = await fetch("/api/vouches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tutorId: viewedTutorId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLocalVouched(data.vouched);
+        setLocalVouchCount(data.vouchCount);
+      } else {
+        // Rollback
+        setLocalVouched(prevVouched);
+        setLocalVouchCount(prevCount);
+      }
+    } catch {
+      setLocalVouched(prevVouched);
+      setLocalVouchCount(prevCount);
+    } finally {
+      setIsVouching(false);
+    }
+  }
 
   return (
     <>
@@ -62,7 +116,22 @@ export default function ProfileClient({
           <TutorCard
             data={tutor}
             variant="full"
+            vouchCount={localVouchCount}
           />
+
+          {!isOwnCard && (
+            <button
+              className={`vouch-btn${localVouched ? " vouched" : ""}`}
+              onClick={handleVouch}
+              disabled={isVouching}
+            >
+              {localVouched ? (
+                <><span className="vouch-icon">✓</span> Vouched</>
+              ) : (
+                <><span className="vouch-icon">🤝</span> Vouch for {tutor.firstName}</>
+              )}
+            </button>
+          )}
 
           <button
             className="vcard-btn"

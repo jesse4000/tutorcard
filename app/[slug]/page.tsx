@@ -42,6 +42,36 @@ export default async function ProfilePage({ params }: PageProps) {
   const tutor = await getTutor(slug);
   if (!tutor) notFound();
 
+  const supabase = await createClient();
+
+  // Vouch count
+  const { count: vouchCount } = await supabase
+    .from("vouches")
+    .select("id", { count: "exact", head: true })
+    .eq("vouched_tutor_id", tutor.id);
+
+  // Check if current visitor is logged in and has vouched
+  let currentTutorId: string | null = null;
+  let hasVouched = false;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: currentTutor } = await supabase
+      .from("tutors")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+    if (currentTutor) {
+      currentTutorId = currentTutor.id;
+      const { data: vouch } = await supabase
+        .from("vouches")
+        .select("id")
+        .eq("voucher_tutor_id", currentTutor.id)
+        .eq("vouched_tutor_id", tutor.id)
+        .maybeSingle();
+      hasVouched = !!vouch;
+    }
+  }
+
   const tutorData = {
     firstName: tutor.first_name,
     lastName: tutor.last_name,
@@ -59,6 +89,10 @@ export default async function ProfilePage({ params }: PageProps) {
   return (
     <ProfileClient
       tutor={tutorData}
+      vouchCount={vouchCount ?? 0}
+      hasVouched={hasVouched}
+      currentTutorId={currentTutorId}
+      viewedTutorId={tutor.id}
     />
   );
 }

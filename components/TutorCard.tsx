@@ -40,9 +40,10 @@ interface TutorCardProps {
   referralCount?: number;
   referralLabel?: string;
   onReferralClick?: () => void;
+  vouchCount?: number;
 }
 
-export default function TutorCard({ data, variant = "preview", referralCount, referralLabel, onReferralClick }: TutorCardProps) {
+export default function TutorCard({ data, variant = "preview", referralCount, referralLabel, onReferralClick, vouchCount }: TutorCardProps) {
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(" ");
   const initials =
     [data.firstName?.[0], data.lastName?.[0]].filter(Boolean).join("") || "?";
@@ -88,6 +89,12 @@ export default function TutorCard({ data, variant = "preview", referralCount, re
       <div className={isPreview ? "lc-title-text" : "mc-title"}>
         {data.title || "Your title will appear here"}
       </div>
+
+      {!isPreview && vouchCount !== undefined && vouchCount > 0 && (
+        <div className="vouch-count">
+          Vouched by {vouchCount} {vouchCount === 1 ? "tutor" : "tutors"}
+        </div>
+      )}
 
       {/* Tags */}
       <div className={isPreview ? "lc-tags" : "mc-tags"}>
