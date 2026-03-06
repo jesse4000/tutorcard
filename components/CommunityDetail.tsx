@@ -53,6 +53,46 @@ interface JoinRequest {
   };
 }
 
+interface MockOpportunity {
+  id: string;
+  subject: string;
+  location: string;
+  grade_level: string;
+  notes: string;
+  created_at: string;
+  tutor: { first_name: string; last_name: string; avatar_color: string; slug: string };
+}
+
+const MOCK_OPPORTUNITIES: MockOpportunity[] = [
+  {
+    id: "mock-1",
+    subject: "SAT Math",
+    location: "New York City",
+    grade_level: "11th grade",
+    notes: "Student needs help preparing for March SAT, currently scoring around 650",
+    created_at: "2026-03-05",
+    tutor: { first_name: "Sarah", last_name: "Chen", avatar_color: "#6366f1", slug: "sarah-chen" },
+  },
+  {
+    id: "mock-2",
+    subject: "AP Chemistry",
+    location: "Online",
+    grade_level: "10th grade",
+    notes: "Looking for twice-weekly sessions, student struggling with stoichiometry",
+    created_at: "2026-03-04",
+    tutor: { first_name: "Mike", last_name: "Johnson", avatar_color: "#f59e0b", slug: "mike-johnson" },
+  },
+  {
+    id: "mock-3",
+    subject: "Essay Writing",
+    location: "Boston",
+    grade_level: "12th grade",
+    notes: "College application essays — needs a tutor experienced with Common App",
+    created_at: "2026-03-03",
+    tutor: { first_name: "Priya", last_name: "Patel", avatar_color: "#10b981", slug: "priya-patel" },
+  },
+];
+
 interface CommunityDetailProps {
   communityId: string;
   onBack: () => void;
@@ -249,14 +289,9 @@ export default function CommunityDetail({
         </div>
         <div className="cd-header-info">
           <h1 className="cd-title">{community.name}</h1>
-          {community.description && (
-            <p className="cd-description">{community.description}</p>
-          )}
-          {community.userRole && (
-            <span className={`cd-role-badge cd-role-${community.userRole}`}>
-              {community.userRole}
-            </span>
-          )}
+          <span className="cd-member-count-tag">
+            {community.memberCount} Member{community.memberCount !== 1 ? "s" : ""}
+          </span>
         </div>
         <div className="cd-menu-wrap">
           <button
@@ -309,27 +344,80 @@ export default function CommunityDetail({
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="cd-stats">
-        <div className="cd-stat">
-          <span className="cd-stat-num">{community.memberCount}</span>
-          <span className="cd-stat-label">
-            Member{community.memberCount !== 1 ? "s" : ""}
-          </span>
+      {/* Tagline below header */}
+      {community.description && (
+        <p className="cd-tagline">{community.description}</p>
+      )}
+
+      {/* Member view: Opportunities section */}
+      {!community.isOwnerOrAdmin && (
+        <div className="cd-opportunities">
+          <div className="cd-opportunities-header">
+            <h2 className="cd-section-title">Opportunities</h2>
+            <span className="cd-opp-count">{MOCK_OPPORTUNITIES.length}</span>
+          </div>
+          <div className="opp-list">
+            {MOCK_OPPORTUNITIES.map((opp) => {
+              const initials = [opp.tutor.first_name?.[0], opp.tutor.last_name?.[0]]
+                .filter(Boolean)
+                .join("");
+              return (
+                <div key={opp.id} className="opp-card">
+                  <div className="opp-card-top">
+                    <div className="opp-card-subject">{opp.subject}</div>
+                    <div className="opp-card-meta">
+                      {opp.location} &middot; {opp.grade_level}
+                    </div>
+                    {opp.notes && (
+                      <div className="opp-card-notes">{opp.notes}</div>
+                    )}
+                  </div>
+                  <div className="opp-card-poster">
+                    <div
+                      className="opp-poster-av"
+                      style={{ background: opp.tutor.avatar_color }}
+                    >
+                      {initials}
+                    </div>
+                    <div className="opp-poster-info">
+                      <span className="opp-poster-name">
+                        {opp.tutor.first_name} {opp.tutor.last_name}
+                      </span>
+                      <a
+                        href={`/${opp.tutor.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="opp-poster-link"
+                      >
+                        View card
+                      </a>
+                    </div>
+                  </div>
+                  <div className="opp-card-actions">
+                    <button className="opp-apply-btn">Apply</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="cd-stat">
-          <span className="cd-stat-num">{community.referralCount}</span>
-          <span className="cd-stat-label">
-            Referral{community.referralCount !== 1 ? "s" : ""}
-          </span>
-        </div>
-        {community.isOwnerOrAdmin && (
+      )}
+
+      {/* Admin/Owner stats row */}
+      {community.isOwnerOrAdmin && (
+        <div className="cd-stats">
+          <div className="cd-stat">
+            <span className="cd-stat-num">{community.referralCount}</span>
+            <span className="cd-stat-label">
+              Referral{community.referralCount !== 1 ? "s" : ""}
+            </span>
+          </div>
           <div className="cd-stat cd-stat-pending">
             <span className="cd-stat-num">{community.pendingRequests}</span>
             <span className="cd-stat-label">Pending</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Tabs (owner/admin only) */}
       {community.isOwnerOrAdmin && (
