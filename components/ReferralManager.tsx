@@ -29,6 +29,7 @@ interface Referral {
   location: string;
   grade_level: string;
   notes: string;
+  message: string;
   status: string;
   created_at: string;
   referral_applications: Application[];
@@ -86,6 +87,7 @@ export default function ReferralManager() {
   const [location, setLocation] = useState("");
   const [gradeLevel, setGradeLevel] = useState("");
   const [notes, setNotes] = useState("");
+  const [message, setMessage] = useState("");
   const [creating, setCreating] = useState(false);
 
   const fetchReferrals = useCallback(async () => {
@@ -116,6 +118,7 @@ export default function ReferralManager() {
           location: location.trim() || "Online",
           gradeLevel: gradeLevel.trim(),
           notes: notes.trim(),
+          message: message.trim(),
         }),
       });
       if (res.ok) {
@@ -123,6 +126,7 @@ export default function ReferralManager() {
         setLocation("");
         setGradeLevel("");
         setNotes("");
+        setMessage("");
         setView("list");
         await fetchReferrals();
       }
@@ -284,6 +288,21 @@ export default function ReferralManager() {
           />
         </div>
 
+        <div className="field">
+          <label className="field-label">Message for accepted applicant (optional)</label>
+          <div className="field-hint">
+            This will only be shown to the tutor you accept. Share contact info,
+            the parent&apos;s email, or instructions like &quot;call me for details.&quot;
+          </div>
+          <textarea
+            className="field-input ref-textarea"
+            placeholder='e.g. "Parent email: jane@example.com" or "Call me and I will share more details"'
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+          />
+        </div>
+
         <div className="step-nav">
           <button className="btn-back" onClick={() => setView("list")}>
             Cancel
@@ -330,6 +349,12 @@ export default function ReferralManager() {
             {selectedReferral.notes && (
               <div className="ref-detail-notes">
                 &quot;{selectedReferral.notes}&quot;
+              </div>
+            )}
+            {selectedReferral.message && (
+              <div className="ref-detail-message">
+                <span className="ref-detail-message-label">Message for accepted applicant:</span>{" "}
+                {selectedReferral.message}
               </div>
             )}
           </div>
