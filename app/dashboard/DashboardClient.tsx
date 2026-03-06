@@ -451,35 +451,16 @@ export default function DashboardClient({
 
                         <div className="opp-card-actions">
                           {opp.applied ? (
-                            <span className="opp-applied">Applied ✓</span>
-                          ) : showCoffee === opp.id ? (
-                            <div className="opp-coffee-prompt">
-                              <button
-                                className="opp-apply-btn secondary"
-                                onClick={() =>
-                                  handleApplyToOpportunity(opp.id, false)
-                                }
-                                disabled={isApplying}
-                              >
-                                {isApplying ? "Applying..." : "Just apply"}
-                              </button>
-                              <button
-                                className="opp-coffee-btn"
-                                onClick={() =>
-                                  handleApplyToOpportunity(opp.id, true)
-                                }
-                                disabled={isApplying}
-                              >
-                                ☕ Apply + coffee
-                              </button>
-                            </div>
+                            <span className="opp-applied">Applied</span>
                           ) : (
                             <button
                               className="opp-apply-btn"
-                              onClick={() => setShowCoffee(opp.id)}
+                              onClick={() =>
+                                handleApplyToOpportunity(opp.id, false)
+                              }
                               disabled={isApplying}
                             >
-                              Apply
+                              {isApplying ? "Applying..." : "Apply"}
                             </button>
                           )}
                         </div>
