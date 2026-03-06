@@ -80,6 +80,7 @@ export default function DashboardClient({
 
   // Communities state
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
+  const [joinedCommunityDetails, setJoinedCommunityDetails] = useState<{ id: string; name: string; avatar_color: string }[]>([]);
   const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
   const [ownedCommunities, setOwnedCommunities] = useState<string[]>([]);
   const [openCommunityId, setOpenCommunityId] = useState<string | null>(null);
@@ -177,8 +178,16 @@ export default function DashboardClient({
         const res = await fetch("/api/communities/joined");
         if (res.ok) {
           const data = await res.json();
+          const comms = data.communities || [];
           setJoinedCommunities(
-            (data.communities || []).map((c: { id: string }) => c.id)
+            comms.map((c: { id: string }) => c.id)
+          );
+          setJoinedCommunityDetails(
+            comms.map((c: { id: string; name: string; avatar_color: string }) => ({
+              id: c.id,
+              name: c.name,
+              avatar_color: c.avatar_color,
+            }))
           );
           setPendingCommunities(data.pendingCommunityIds || []);
           setOwnedCommunities(data.ownedCommunityIds || []);
@@ -390,7 +399,7 @@ export default function DashboardClient({
 
             {referralTab === "yours" ? (
               <div className="dashboard-referrals">
-                <ReferralManager onViewChange={setReferralView} />
+                <ReferralManager onViewChange={setReferralView} communities={joinedCommunityDetails} />
               </div>
             ) : (
               <div>

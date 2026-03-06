@@ -26,12 +26,13 @@ export async function GET() {
       return NextResponse.json({ opportunities: [] });
     }
 
-    // Fetch all active referrals from OTHER tutors, with poster info
+    // Fetch all active referrals from OTHER tutors, with poster info and community shares
     const { data: referrals, error } = await supabase
       .from("referrals")
       .select(
-        `id, subject, location, grade_level, notes, message, created_at,
-         tutor:tutors!referrals_tutor_id_fkey(id, first_name, last_name, avatar_color, slug, subjects, exams)`
+        `id, subject, location, grade_level, notes, message, shared_with_friends, created_at,
+         tutor:tutors!referrals_tutor_id_fkey(id, first_name, last_name, avatar_color, slug, subjects, exams),
+         referral_community_shares(community_id)`
       )
       .eq("status", "active")
       .neq("tutor_id", currentTutor.id)
@@ -55,6 +56,34 @@ export async function GET() {
       (myApps || []).map((a) => [a.referral_id, a.status])
     );
 
+    // Get communities the current user is a member of
+    const { data: myMemberships } = await supabase
+      .from("community_members")
+      .select("community_id")
+      .eq("tutor_id", currentTutor.id);
+
+    const myCommunityIds = new Set(
+      (myMemberships || []).map((m: { community_id: string }) => m.community_id)
+    );
+
+    // Get the current user's accepted friends (both directions)
+    const { data: friendsSent } = await supabase
+      .from("friends")
+      .select("friend_tutor_id")
+      .eq("tutor_id", currentTutor.id)
+      .eq("status", "accepted");
+
+    const { data: friendsReceived } = await supabase
+      .from("friends")
+      .select("tutor_id")
+      .eq("friend_tutor_id", currentTutor.id)
+      .eq("status", "accepted");
+
+    const friendTutorIds = new Set([
+      ...(friendsSent || []).map((f: { friend_tutor_id: string }) => f.friend_tutor_id),
+      ...(friendsReceived || []).map((f: { tutor_id: string }) => f.tutor_id),
+    ]);
+
     // Build skill match set (lowercase for comparison)
     const mySkills = [
       ...(currentTutor.subjects || []),
@@ -64,29 +93,67 @@ export async function GET() {
       (l: string) => l.toLowerCase()
     );
 
-    const opportunities = (referrals || []).map((ref) => {
-      const subjectLower = ref.subject.toLowerCase();
-      const locationLower = ref.location.toLowerCase();
-      const skillMatch =
-        mySkills.some(
-          (s) => subjectLower.includes(s) || s.includes(subjectLower)
-        ) ||
-        myLocations.some(
-          (l) => locationLower.includes(l) || l.includes(locationLower)
-        );
+    const opportunities = (referrals || [])
+      .filter((ref) => {
+        const communityShares = (ref.referral_community_shares || []) as { community_id: string }[];
+        const hasCommunityShares = communityShares.length > 0;
+        const sharedWithFriends = !!(ref as Record<string, unknown>).shared_with_friends;
+        const hasAnySharing = hasCommunityShares || sharedWithFriends;
 
-      const appStatus = appMap.get(ref.id) || null;
-      const isAccepted = appStatus === "accepted";
+        // If no sharing restrictions set, it's a public referral (backward compat)
+        if (!hasAnySharing) return true;
 
-      return {
-        ...ref,
-        // Only reveal the private message to accepted applicants
-        message: isAccepted ? ((ref as Record<string, unknown>).message || "") : undefined,
-        applied: !!appStatus,
-        applicationStatus: appStatus,
-        skillMatch,
-      };
-    });
+        // Check if viewer is in one of the shared communities
+        if (hasCommunityShares) {
+          const inSharedCommunity = communityShares.some(
+            (s) => myCommunityIds.has(s.community_id)
+          );
+          if (inSharedCommunity) return true;
+        }
+
+        // Check if viewer is a friend of the poster
+        if (sharedWithFriends) {
+          const tutor = ref.tutor as { id: string } | null;
+          if (tutor && friendTutorIds.has(tutor.id)) return true;
+        }
+
+        return false;
+      })
+      .map((ref) => {
+        const subjectLower = ref.subject.toLowerCase();
+        const locationLower = ref.location.toLowerCase();
+        const skillMatch =
+          mySkills.some(
+            (s) => subjectLower.includes(s) || s.includes(subjectLower)
+          ) ||
+          myLocations.some(
+            (l) => locationLower.includes(l) || l.includes(locationLower)
+          );
+
+        const appStatus = appMap.get(ref.id) || null;
+        const isAccepted = appStatus === "accepted";
+
+        // Build sharing info for display
+        const communityShares = (ref.referral_community_shares || []) as { community_id: string }[];
+        const sharedCommunityIds = communityShares.map((s) => s.community_id);
+
+        return {
+          id: ref.id,
+          subject: ref.subject,
+          location: ref.location,
+          grade_level: ref.grade_level,
+          notes: ref.notes,
+          created_at: ref.created_at,
+          tutor: ref.tutor,
+          // Only reveal the private message to accepted applicants
+          message: isAccepted ? ((ref as Record<string, unknown>).message || "") : undefined,
+          applied: !!appStatus,
+          applicationStatus: appStatus,
+          skillMatch,
+          sharedWithFriends: !!(ref as Record<string, unknown>).shared_with_friends,
+          sharedCommunityIds,
+        };
+      });
 
     // Sort: skill matches first, then by date
     opportunities.sort((a, b) => {

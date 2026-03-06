@@ -35,6 +35,12 @@ interface Referral {
   referral_applications: Application[];
 }
 
+interface Community {
+  id: string;
+  name: string;
+  avatar_color: string;
+}
+
 type View = "list" | "create" | "detail";
 
 const SUBJECT_PRESETS = [
@@ -74,7 +80,7 @@ const GRADE_PRESETS = [
   "Adult",
 ];
 
-export default function ReferralManager({ onViewChange }: { onViewChange?: (view: View) => void } = {}) {
+export default function ReferralManager({ onViewChange, communities = [] }: { onViewChange?: (view: View) => void; communities?: Community[] } = {}) {
   const [view, setViewInternal] = useState<View>("list");
 
   const setView = useCallback((v: View) => {
@@ -93,6 +99,8 @@ export default function ReferralManager({ onViewChange }: { onViewChange?: (view
   const [gradeLevel, setGradeLevel] = useState("");
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState("");
+  const [sharedWithFriends, setSharedWithFriends] = useState(false);
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
 
   const fetchReferrals = useCallback(async () => {
@@ -124,6 +132,8 @@ export default function ReferralManager({ onViewChange }: { onViewChange?: (view
           gradeLevel: gradeLevel.trim(),
           notes: notes.trim(),
           message: message.trim(),
+          sharedWithFriends,
+          communityIds: selectedCommunityIds,
         }),
       });
       if (res.ok) {
@@ -132,6 +142,8 @@ export default function ReferralManager({ onViewChange }: { onViewChange?: (view
         setGradeLevel("");
         setNotes("");
         setMessage("");
+        setSharedWithFriends(false);
+        setSelectedCommunityIds([]);
         setView("list");
         await fetchReferrals();
       }
@@ -306,6 +318,59 @@ export default function ReferralManager({ onViewChange }: { onViewChange?: (view
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
           />
+        </div>
+
+        <div className="field">
+          <label className="field-label">Share with</label>
+          <div className="field-hint">
+            Choose who can see this referral. If nothing is selected, it will be visible to all tutors.
+          </div>
+          <div className="ref-share-options">
+            <label className="ref-share-option">
+              <input
+                type="checkbox"
+                checked={sharedWithFriends}
+                onChange={(e) => setSharedWithFriends(e.target.checked)}
+              />
+              <span className="ref-share-icon">👥</span>
+              <span className="ref-share-label">Friends</span>
+            </label>
+            {communities.map((c) => (
+              <label key={c.id} className="ref-share-option">
+                <input
+                  type="checkbox"
+                  checked={selectedCommunityIds.includes(c.id)}
+                  onChange={(e) => {
+                    setSelectedCommunityIds((prev) =>
+                      e.target.checked
+                        ? [...prev, c.id]
+                        : prev.filter((id) => id !== c.id)
+                    );
+                  }}
+                />
+                <span
+                  className="ref-share-community-dot"
+                  style={{ background: c.avatar_color || "#0f172a" }}
+                />
+                <span className="ref-share-label">{c.name}</span>
+              </label>
+            ))}
+          </div>
+          {!sharedWithFriends && selectedCommunityIds.length === 0 && (
+            <div className="ref-share-hint">
+              Visible to all tutors on the platform
+            </div>
+          )}
+          {(sharedWithFriends || selectedCommunityIds.length > 0) && (
+            <div className="ref-share-hint">
+              Only visible to {[
+                sharedWithFriends ? "your friends" : "",
+                selectedCommunityIds.length > 0
+                  ? `${selectedCommunityIds.length} communit${selectedCommunityIds.length === 1 ? "y" : "ies"}`
+                  : "",
+              ].filter(Boolean).join(" and ")}
+            </div>
+          )}
         </div>
 
         <div className="step-nav">
