@@ -73,6 +73,7 @@ export default function DashboardClient({
   const [oppFetched, setOppFetched] = useState(false);
   const [applyingTo, setApplyingTo] = useState<string | null>(null);
   const [showCoffee, setShowCoffee] = useState<string | null>(null);
+  const [referralView, setReferralView] = useState<string>("list");
 
   // Friends state
   const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
@@ -257,6 +258,8 @@ export default function DashboardClient({
               ← Communities
             </button>
           </div>
+        ) : view === "referrals" && referralView !== "list" ? (
+          null
         ) : (
           <div className="dash-tabs">
             <button
@@ -368,24 +371,26 @@ export default function DashboardClient({
         ) : view === "referrals" ? (
           /* ── Referrals screen ── */
           <div className="dash-section">
-            <div className="ref-sub-tabs">
-              <button
-                className={`ref-sub-tab${referralTab === "yours" ? " active" : ""}`}
-                onClick={() => setReferralTab("yours")}
-              >
-                Your Referrals
-              </button>
-              <button
-                className={`ref-sub-tab${referralTab === "opportunities" ? " active" : ""}`}
-                onClick={() => setReferralTab("opportunities")}
-              >
-                Opportunities
-              </button>
-            </div>
+            {referralView === "list" && (
+              <div className="ref-sub-tabs">
+                <button
+                  className={`ref-sub-tab${referralTab === "yours" ? " active" : ""}`}
+                  onClick={() => setReferralTab("yours")}
+                >
+                  Your Referrals
+                </button>
+                <button
+                  className={`ref-sub-tab${referralTab === "opportunities" ? " active" : ""}`}
+                  onClick={() => setReferralTab("opportunities")}
+                >
+                  Opportunities
+                </button>
+              </div>
+            )}
 
             {referralTab === "yours" ? (
               <div className="dashboard-referrals">
-                <ReferralManager />
+                <ReferralManager onViewChange={setReferralView} />
               </div>
             ) : (
               <div>

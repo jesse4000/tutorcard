@@ -74,8 +74,13 @@ const GRADE_PRESETS = [
   "Adult",
 ];
 
-export default function ReferralManager() {
-  const [view, setView] = useState<View>("list");
+export default function ReferralManager({ onViewChange }: { onViewChange?: (view: View) => void } = {}) {
+  const [view, setViewInternal] = useState<View>("list");
+
+  const setView = useCallback((v: View) => {
+    setViewInternal(v);
+    onViewChange?.(v);
+  }, [onViewChange]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReferral, setSelectedReferral] = useState<Referral | null>(
