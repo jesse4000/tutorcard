@@ -7,13 +7,11 @@ import { QRCodeSVG } from "qrcode.react";
 import Navbar from "@/components/Navbar";
 import TutorCard from "@/components/TutorCard";
 import ReferralManager from "@/components/ReferralManager";
-import InviteFriends from "@/components/InviteFriends";
 import CommunityPicker from "@/components/CommunityPicker";
 import CommunityDetail from "@/components/CommunityDetail";
 import JoinCommunityPopup from "@/components/JoinCommunityPopup";
 import { createClient } from "@/lib/supabase/client";
 import type { TutorLink } from "@/components/TutorCard";
-import type { FriendInvite } from "@/components/InviteFriends";
 
 interface TutorRow {
   id: string;
@@ -67,7 +65,7 @@ export default function DashboardClient({
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [view, setView] = useState<"card" | "referrals" | "friends" | "communities">("card");
+  const [view, setView] = useState<"card" | "referrals" | "communities">("card");
   const [referralTab, setReferralTab] = useState<"home" | "yours" | "opportunities">("home");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [oppLoading, setOppLoading] = useState(false);
@@ -76,9 +74,6 @@ export default function DashboardClient({
   const [showCoffee, setShowCoffee] = useState<string | null>(null);
   const [referralView, setReferralView] = useState<string>("list");
   const [pendingApplicants, setPendingApplicants] = useState(0);
-
-  // Friends state
-  const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
 
   // Communities state
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
@@ -298,12 +293,6 @@ export default function DashboardClient({
               onClick={() => setView("card")}
             >
               Card
-            </button>
-            <button
-              className={`dash-tab${view === "friends" ? " active" : ""}`}
-              onClick={() => setView("friends")}
-            >
-              Friends
             </button>
             <button
               className={`dash-tab${view === "communities" ? " active" : ""}`}
@@ -624,19 +613,6 @@ export default function DashboardClient({
                 </div>
               </>
             )}
-          </div>
-        ) : view === "friends" ? (
-          /* ── Friends screen ── */
-          <div className="dash-section">
-            <h1 className="dashboard-title">Invite fellow tutors</h1>
-            <p className="dashboard-sub">
-              Add tutors you know. They&apos;ll get an invite to connect with you
-              and can send or receive referrals.
-            </p>
-            <InviteFriends
-              invites={friendInvites}
-              onChange={setFriendInvites}
-            />
           </div>
         ) : view === "communities" ? (
           /* ── Communities screen ── */

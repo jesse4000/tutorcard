@@ -30,7 +30,7 @@ export async function GET() {
     const { data: referrals, error } = await supabase
       .from("referrals")
       .select(
-        `id, subject, location, grade_level, notes, message, shared_with_friends, created_at,
+        `id, subject, location, grade_level, notes, message, created_at,
          tutor:tutors!referrals_tutor_id_fkey(id, first_name, last_name, avatar_color, slug, subjects, exams),
          referral_community_shares(community_id)`
       )
@@ -66,24 +66,6 @@ export async function GET() {
       (myMemberships || []).map((m: { community_id: string }) => m.community_id)
     );
 
-    // Get the current user's accepted friends (both directions)
-    const { data: friendsSent } = await supabase
-      .from("friends")
-      .select("friend_tutor_id")
-      .eq("tutor_id", currentTutor.id)
-      .eq("status", "accepted");
-
-    const { data: friendsReceived } = await supabase
-      .from("friends")
-      .select("tutor_id")
-      .eq("friend_tutor_id", currentTutor.id)
-      .eq("status", "accepted");
-
-    const friendTutorIds = new Set([
-      ...(friendsSent || []).map((f: { friend_tutor_id: string }) => f.friend_tutor_id),
-      ...(friendsReceived || []).map((f: { tutor_id: string }) => f.tutor_id),
-    ]);
-
     // Build skill match set (lowercase for comparison)
     const mySkills = [
       ...(currentTutor.subjects || []),
@@ -96,28 +78,11 @@ export async function GET() {
     const opportunities = (referrals || [])
       .filter((ref) => {
         const communityShares = (ref.referral_community_shares || []) as { community_id: string }[];
-        const hasCommunityShares = communityShares.length > 0;
-        const sharedWithFriends = !!(ref as Record<string, unknown>).shared_with_friends;
-        const hasAnySharing = hasCommunityShares || sharedWithFriends;
+        if (communityShares.length === 0) return false;
 
-        // Referrals with no sharing target are not shown in the feed
-        if (!hasAnySharing) return false;
-
-        // Check if viewer is in one of the shared communities
-        if (hasCommunityShares) {
-          const inSharedCommunity = communityShares.some(
-            (s) => myCommunityIds.has(s.community_id)
-          );
-          if (inSharedCommunity) return true;
-        }
-
-        // Check if viewer is a friend of the poster
-        if (sharedWithFriends) {
-          const tutor = ref.tutor as unknown as { id: string } | null;
-          if (tutor && friendTutorIds.has(tutor.id)) return true;
-        }
-
-        return false;
+        return communityShares.some(
+          (s) => myCommunityIds.has(s.community_id)
+        );
       })
       .map((ref) => {
         const subjectLower = ref.subject.toLowerCase();
@@ -150,7 +115,6 @@ export async function GET() {
           applied: !!appStatus,
           applicationStatus: appStatus,
           skillMatch,
-          sharedWithFriends: !!(ref as Record<string, unknown>).shared_with_friends,
           sharedCommunityIds,
         };
       });

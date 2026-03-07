@@ -99,7 +99,6 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
   const [gradeLevel, setGradeLevel] = useState("");
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState("");
-  const [sharedWithFriends, setSharedWithFriends] = useState(false);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const [createdReferral, setCreatedReferral] = useState<{ id: string; subject: string; location: string; grade_level: string } | null>(null);
@@ -135,7 +134,6 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
           gradeLevel: gradeLevel.trim(),
           notes: notes.trim(),
           message: message.trim(),
-          sharedWithFriends,
           communityIds: selectedCommunityIds,
         }),
       });
@@ -152,7 +150,6 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
         setGradeLevel("");
         setNotes("");
         setMessage("");
-        setSharedWithFriends(false);
         setSelectedCommunityIds([]);
         setLinkCopied(false);
         setView("success");
@@ -339,15 +336,6 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
             Choose who can see this referral. At least one option is required.
           </div>
           <div className="ref-share-options">
-            <label className="ref-share-option">
-              <input
-                type="checkbox"
-                checked={sharedWithFriends}
-                onChange={(e) => setSharedWithFriends(e.target.checked)}
-              />
-              <span className="ref-share-icon">👥</span>
-              <span className="ref-share-label">Friends</span>
-            </label>
             {communities.map((c) => (
               <label key={c.id} className="ref-share-option">
                 <input
@@ -369,19 +357,14 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
               </label>
             ))}
           </div>
-          {!sharedWithFriends && selectedCommunityIds.length === 0 && (
+          {selectedCommunityIds.length === 0 && (
             <div className="ref-share-hint ref-share-required">
-              Select at least one option to post your referral
+              Select at least one community to post your referral
             </div>
           )}
-          {(sharedWithFriends || selectedCommunityIds.length > 0) && (
+          {selectedCommunityIds.length > 0 && (
             <div className="ref-share-hint">
-              Only visible to {[
-                sharedWithFriends ? "your friends" : "",
-                selectedCommunityIds.length > 0
-                  ? `${selectedCommunityIds.length} communit${selectedCommunityIds.length === 1 ? "y" : "ies"}`
-                  : "",
-              ].filter(Boolean).join(" and ")}
+              Only visible to {selectedCommunityIds.length} communit{selectedCommunityIds.length === 1 ? "y" : "ies"}
             </div>
           )}
         </div>
@@ -393,7 +376,7 @@ export default function ReferralManager({ onViewChange, communities = [] }: { on
           <button
             className="btn-next"
             onClick={handleCreate}
-            disabled={creating || !subject.trim() || (!sharedWithFriends && selectedCommunityIds.length === 0)}
+            disabled={creating || !subject.trim() || selectedCommunityIds.length === 0}
           >
             {creating ? "Posting..." : "Post referral"}
           </button>
