@@ -56,6 +56,34 @@ interface Opportunity {
   applied: boolean;
   applicationStatus?: string | null;
   skillMatch: boolean;
+  communityName?: string;
+}
+
+interface MyReferral {
+  id: string;
+  subject: string;
+  location: string;
+  grade_level: string;
+  status: string;
+  referral_applications: { id: string; status: string }[];
+}
+
+interface CommunityDetail {
+  id: string;
+  name: string;
+  avatar_color: string;
+  memberCount?: number;
+  newReferralCount?: number;
+}
+
+function getTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hours = Math.floor(diff / 3600000);
+  if (hours < 1) return "just now";
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "1d ago";
+  return `${days}d ago`;
 }
 
 export default function DashboardClient({
@@ -77,11 +105,17 @@ export default function DashboardClient({
 
   // Communities state
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
-  const [joinedCommunityDetails, setJoinedCommunityDetails] = useState<{ id: string; name: string; avatar_color: string }[]>([]);
+  const [joinedCommunityDetails, setJoinedCommunityDetails] = useState<CommunityDetail[]>([]);
   const [pendingCommunities, setPendingCommunities] = useState<string[]>([]);
   const [ownedCommunities, setOwnedCommunities] = useState<string[]>([]);
   const [openCommunityId, setOpenCommunityId] = useState<string | null>(null);
   const [joinPopupCommunityId, setJoinPopupCommunityId] = useState<string | null>(null);
+
+  // Desktop dashboard state
+  const [myReferrals, setMyReferrals] = useState<MyReferral[]>([]);
+  const [vouchCount, setVouchCount] = useState(0);
+  const [showDesktopCommunities, setShowDesktopCommunities] = useState(false);
+  const [desktopNewListing, setDesktopNewListing] = useState(false);
 
   const fetchOpportunities = useCallback(async () => {
     setOppLoading(true);
@@ -111,13 +145,32 @@ export default function DashboardClient({
         const res = await fetch("/api/referrals?mine=true");
         if (res.ok) {
           const data = await res.json();
-          const pending = (data.referrals || []).reduce(
+          const refs = data.referrals || [];
+          setMyReferrals(refs);
+          const pending = refs.reduce(
             (sum: number, r: { referral_applications?: { status: string }[] }) =>
-              sum + (r.referral_applications?.filter((a) => a.status === "pending").length || 0),
+              sum + (r.referral_applications?.filter((a: { status: string }) => a.status === "pending").length || 0),
             0
           );
           setPendingApplicants(pending);
         }
+      } catch {
+        // silently fail
+      }
+    })();
+  }, [tutor]);
+
+  // Fetch vouch count
+  useEffect(() => {
+    if (!tutor) return;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { count } = await supabase
+          .from("vouches")
+          .select("*", { count: "exact", head: true })
+          .eq("vouched_tutor_id", tutor.id);
+        setVouchCount(count || 0);
       } catch {
         // silently fail
       }
@@ -200,10 +253,12 @@ export default function DashboardClient({
             comms.map((c: { id: string }) => c.id)
           );
           setJoinedCommunityDetails(
-            comms.map((c: { id: string; name: string; avatar_color: string }) => ({
+            comms.map((c: { id: string; name: string; avatar_color: string; memberCount?: number; newReferralCount?: number }) => ({
               id: c.id,
               name: c.name,
               avatar_color: c.avatar_color,
+              memberCount: c.memberCount,
+              newReferralCount: c.newReferralCount,
             }))
           );
           setPendingCommunities(data.pendingCommunityIds || []);
@@ -273,7 +328,7 @@ export default function DashboardClient({
         userEmail={userEmail}
         onSignOut={handleSignOut}
       />
-      <div className="dashboard-page">
+      <div className="dashboard-page mobile-dashboard">
         {/* Dashboard Tab Bar (hidden when community detail is open) */}
         {view === "communities" && openCommunityId ? (
           <div className="dash-back-bar">
@@ -647,6 +702,330 @@ export default function DashboardClient({
             </div>
           )
         ) : null}
+      </div>
+
+      {/* ── DESKTOP UNIFIED DASHBOARD ── */}
+      <div className="desktop-dashboard">
+        {/* Desktop drill-down views */}
+        {openCommunityId ? (
+          <div style={{ width: "100%" }}>
+            <CommunityDetail
+              communityId={openCommunityId}
+              onBack={() => setOpenCommunityId(null)}
+            />
+          </div>
+        ) : showDesktopCommunities ? (
+          <div style={{ width: "100%" }}>
+            <button className="listings-back-btn" onClick={() => setShowDesktopCommunities(false)}>
+              ← Back to dashboard
+            </button>
+            <h1 className="dashboard-title" style={{ marginBottom: 16 }}>Communities</h1>
+            <CommunityPicker
+              joined={joinedCommunities}
+              pending={pendingCommunities}
+              owned={ownedCommunities}
+              onJoin={handleJoinCommunity}
+              onLeave={handleLeaveCommunity}
+              onCreate={handleCreateCommunity}
+              onOpen={(id) => setOpenCommunityId(id)}
+              onApply={(id) => setJoinPopupCommunityId(id)}
+            />
+          </div>
+        ) : desktopNewListing ? (
+          <div style={{ width: "100%" }}>
+            <button className="listings-back-btn" onClick={() => setDesktopNewListing(false)}>
+              ← Back to dashboard
+            </button>
+            <div className="dashboard-referrals">
+              <ReferralManager onViewChange={setReferralView} communities={joinedCommunityDetails} />
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* LEFT SIDEBAR */}
+            <aside className="dd-sidebar">
+              <div className="dd-profile-card">
+                <div className="dd-profile-head">
+                  <div
+                    className="dd-avatar"
+                    style={{ background: tutor.profile_image_url ? "transparent" : (tutor.avatar_color || "#0f172a") }}
+                  >
+                    {tutor.profile_image_url ? (
+                      <img
+                        src={tutor.profile_image_url}
+                        alt={tutorData.firstName}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                      />
+                    ) : (
+                      [tutor.first_name?.[0], tutor.last_name?.[0]].filter(Boolean).join("")
+                    )}
+                  </div>
+                  <div>
+                    <div className="dd-name">
+                      {[tutor.first_name, tutor.last_name].filter(Boolean).join(" ")}
+                    </div>
+                    <div className="dd-title-text">{tutor.title || "Tutor"}</div>
+                  </div>
+                </div>
+
+                <div className="dd-tags">
+                  {[...tutorData.exams, ...tutorData.locations].map((tag, i) => (
+                    <span key={tag + i} className={`dd-tag${i === 0 ? " accent" : ""}`}>{tag}</span>
+                  ))}
+                </div>
+
+                <div className="dd-stats">
+                  <div className="dd-stat">
+                    <span className="dd-stat-num">{myReferrals.length}</span>
+                    <span className="dd-stat-label">LISTINGS</span>
+                  </div>
+                  <div className="dd-stat">
+                    <span className="dd-stat-num">
+                      {myReferrals.reduce((sum, r) => sum + (r.referral_applications?.length || 0), 0)}
+                    </span>
+                    <span className="dd-stat-label">PASSED</span>
+                  </div>
+                  <div className="dd-stat">
+                    <span className="dd-stat-num">{vouchCount}</span>
+                    <span className="dd-stat-label">VOUCHES</span>
+                  </div>
+                </div>
+
+                <div className="dd-actions">
+                  <button className="dd-action-btn" onClick={() => setShowQR(true)}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="1" width="6" height="6" rx="1" />
+                      <rect x="9" y="1" width="6" height="6" rx="1" />
+                      <rect x="1" y="9" width="6" height="6" rx="1" />
+                      <rect x="11" y="11" width="2" height="2" />
+                    </svg>
+                    QR CODE
+                  </button>
+                  <button
+                    className="dd-action-btn"
+                    onClick={() => {
+                      const url = typeof window !== "undefined"
+                        ? `${window.location.origin}/${tutor.slug}`
+                        : `/${tutor.slug}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        setLinkCopied(true);
+                        setTimeout(() => setLinkCopied(false), 2000);
+                      });
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10 2.5l1.5-1.5a2 2 0 0 1 3 3L13 5.5M6 10l-1.5 1.5a2 2 0 0 1-3-3L3 7" />
+                      <path d="M6 10l4-4" />
+                    </svg>
+                    {linkCopied ? "COPIED!" : "SHARE"}
+                  </button>
+                  <Link href="/dashboard/edit" className="dd-action-btn">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11.3 1.7a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3L5.7 13.3 2 14l.7-3.7z" />
+                    </svg>
+                    EDIT
+                  </Link>
+                </div>
+              </div>
+
+              {/* Communities Section */}
+              <div className="dd-communities">
+                <div className="dd-comm-header">
+                  <span className="dd-comm-title">Communities</span>
+                  <button className="dd-comm-browse" onClick={() => setShowDesktopCommunities(true)}>
+                    Browse &rarr;
+                  </button>
+                </div>
+                {joinedCommunityDetails.map((comm) => (
+                  <div
+                    key={comm.id}
+                    className="dd-comm-item"
+                    onClick={() => setOpenCommunityId(comm.id)}
+                  >
+                    <div
+                      className="dd-comm-avatar"
+                      style={{ background: comm.avatar_color || "#0f172a" }}
+                    >
+                      {comm.name.slice(0, 3).toUpperCase()}
+                    </div>
+                    <div className="dd-comm-info">
+                      <div className="dd-comm-name">{comm.name}</div>
+                      <div className="dd-comm-meta">
+                        {comm.memberCount || 0} member{(comm.memberCount || 0) !== 1 ? "s" : ""}
+                        {(comm.newReferralCount || 0) > 0 && (
+                          <> &middot; {comm.newReferralCount} new referral{(comm.newReferralCount || 0) !== 1 ? "s" : ""}</>
+                        )}
+                      </div>
+                    </div>
+                    {(comm.newReferralCount || 0) > 0 && <span className="dd-comm-dot" />}
+                  </div>
+                ))}
+                <button
+                  className="dd-comm-join"
+                  onClick={() => setShowDesktopCommunities(true)}
+                >
+                  + Join a community
+                </button>
+              </div>
+            </aside>
+
+            {/* RIGHT MAIN CONTENT */}
+            <main className="dd-main">
+              {/* Match Banner */}
+              {opportunities.filter((o) => o.skillMatch).length > 0 && (
+                <div className="dd-match-banner">
+                  <div className="dd-match-info">
+                    <span className="dd-match-icon">&#x1F4E3;</span>
+                    <div>
+                      <div className="dd-match-title">
+                        {opportunities.filter((o) => o.skillMatch).length} new referral{opportunities.filter((o) => o.skillMatch).length !== 1 ? "s" : ""} match your profile
+                      </div>
+                      <div className="dd-match-sub">
+                        {[...new Set(opportunities.filter((o) => o.skillMatch).map((o) => o.subject))].slice(0, 2).join(", ")}
+                        {" "}&middot; posted in the last 24h
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="dd-match-btn"
+                    onClick={() => {
+                      const el = document.getElementById("dd-opps-section");
+                      el?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    View matches
+                  </button>
+                </div>
+              )}
+
+              {/* Your Listings */}
+              <section className="dd-listings-section">
+                <div className="dd-section-header">
+                  <h2 className="dd-section-title">Your listings</h2>
+                  <button className="dd-section-link" onClick={() => setDesktopNewListing(true)}>
+                    + New listing
+                  </button>
+                </div>
+                <div className="dd-listings-row">
+                  {myReferrals.map((ref) => {
+                    const pendingCount = ref.referral_applications?.filter((a) => a.status === "pending").length || 0;
+                    const isActive = ref.status === "open";
+                    return (
+                      <div
+                        key={ref.id}
+                        className="dd-listing-card"
+                        onClick={() => setDesktopNewListing(true)}
+                      >
+                        <div className="dd-listing-subject">{ref.subject}</div>
+                        <div className="dd-listing-meta">
+                          {[ref.location, ref.grade_level].filter(Boolean).join(" \u00B7 ")}
+                        </div>
+                        {pendingCount > 0 ? (
+                          <span className="dd-listing-badge applicants">
+                            {pendingCount} APPLICANT{pendingCount !== 1 ? "S" : ""}
+                          </span>
+                        ) : (
+                          <span className={`dd-listing-badge ${isActive ? "active" : "closed"}`}>
+                            {isActive ? "ACTIVE" : "CLOSED"}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <div
+                    className="dd-listing-card dd-listing-add"
+                    onClick={() => setDesktopNewListing(true)}
+                  >
+                    <div className="dd-listing-add-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 8v8M8 12h8" />
+                      </svg>
+                    </div>
+                    <span className="dd-listing-add-text">List a referral</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Opportunities */}
+              <section className="dd-opps-section" id="dd-opps-section">
+                <div className="dd-section-header">
+                  <h2 className="dd-section-title">Opportunities</h2>
+                  {opportunities.length > 5 && (
+                    <span className="dd-section-link" style={{ cursor: "default" }}>
+                      See all
+                    </span>
+                  )}
+                </div>
+                {opportunities.length === 0 ? (
+                  <div className="dd-opps-empty">
+                    No referral opportunities right now. Check back later.
+                  </div>
+                ) : (
+                  <div className="dd-opps-list">
+                    {opportunities.slice(0, 5).map((opp) => {
+                      const posterName = [opp.tutor.first_name, opp.tutor.last_name].filter(Boolean).join(" ");
+                      const posterInitials = [opp.tutor.first_name?.[0], opp.tutor.last_name?.[0]].filter(Boolean).join("");
+                      const isApplying = applyingTo === opp.id;
+                      const timeAgo = getTimeAgo(opp.created_at);
+
+                      return (
+                        <div key={opp.id} className="dd-opp-card">
+                          <div className="dd-opp-top">
+                            <div className="dd-opp-subject">{opp.subject}</div>
+                            <div className="dd-opp-time-row">
+                              <span className="dd-opp-time">{timeAgo}</span>
+                              {opp.skillMatch && <span className="dd-opp-match">MATCH</span>}
+                            </div>
+                          </div>
+
+                          <div className="dd-opp-tags">
+                            {[opp.subject.split(" ")[0], opp.location, opp.grade_level].filter(Boolean).map((tag, i) => (
+                              <span key={tag + i} className={`dd-opp-tag${i === 0 && opp.skillMatch ? " accent" : ""}`}>{tag}</span>
+                            ))}
+                          </div>
+
+                          {opp.notes && (
+                            <div className="dd-opp-notes">
+                              {opp.notes}
+                            </div>
+                          )}
+
+                          <div className="dd-opp-footer">
+                            <div className="dd-opp-poster">
+                              <div
+                                className="dd-opp-poster-av"
+                                style={{ background: opp.tutor.avatar_color || "#0f172a" }}
+                              >
+                                {posterInitials}
+                              </div>
+                              <span className="dd-opp-poster-name">
+                                {opp.communityName ? `via ${opp.communityName} \u00B7 ` : ""}{posterName}
+                              </span>
+                            </div>
+                            {opp.applied ? (
+                              <span className={`dd-opp-status${opp.applicationStatus === "accepted" ? " accepted" : opp.applicationStatus === "declined" ? " declined" : ""}`}>
+                                {opp.applicationStatus === "accepted" ? "Accepted" : opp.applicationStatus === "declined" ? "Declined" : "Applied"}
+                              </span>
+                            ) : (
+                              <button
+                                className="dd-opp-apply"
+                                onClick={() => handleApplyToOpportunity(opp.id, false)}
+                                disabled={isApplying}
+                              >
+                                {isApplying ? "Applying..." : "Apply"} &rarr;
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            </main>
+          </>
+        )}
       </div>
 
       {/* Join Community Popup */}
