@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "npx tsx --env-file=.env.local scripts/seed.ts",
+    "seed:clean": "npx tsx --env-file=.env.local scripts/seed.ts --clean"
   },
   "dependencies": {
     "@eslint/eslintrc": "^3.3.4",
@@ -25,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.12",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   }
 }
