@@ -1,6 +1,3 @@
--- Add shared_with_friends flag to referrals
-alter table referrals add column if not exists shared_with_friends boolean not null default false;
-
 -- Create referral_community_shares join table for multi-community sharing
 create table if not exists referral_community_shares (
   id uuid primary key default gen_random_uuid(),

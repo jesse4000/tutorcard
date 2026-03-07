@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { subject, location, gradeLevel, notes, message, sharedWithFriends, communityIds } = body;
+    const { subject, location, gradeLevel, notes, message, communityIds } = body;
 
     if (!subject) {
       return NextResponse.json(
@@ -154,7 +154,6 @@ export async function POST(request: Request) {
         grade_level: (gradeLevel || "").trim(),
         notes: (notes || "").trim(),
         message: (message || "").trim(),
-        shared_with_friends: !!sharedWithFriends,
       })
       .select()
       .single();
