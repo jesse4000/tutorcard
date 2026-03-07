@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx tsx scripts/seed.ts",
-    "seed:clean": "npx tsx scripts/seed.ts --clean"
+    "seed": "npx tsx --env-file=.env.local scripts/seed.ts",
+    "seed:clean": "npx tsx --env-file=.env.local scripts/seed.ts --clean"
   },
   "dependencies": {
     "@eslint/eslintrc": "^3.3.4",
