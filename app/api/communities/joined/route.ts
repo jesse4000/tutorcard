@@ -27,9 +27,60 @@ export async function GET() {
       .select("community_id, role, communities(id, name, description, avatar_color)")
       .eq("tutor_id", tutor.id);
 
+    const communityIds = (memberships || [])
+      .map((m: Record<string, unknown>) => {
+        const c = m.communities as Record<string, unknown> | null;
+        return c ? (c.id as string) : null;
+      })
+      .filter(Boolean) as string[];
+
+    // Fetch member counts for joined communities
+    let memberCounts: Record<string, number> = {};
+    if (communityIds.length > 0) {
+      const { data: countRows } = await supabase
+        .from("community_members")
+        .select("community_id")
+        .in("community_id", communityIds);
+      if (countRows) {
+        memberCounts = countRows.reduce((acc: Record<string, number>, row: Record<string, unknown>) => {
+          const cid = row.community_id as string;
+          acc[cid] = (acc[cid] || 0) + 1;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Fetch new referral counts (posted in last 24h) per community
+    let newReferralCounts: Record<string, number> = {};
+    if (communityIds.length > 0) {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: refRows } = await supabase
+        .from("community_referrals")
+        .select("community_id")
+        .in("community_id", communityIds)
+        .gte("created_at", oneDayAgo);
+      if (refRows) {
+        newReferralCounts = refRows.reduce((acc: Record<string, number>, row: Record<string, unknown>) => {
+          const cid = row.community_id as string;
+          acc[cid] = (acc[cid] || 0) + 1;
+          return acc;
+        }, {});
+      }
+    }
+
     const communities = (memberships || []).map((m: Record<string, unknown>) => {
       const c = m.communities as Record<string, unknown> | null;
-      return c ? { id: c.id, name: c.name, description: c.description, avatar_color: c.avatar_color, role: m.role } : null;
+      if (!c) return null;
+      const cid = c.id as string;
+      return {
+        id: cid,
+        name: c.name,
+        description: c.description,
+        avatar_color: c.avatar_color,
+        role: m.role,
+        memberCount: memberCounts[cid] || 0,
+        newReferralCount: newReferralCounts[cid] || 0,
+      };
     }).filter(Boolean);
 
     const ownedCommunityIds = (memberships || [])
