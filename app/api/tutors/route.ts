@@ -41,9 +41,9 @@ export async function POST(request: Request) {
     } = body;
 
     // Validate required fields
-    if (!firstName || !lastName || !slug) {
+    if (!firstName || !slug) {
       return NextResponse.json(
-        { error: "First name, last name, and card URL are required" },
+        { error: "First name and card URL are required" },
         { status: 400 }
       );
     }
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: user.id,
         first_name: firstName.trim(),
-        last_name: lastName.trim(),
+        last_name: lastName?.trim() || "",
         title: title?.trim() || null,
         slug: cleanSlug,
         avatar_color: avatarColor || "#0f172a",

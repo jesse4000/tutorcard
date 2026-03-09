@@ -1,7 +1,7 @@
 "use client";
 
-import TutorForm from "@/components/TutorForm";
+import TutorCardOnboarding from "@/components/TutorCardOnboarding";
 
 export default function CreatePage() {
-  return <TutorForm mode="create" />;
+  return <TutorCardOnboarding />;
 }
