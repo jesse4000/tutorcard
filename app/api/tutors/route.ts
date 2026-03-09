@@ -36,7 +36,6 @@ export async function POST(request: Request) {
       subjects,
       locations,
       links,
-      openToReferrals,
       notifyOnMatch,
       email,
     } = body;
@@ -85,7 +84,6 @@ export async function POST(request: Request) {
         subjects: subjects || [],
         locations: locations || [],
         links: links || [],
-        open_to_referrals: openToReferrals || false,
         notify_on_match: notifyOnMatch || false,
         email: email?.trim() || "",
         business_name: body.businessName?.trim() || null,
@@ -157,8 +155,6 @@ export async function PUT(request: Request) {
     if (fields.subjects !== undefined) updateData.subjects = fields.subjects;
     if (fields.locations !== undefined) updateData.locations = fields.locations;
     if (fields.links !== undefined) updateData.links = fields.links;
-    if (fields.openToReferrals !== undefined)
-      updateData.open_to_referrals = fields.openToReferrals;
     if (fields.notifyOnMatch !== undefined)
       updateData.notify_on_match = fields.notifyOnMatch;
     if (fields.email !== undefined)

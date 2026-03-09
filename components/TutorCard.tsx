@@ -37,13 +37,10 @@ const LINK_ICONS: Record<string, string> = {
 interface TutorCardProps {
   data: TutorData;
   variant?: "preview" | "full";
-  referralCount?: number;
-  referralLabel?: string;
-  onReferralClick?: () => void;
   vouchCount?: number;
 }
 
-export default function TutorCard({ data, variant = "preview", referralCount, referralLabel, onReferralClick, vouchCount }: TutorCardProps) {
+export default function TutorCard({ data, variant = "preview", vouchCount }: TutorCardProps) {
   const fullName = [data.firstName, data.lastName].filter(Boolean).join(" ");
   const initials =
     [data.firstName?.[0], data.lastName?.[0]].filter(Boolean).join("") || "?";
@@ -189,38 +186,6 @@ export default function TutorCard({ data, variant = "preview", referralCount, re
         <div className="vouch-badge">
           <span className="vouch-badge-icon">🤝</span>
           Vouched by {vouchCount} {vouchCount === 1 ? "tutor" : "tutors"}
-        </div>
-      )}
-
-      {/* Referral block — only shown in preview or when referral props are provided */}
-      {(isPreview || referralCount !== undefined || onReferralClick) && (
-        <div
-          className={`${isPreview ? "lc-ref" : "mc-ref"}${onReferralClick ? " clickable" : ""}`}
-          onClick={onReferralClick}
-        >
-          <div>
-            <div className={isPreview ? "lc-ref-lbl" : "mc-ref-lbl"}>
-              {isPreview
-                ? "Active referral"
-                : referralLabel
-                  ? referralLabel
-                  : (referralCount ?? 0) > 0 ? "Active referrals" : "Referrals"}
-            </div>
-            <div className={isPreview ? "lc-ref-val" : "mc-ref-val"}>
-              {isPreview
-                ? "Add referrals after creating your card"
-                : referralLabel
-                  ? (referralCount ?? 0) > 0
-                    ? `${referralCount} available · Tap to browse`
-                    : "Tap to browse"
-                  : (referralCount ?? 0) > 0
-                    ? `${referralCount} open · Tap to view`
-                    : "No active referrals"}
-            </div>
-          </div>
-          <div className={isPreview ? "lc-ref-n" : "mc-ref-n"}>
-            {isPreview ? "0" : String(referralCount ?? 0)}
-          </div>
         </div>
       )}
 

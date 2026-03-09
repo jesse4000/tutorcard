@@ -37,20 +37,6 @@ const MOCK_TUTOR_IDS = [
   "b0000000-0000-0000-0000-000000000008",
 ];
 
-const MOCK_COMMUNITY_IDS = [
-  "c0000000-0000-0000-0000-000000000001",
-  "c0000000-0000-0000-0000-000000000002",
-  "c0000000-0000-0000-0000-000000000003",
-];
-
-const MOCK_REFERRAL_IDS = [
-  "d0000000-0000-0000-0000-000000000001",
-  "d0000000-0000-0000-0000-000000000002",
-  "d0000000-0000-0000-0000-000000000003",
-  "d0000000-0000-0000-0000-000000000004",
-  "d0000000-0000-0000-0000-000000000005",
-];
-
 const tutors = [
   {
     id: MOCK_TUTOR_IDS[0],
@@ -68,8 +54,6 @@ const tutors = [
       { label: "Visit sarahchen.com", url: "https://sarahchen.com", icon: "link" },
       { label: "Book a free 20-min consult", url: "https://calendly.com/sarah-chen", icon: "calendar" },
     ],
-    open_to_referrals: true,
-    notify_on_match: true,
     business_name: "Chen Tutoring",
     years_experience: 6,
   },
@@ -88,8 +72,6 @@ const tutors = [
     links: [
       { label: "Book a session", url: "https://calendly.com/marcus-t", icon: "calendar" },
     ],
-    open_to_referrals: true,
-    notify_on_match: true,
     business_name: null,
     years_experience: 4,
   },
@@ -110,8 +92,6 @@ const tutors = [
       { label: "Schedule a call", url: "https://calendly.com/rachel-kim", icon: "calendar" },
       { label: "Free SAT Reading Guide", url: "https://rachelkim-tutoring.com/guide", icon: "file" },
     ],
-    open_to_referrals: true,
-    notify_on_match: true,
     business_name: "Kim Test Prep",
     years_experience: 7,
   },
@@ -130,8 +110,6 @@ const tutors = [
     links: [
       { label: "Book with me", url: "https://calendly.com/james-okafor", icon: "calendar" },
     ],
-    open_to_referrals: true,
-    notify_on_match: true,
     business_name: "Okafor STEM Academy",
     years_experience: 5,
   },
@@ -151,8 +129,6 @@ const tutors = [
       { label: "My tutoring site", url: "https://anikapatel.dev", icon: "link" },
       { label: "Free AP Calc cheat sheet", url: "https://anikapatel.dev/calc-guide", icon: "file" },
     ],
-    open_to_referrals: true,
-    notify_on_match: true,
     business_name: null,
     years_experience: 3,
   },
@@ -172,8 +148,6 @@ const tutors = [
       { label: "Website", url: "https://davidnguyen-prep.com", icon: "link" },
       { label: "Book intro call", url: "https://calendly.com/david-nguyen", icon: "calendar" },
     ],
-    open_to_referrals: true,
-    notify_on_match: false,
     business_name: "Nguyen Test Prep",
     years_experience: 8,
   },
@@ -192,8 +166,6 @@ const tutors = [
     links: [
       { label: "Schedule a lesson", url: "https://calendly.com/emily-rivera", icon: "calendar" },
     ],
-    open_to_referrals: false,
-    notify_on_match: true,
     business_name: null,
     years_experience: 4,
   },
@@ -213,129 +185,19 @@ const tutors = [
       { label: "Book a session", url: "https://calendly.com/alex-washington", icon: "calendar" },
       { label: "Free essay template", url: "https://alexwrites.co/template", icon: "file" },
     ],
-    open_to_referrals: true,
-    notify_on_match: true,
     business_name: "Washington Writing Lab",
     years_experience: 5,
   },
 ];
 
-const communities = [
-  {
-    id: MOCK_COMMUNITY_IDS[0],
-    name: "NYC SAT/ACT Tutors",
-    description:
-      "A community for SAT and ACT tutors in the New York City metro area. Share referrals, resources, and connect with fellow test prep professionals.",
-    avatar_color: "#6366f1",
-    created_by: MOCK_TUTOR_IDS[0], // Sarah Chen
-    is_public: true,
-    require_approval: true,
-    application_questions: ["What subjects and exams do you tutor?", "How long have you been tutoring in NYC?"],
-  },
-  {
-    id: MOCK_COMMUNITY_IDS[1],
-    name: "Bay Area STEM Tutors",
-    description:
-      "STEM tutors across the San Francisco Bay Area. Referrals for math, science, and CS students.",
-    avatar_color: "#14b8a6",
-    created_by: MOCK_TUTOR_IDS[3], // James Okafor
-    is_public: true,
-    require_approval: false,
-  },
-  {
-    id: MOCK_COMMUNITY_IDS[2],
-    name: "Online AP Tutors Network",
-    description:
-      "AP tutors who teach online. All AP subjects welcome. Post and claim referrals for AP students nationwide.",
-    avatar_color: "#f59e0b",
-    created_by: MOCK_TUTOR_IDS[4], // Anika Patel
-    is_public: true,
-    require_approval: true,
-  },
-];
-
-// Community memberships: owner + a few members each
-const communityMembers = [
-  // NYC SAT/ACT Tutors — Sarah (owner), Marcus, Rachel
-  { community_id: MOCK_COMMUNITY_IDS[0], tutor_id: MOCK_TUTOR_IDS[0], role: "owner" },
-  { community_id: MOCK_COMMUNITY_IDS[0], tutor_id: MOCK_TUTOR_IDS[1], role: "member" },
-  { community_id: MOCK_COMMUNITY_IDS[0], tutor_id: MOCK_TUTOR_IDS[2], role: "member" },
-  // Bay Area STEM — James (owner), Anika
-  { community_id: MOCK_COMMUNITY_IDS[1], tutor_id: MOCK_TUTOR_IDS[3], role: "owner" },
-  { community_id: MOCK_COMMUNITY_IDS[1], tutor_id: MOCK_TUTOR_IDS[4], role: "member" },
-  // Online AP Network — Anika (owner), Alex, Rachel, Emily
-  { community_id: MOCK_COMMUNITY_IDS[2], tutor_id: MOCK_TUTOR_IDS[4], role: "owner" },
-  { community_id: MOCK_COMMUNITY_IDS[2], tutor_id: MOCK_TUTOR_IDS[7], role: "member" },
-  { community_id: MOCK_COMMUNITY_IDS[2], tutor_id: MOCK_TUTOR_IDS[2], role: "member" },
-  { community_id: MOCK_COMMUNITY_IDS[2], tutor_id: MOCK_TUTOR_IDS[6], role: "member" },
-];
-
-const referrals = [
-  {
-    id: MOCK_REFERRAL_IDS[0],
-    tutor_id: MOCK_TUTOR_IDS[0], // Sarah
-    community_id: MOCK_COMMUNITY_IDS[0],
-    subject: "SAT Math",
-    location: "New Jersey",
-    grade_level: "10th grade",
-    notes: "Student needs help bringing score from 650 to 750+. Prefers in-person in northern NJ.",
-    message: "Student's name is Alex, parent contact: parent@example.com",
-    status: "active",
-  },
-  {
-    id: MOCK_REFERRAL_IDS[1],
-    tutor_id: MOCK_TUTOR_IDS[2], // Rachel
-    community_id: MOCK_COMMUNITY_IDS[0],
-    subject: "ACT English",
-    location: "Brooklyn",
-    grade_level: "11th grade",
-    notes: "Student is aiming for 34+ on ACT English. Available weekday evenings.",
-    message: "",
-    status: "active",
-  },
-  {
-    id: MOCK_REFERRAL_IDS[2],
-    tutor_id: MOCK_TUTOR_IDS[3], // James
-    community_id: MOCK_COMMUNITY_IDS[1],
-    subject: "AP Chemistry",
-    location: "Bay Area",
-    grade_level: "11th grade",
-    notes: "Student struggling with stoichiometry and equilibrium. Exam in May.",
-    message: "",
-    status: "active",
-  },
-  {
-    id: MOCK_REFERRAL_IDS[3],
-    tutor_id: MOCK_TUTOR_IDS[4], // Anika
-    community_id: MOCK_COMMUNITY_IDS[2],
-    subject: "AP Calculus BC",
-    location: "Online",
-    grade_level: "12th grade",
-    notes: "Student needs help with series and sequences unit. Looking for 2x/week sessions.",
-    message: "Student prefers evenings after 6pm EST.",
-    status: "active",
-  },
-  {
-    id: MOCK_REFERRAL_IDS[4],
-    tutor_id: MOCK_TUTOR_IDS[5], // David
-    community_id: null,
-    subject: "SAT Reading",
-    location: "Los Angeles",
-    grade_level: "10th grade",
-    notes: "Student just moved to LA, looking for in-person SAT reading tutor. Currently scoring around 600.",
-    message: "",
-    status: "active",
-  },
-];
-
 const vouches = [
-  { voucher_tutor_id: MOCK_TUTOR_IDS[0], vouched_tutor_id: MOCK_TUTOR_IDS[1] }, // Sarah vouches for Marcus
-  { voucher_tutor_id: MOCK_TUTOR_IDS[0], vouched_tutor_id: MOCK_TUTOR_IDS[2] }, // Sarah vouches for Rachel
-  { voucher_tutor_id: MOCK_TUTOR_IDS[2], vouched_tutor_id: MOCK_TUTOR_IDS[0] }, // Rachel vouches for Sarah
-  { voucher_tutor_id: MOCK_TUTOR_IDS[1], vouched_tutor_id: MOCK_TUTOR_IDS[0] }, // Marcus vouches for Sarah
-  { voucher_tutor_id: MOCK_TUTOR_IDS[3], vouched_tutor_id: MOCK_TUTOR_IDS[4] }, // James vouches for Anika
-  { voucher_tutor_id: MOCK_TUTOR_IDS[4], vouched_tutor_id: MOCK_TUTOR_IDS[3] }, // Anika vouches for James
-  { voucher_tutor_id: MOCK_TUTOR_IDS[7], vouched_tutor_id: MOCK_TUTOR_IDS[2] }, // Alex vouches for Rachel
+  { voucher_tutor_id: MOCK_TUTOR_IDS[0], vouched_tutor_id: MOCK_TUTOR_IDS[1] },
+  { voucher_tutor_id: MOCK_TUTOR_IDS[0], vouched_tutor_id: MOCK_TUTOR_IDS[2] },
+  { voucher_tutor_id: MOCK_TUTOR_IDS[2], vouched_tutor_id: MOCK_TUTOR_IDS[0] },
+  { voucher_tutor_id: MOCK_TUTOR_IDS[1], vouched_tutor_id: MOCK_TUTOR_IDS[0] },
+  { voucher_tutor_id: MOCK_TUTOR_IDS[3], vouched_tutor_id: MOCK_TUTOR_IDS[4] },
+  { voucher_tutor_id: MOCK_TUTOR_IDS[4], vouched_tutor_id: MOCK_TUTOR_IDS[3] },
+  { voucher_tutor_id: MOCK_TUTOR_IDS[7], vouched_tutor_id: MOCK_TUTOR_IDS[2] },
 ];
 
 async function createMockUsers() {
@@ -369,40 +231,6 @@ async function seedTutors() {
   return true;
 }
 
-async function seedCommunities() {
-  console.log("Seeding communities...");
-  const { error } = await supabase.from("communities").upsert(communities, { onConflict: "id" });
-  if (error) {
-    console.error("  Failed to seed communities:", error.message);
-    return false;
-  }
-  console.log(`  Inserted ${communities.length} communities`);
-  return true;
-}
-
-async function seedCommunityMembers() {
-  console.log("Seeding community memberships...");
-  for (const m of communityMembers) {
-    const { error } = await supabase.from("community_members").upsert(m, {
-      onConflict: "community_id,tutor_id",
-    });
-    if (error) {
-      console.error(`  Failed to add member ${m.tutor_id} to ${m.community_id}:`, error.message);
-    }
-  }
-  console.log(`  Inserted ${communityMembers.length} memberships`);
-}
-
-async function seedReferrals() {
-  console.log("Seeding referrals (opportunities)...");
-  const { error } = await supabase.from("referrals").upsert(referrals, { onConflict: "id" });
-  if (error) {
-    console.error("  Failed to seed referrals:", error.message);
-    return;
-  }
-  console.log(`  Inserted ${referrals.length} referrals`);
-}
-
 async function seedVouches() {
   console.log("Seeding vouches...");
   for (const v of vouches) {
@@ -419,18 +247,8 @@ async function seedVouches() {
 async function clean() {
   console.log("Cleaning mock data...");
 
-  // Delete in reverse dependency order
   console.log("  Removing vouches...");
   await supabase.from("vouches").delete().in("voucher_tutor_id", MOCK_TUTOR_IDS);
-
-  console.log("  Removing referrals...");
-  await supabase.from("referrals").delete().in("id", MOCK_REFERRAL_IDS);
-
-  console.log("  Removing community members...");
-  await supabase.from("community_members").delete().in("tutor_id", MOCK_TUTOR_IDS);
-
-  console.log("  Removing communities...");
-  await supabase.from("communities").delete().in("id", MOCK_COMMUNITY_IDS);
 
   console.log("  Removing tutors...");
   await supabase.from("tutors").delete().in("id", MOCK_TUTOR_IDS);
@@ -450,14 +268,9 @@ async function seed() {
   await createMockUsers();
   const tutorsOk = await seedTutors();
   if (!tutorsOk) {
-    console.error("Aborting: tutors must be seeded before communities/referrals.");
+    console.error("Aborting: tutors must be seeded first.");
     process.exit(1);
   }
-  const communitiesOk = await seedCommunities();
-  if (communitiesOk) {
-    await seedCommunityMembers();
-  }
-  await seedReferrals();
   await seedVouches();
   console.log("\nSeed complete!");
 }
