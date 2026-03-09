@@ -43,14 +43,13 @@ export default function LandingPage() {
       <section className="hero">
         <div className="pill">✦ Free for every tutor, forever</div>
         <h1 className="hero-title">
-          <span>Your tutor card.</span>
+          <span>Your digital</span>
           <br />
-          <em>Your referral network.</em>
+          <em>tutor business card.</em>
         </h1>
         <p className="hero-sub">
-          One link that shows who you are and how to reach you — plus a
-          community that notifies you the moment a student matches your
-          specialty.
+          One link that shows who you are and how to reach you — subjects,
+          exams, locations, booking page, and resources. Share it anywhere.
         </p>
         {!heroSubmitted ? (
           <div className="email-row">
@@ -87,7 +86,7 @@ export default function LandingPage() {
 
       <div className="rule" />
 
-      {/* THREE THINGS */}
+      {/* FEATURE SECTION */}
       <ThingsSection />
 
       {/* PROOF */}
@@ -138,7 +137,7 @@ export default function LandingPage() {
       {/* FINAL CTA */}
       <section className="final" id="waitlist">
         <div className="section-label">Get early access</div>
-        <h2>Be first in your community with a card.</h2>
+        <h2>Be the first tutor with a card.</h2>
         <p>Free to create. Free forever. Setup link sent at launch.</p>
         {!finalSubmitted ? (
           <div className="email-row" style={{ justifyContent: "center" }}>
@@ -200,7 +199,6 @@ function MockCard() {
             SAT &amp; ACT Tutor · New York &amp; New Jersey
           </div>
         </div>
-        <div className="open-badge">Open to referrals</div>
       </div>
       <div className="mc-tags">
         <span className="tag">SAT Math</span>
@@ -224,76 +222,31 @@ function MockCard() {
           <span className="btn-arrow">↗</span>
         </div>
       </div>
-      <div className="mc-ref">
-        <div>
-          <div className="mc-ref-lbl">Active referral</div>
-          <div className="mc-ref-val">
-            SAT Math · New Jersey · 10th grade
-          </div>
-        </div>
-        <div className="mc-ref-n">4</div>
-      </div>
     </div>
   );
 }
 
-/* ── Three things section ── */
+/* ── Feature section ── */
 function ThingsSection() {
   return (
     <section className="things-section">
       <div className="things-header">
         <div className="section-label">What it does</div>
-        <h2>Three things. All free.</h2>
+        <h2>Your digital tutor business card.</h2>
       </div>
 
       <ThingRow flip={false}>
         <div className="thing-text">
           <div className="thing-num-badge n1">1</div>
-          <div className="thing-title">Your digital tutor business card</div>
+          <div className="thing-title">Everything about you in one link</div>
           <div className="thing-body">
-            Everything about you in one shareable link — subjects, exams,
-            location, website, booking page, and free resources. Parents and
-            students tap the buttons to take action instantly. Comes with a QR
-            code to share offline too.
+            Subjects, exams, location, website, booking page, and free
+            resources. Parents and students tap the buttons to take action
+            instantly. Comes with a QR code to share offline too.
           </div>
         </div>
         <div className="thing-visual">
           <Step1Visual />
-        </div>
-      </ThingRow>
-
-      <ThingRow flip>
-        <div className="thing-text">
-          <div className="thing-num-badge n2">2</div>
-          <div className="thing-title">Post referrals, skip the DM chaos</div>
-          <div className="thing-body">
-            Have a student you can&apos;t take? Post a referral with one link
-            instead of writing &quot;DM me&quot; in a group. Interested tutors
-            submit their profile directly. You see all submissions, vet them,
-            and pick the best fit. The tutor you choose can tip you a coffee as
-            a thank-you — no obligation, just good karma.
-          </div>
-        </div>
-        <div className="thing-visual">
-          <Step2Visual />
-        </div>
-      </ThingRow>
-
-      <ThingRow flip={false}>
-        <div className="thing-text">
-          <div className="thing-num-badge n3">3</div>
-          <div className="thing-title">
-            Get notified when students match you
-          </div>
-          <div className="thing-body">
-            When any tutor in the TutorCard community posts a student they
-            can&apos;t take, we instantly notify every tutor who matches — by
-            subject, exam, and location. No more scrolling through group posts
-            and missing opportunities buried in comment threads.
-          </div>
-        </div>
-        <div className="thing-visual">
-          <Step3Visual />
         </div>
       </ThingRow>
     </section>
@@ -349,7 +302,6 @@ function Step1Visual() {
           <div className="s1-name">Sarah Chen</div>
           <div className="s1-sub">SAT &amp; ACT · NYC &amp; New Jersey</div>
         </div>
-        <div className="s1-open">Open</div>
       </div>
       <div className="s1-tags">
         <span className="s1-tag">SAT Math</span>
@@ -372,115 +324,6 @@ function Step1Visual() {
           <span className="s1-btn-arr">↗</span>
         </div>
       </div>
-      <div className="s1-ref">
-        <div>
-          <div className="s1-ref-lbl">Active referral</div>
-          <div className="s1-ref-val">SAT Math · New Jersey</div>
-        </div>
-        <div className="s1-ref-n">4</div>
-      </div>
-    </div>
-  );
-}
-
-function Step2Visual() {
-  return (
-    <div className="step2-visual">
-      <div className="s2-post">
-        <div className="s2-post-lbl">Your referral post</div>
-        <div className="s2-post-title">
-          SAT Math · New Jersey · 10th grade
-        </div>
-        <div className="s2-post-sub">
-          Starting ASAP · 3 submissions so far
-        </div>
-      </div>
-      <div className="s2-subs">
-        <div className="s2-subs-lbl">Tutors who applied</div>
-        <div className="s2-sub">
-          <div
-            className="s2-av"
-            style={{
-              background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-            }}
-          >
-            M
-          </div>
-          <div>
-            <div className="s2-name">Marcus T.</div>
-            <div className="s2-detail">SAT Math · NJ · 4 yrs exp</div>
-          </div>
-          <div className="s2-rate">$85/hr</div>
-        </div>
-        <div className="s2-sub">
-          <div
-            className="s2-av"
-            style={{
-              background: "linear-gradient(135deg,#ec4899,#f43f5e)",
-            }}
-          >
-            R
-          </div>
-          <div>
-            <div className="s2-name">Rachel K.</div>
-            <div className="s2-detail">SAT/ACT · NYC+NJ · 6 yrs</div>
-          </div>
-          <div className="s2-rate">$95/hr</div>
-        </div>
-        <button className="s2-accept">✓ Send referral to Marcus</button>
-        <div className="s2-coffee">
-          <span>☕</span>
-          <div className="s2-coffee-text">
-            Marcus sent you a $5 thank-you tip!
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Step3Visual() {
-  return (
-    <div className="step3-visual">
-      <div className="s3-header">
-        <div className="s3-header-title">Your referral matches</div>
-        <div className="s3-header-badge">2 new</div>
-      </div>
-      <div className="s3-list">
-        <div className="s3-notif new">
-          <div className="s3-dot live" />
-          <div className="s3-body">
-            <div className="s3-title">SAT Math student · New Jersey</div>
-            <div className="s3-sub">
-              Posted by Marcus T. · 10th grade · Starting ASAP
-            </div>
-          </div>
-          <div className="s3-time">2m ago</div>
-        </div>
-        <div className="s3-notif new">
-          <div className="s3-dot live" />
-          <div className="s3-body">
-            <div className="s3-title">AP Calculus student · NYC area</div>
-            <div className="s3-sub">
-              Posted by Rachel K. · 11th grade · Online OK
-            </div>
-          </div>
-          <div className="s3-time">1h ago</div>
-        </div>
-        <div className="s3-notif">
-          <div className="s3-dot old" />
-          <div className="s3-body">
-            <div className="s3-title" style={{ color: "var(--ink-3)" }}>
-              ACT Science · Brooklyn
-            </div>
-            <div className="s3-sub">Already filled</div>
-          </div>
-          <div className="s3-time" style={{ color: "var(--ink-3)" }}>
-            3h ago
-          </div>
-        </div>
-      </div>
-      <button className="s3-cta">Submit interest →</button>
     </div>
   );
 }

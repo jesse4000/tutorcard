@@ -15,7 +15,6 @@ interface TutorRow {
   subjects: string[];
   locations: string[];
   links: TutorLink[];
-  open_to_referrals: boolean;
   notify_on_match: boolean;
   email: string;
   business_name: string | null;

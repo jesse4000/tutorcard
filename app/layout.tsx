@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TutorCard — Your tutor card. Your referral network.",
+  title: "TutorCard — Your digital tutor business card.",
   description:
-    "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
+    "One link that shows who you are and how to reach you — subjects, exams, locations, booking page, and resources. Free for every tutor.",
 };
 
 export default function RootLayout({
