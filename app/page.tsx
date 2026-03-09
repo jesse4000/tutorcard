@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: unknown }) => {
   const d: Record<string, React.ReactNode> = {
@@ -135,6 +136,7 @@ function DeepDive({ icon, badge, title, subtitle, desc, children, flipped, isMob
 
 // ─── MAIN ───────────────────────────────────────────────
 export default function TutorCardLanding() {
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const ck = () => setIsMobile(window.innerWidth < 800);
@@ -172,7 +174,7 @@ export default function TutorCardLanding() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {!isMobile && <button className="cta-ghost" style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "transparent", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Find a tutor</button>}
-            <button className="cta-main" style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#111", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
+            <button onClick={() => router.push("/create")} className="cta-main" style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#111", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
               <Icon name="plus" size={14} />Create your card
             </button>
           </div>
@@ -208,7 +210,7 @@ export default function TutorCardLanding() {
               TutorCard gives every tutor a shareable digital card with verified results, peer endorsements, and everything parents need in one place.
             </p>
             <div style={{ display: "flex", gap: 10, justifyContent: isMobile ? "center" : "flex-start", flexWrap: "wrap" }}>
-              <button className="cta-main" style={{
+              <button onClick={() => router.push("/create")} className="cta-main" style={{
                 padding: "13px 28px", borderRadius: 14, border: "none",
                 background: "#111", color: "white", fontSize: 15, fontWeight: 600,
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
@@ -405,7 +407,7 @@ export default function TutorCardLanding() {
           <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto 28px", maxWidth: 400, lineHeight: 1.5 }}>
             Free forever. Set up in 5 minutes.
           </p>
-          <button className="cta-main" style={{
+          <button onClick={() => router.push("/create")} className="cta-main" style={{
             padding: "15px 36px", borderRadius: 14, border: "none",
             background: "#111", color: "white", fontSize: 16, fontWeight: 700,
             cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
