@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import ProfileClient from "./ProfileClient";
+import type { ReviewData, VoucherData, BadgeData } from "./types";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -44,16 +45,43 @@ export default async function ProfilePage({ params }: PageProps) {
 
   const supabase = await createClient();
 
-  // Vouch count
-  const { count: vouchCount } = await supabase
-    .from("vouches")
-    .select("id", { count: "exact", head: true })
-    .eq("vouched_tutor_id", tutor.id);
+  // Check if current visitor is the card owner → redirect to dashboard
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user && user.id === tutor.user_id) {
+    redirect("/dashboard");
+  }
 
-  // Check if current visitor is logged in and has vouched
+  // Parallel data fetching
+  const [
+    { count: vouchCount },
+    { data: reviewsRaw },
+    { data: badgesRaw },
+    { data: vouchesRaw },
+  ] = await Promise.all([
+    supabase
+      .from("vouches")
+      .select("id", { count: "exact", head: true })
+      .eq("vouched_tutor_id", tutor.id),
+    supabase
+      .from("reviews")
+      .select("*")
+      .eq("tutor_id", tutor.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("badges")
+      .select("*")
+      .eq("tutor_id", tutor.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("vouches")
+      .select("id, voucher:tutors!voucher_tutor_id(id, first_name, last_name, slug, title, avatar_color, profile_image_url)")
+      .eq("vouched_tutor_id", tutor.id)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  // Check if current visitor has vouched
   let currentTutorId: string | null = null;
   let hasVouched = false;
-  const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     const { data: currentTutor } = await supabase
       .from("tutors")
@@ -72,7 +100,50 @@ export default async function ProfilePage({ params }: PageProps) {
     }
   }
 
+  // Map reviews
+  const reviews: ReviewData[] = (reviewsRaw || []).map((r: Record<string, unknown>) => ({
+    id: r.id as string,
+    reviewerName: r.reviewer_name as string,
+    reviewerRole: (r.reviewer_role as string) || undefined,
+    exam: (r.exam as string) || undefined,
+    scoreBefore: (r.score_before as string) || undefined,
+    scoreAfter: (r.score_after as string) || undefined,
+    months: (r.months as number) || undefined,
+    rating: r.rating as number,
+    quote: r.quote as string,
+  }));
+
+  // Map badges
+  const badges: BadgeData[] = (badgesRaw || []).map((b: Record<string, unknown>) => ({
+    id: b.id as string,
+    name: b.name as string,
+    organization: (b.organization as string) || undefined,
+    badgeType: b.badge_type as "certification" | "membership",
+    sinceYear: (b.since_year as number) || undefined,
+    description: (b.description as string) || undefined,
+  }));
+
+  // Map vouchers
+  const vouchers: VoucherData[] = (vouchesRaw || []).map((v: Record<string, unknown>) => {
+    const voucher = v.voucher as Record<string, unknown> | null;
+    return {
+      id: v.id as string,
+      firstName: (voucher?.first_name as string) || "",
+      lastName: (voucher?.last_name as string) || "",
+      slug: (voucher?.slug as string) || "",
+      title: (voucher?.title as string) || undefined,
+      avatarColor: (voucher?.avatar_color as string) || "#0f172a",
+      profileImageUrl: (voucher?.profile_image_url as string) || undefined,
+    };
+  });
+
+  // Compute average rating
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : null;
+
   const tutorData = {
+    id: tutor.id,
     firstName: tutor.first_name,
     lastName: tutor.last_name,
     title: tutor.title || "",
@@ -93,6 +164,11 @@ export default async function ProfilePage({ params }: PageProps) {
       hasVouched={hasVouched}
       currentTutorId={currentTutorId}
       viewedTutorId={tutor.id}
+      averageRating={averageRating}
+      reviewCount={reviews.length}
+      reviews={reviews}
+      vouchers={vouchers}
+      badges={badges}
     />
   );
 }

@@ -1,59 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import TutorCard from "@/components/TutorCard";
 import type { TutorData } from "@/components/TutorCard";
-import LogoSvg from "@/components/LogoSvg";
+import type { ReviewData, VoucherData, BadgeData } from "./types";
+import Icon, { textOnAccent } from "./Icon";
+import ProfileCard from "./ProfileCard";
+import ReviewCardComponent from "./ReviewCard";
+import VouchCard from "./VouchCard";
+import BadgeCardComponent from "./BadgeCard";
+import TabBar from "./TabBar";
+import InquirySheet from "./InquirySheet";
 
 interface ProfileClientProps {
-  tutor: TutorData;
+  tutor: TutorData & { id: string };
   vouchCount: number;
   hasVouched: boolean;
   currentTutorId: string | null;
   viewedTutorId: string;
-}
-
-function buildVCard(tutor: TutorData): string {
-  const fullName = [tutor.firstName, tutor.lastName].filter(Boolean).join(" ");
-  const emailLink = tutor.links.find((l) => l.type === "📧 Email");
-  const websiteLink = tutor.links.find((l) => l.type === "🌐 Website");
-  const phoneLink = tutor.links.find((l) => l.type === "📞 Phone");
-  const escape = (s: string) => s.replace(/[;,\\]/g, (c) => "\\" + c);
-
-  const lines = [
-    "BEGIN:VCARD",
-    "VERSION:3.0",
-    `FN:${escape(fullName)}`,
-    `N:${escape(tutor.lastName || "")};${escape(tutor.firstName || "")};;;`,
-  ];
-  if (tutor.businessName) lines.push(`ORG:${escape(tutor.businessName)}`);
-  if (tutor.title) lines.push(`TITLE:${escape(tutor.title)}`);
-  if (phoneLink?.url) lines.push(`TEL:${phoneLink.url.replace(/[^+\d]/g, "")}`);
-  if (emailLink?.url) lines.push(`EMAIL:${emailLink.url}`);
-  if (websiteLink?.url) {
-    const url = websiteLink.url.startsWith("http")
-      ? websiteLink.url
-      : `https://${websiteLink.url}`;
-    lines.push(`URL:${url}`);
-  }
-  if (tutor.profileImageUrl) lines.push(`PHOTO;VALUE=URI:${tutor.profileImageUrl}`);
-  lines.push(`NOTE:${escape([...tutor.exams, ...tutor.subjects].join(", "))}`);
-  lines.push("END:VCARD");
-  return lines.join("\r\n");
-}
-
-function downloadVCard(tutor: TutorData) {
-  const vcf = buildVCard(tutor);
-  const blob = new Blob([vcf], { type: "text/vcard" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${tutor.firstName}-${tutor.lastName}.vcf`;
-  a.click();
-  URL.revokeObjectURL(url);
+  averageRating: number | null;
+  reviewCount: number;
+  reviews: ReviewData[];
+  vouchers: VoucherData[];
+  badges: BadgeData[];
 }
 
 export default function ProfileClient({
@@ -62,12 +32,29 @@ export default function ProfileClient({
   hasVouched,
   currentTutorId,
   viewedTutorId,
+  averageRating,
+  reviewCount,
+  reviews,
+  vouchers,
+  badges,
 }: ProfileClientProps) {
   const router = useRouter();
+  const [tab, setTab] = useState("reviews");
+  const [showInquiry, setShowInquiry] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [localVouched, setLocalVouched] = useState(hasVouched);
   const [localVouchCount, setLocalVouchCount] = useState(vouchCount);
   const [isVouching, setIsVouching] = useState(false);
 
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 800);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const accent = tutor.avatarColor || "#4f46e5";
+  const accentText = textOnAccent(accent);
   const isOwnCard = currentTutorId === viewedTutorId;
 
   async function handleVouch() {
@@ -81,7 +68,6 @@ export default function ProfileClient({
     const prevVouched = localVouched;
     const prevCount = localVouchCount;
 
-    // Optimistic update
     setLocalVouched(!localVouched);
     setLocalVouchCount(localVouched ? localVouchCount - 1 : localVouchCount + 1);
 
@@ -96,7 +82,6 @@ export default function ProfileClient({
         setLocalVouched(data.vouched);
         setLocalVouchCount(data.vouchCount);
       } else {
-        // Rollback
         setLocalVouched(prevVouched);
         setLocalVouchCount(prevCount);
       }
@@ -108,54 +93,282 @@ export default function ProfileClient({
     }
   }
 
+  // Compute tab stats
+  const reviewsWithScores = reviews.filter((r) => r.scoreBefore && r.scoreAfter);
+  const avgImp =
+    reviewsWithScores.length > 0
+      ? Math.round(
+          reviewsWithScores.reduce((s, r) => s + (Number(r.scoreAfter) - Number(r.scoreBefore)), 0) /
+            reviewsWithScores.length
+        )
+      : 0;
+  const avgRat = averageRating != null ? averageRating.toFixed(1) : null;
+  const wide = !isMobile;
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    color: "#9ca3af",
+    margin: 0,
+  };
+
+  function renderTabContent() {
+    if (tab === "reviews") {
+      return (
+        <>
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: wide ? 0 : 8 }}>
+              <p style={labelStyle}>Reviews ({reviews.length})</p>
+              {wide && reviews.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {avgImp > 0 && (
+                    <>
+                      <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg improvement</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>+{avgImp} pts</span>
+                      <span style={{ color: "#e5e7eb" }}>·</span>
+                    </>
+                  )}
+                  {avgRat && (
+                    <>
+                      <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg rating</span>
+                      <Icon name="star" size={10} style={{ color: "#f59e0b" }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{avgRat}</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            {!wide && reviews.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {avgImp > 0 && (
+                  <>
+                    <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg improvement</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>+{avgImp} pts</span>
+                    <span style={{ color: "#e5e7eb" }}>·</span>
+                  </>
+                )}
+                {avgRat && (
+                  <>
+                    <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg rating</span>
+                    <Icon name="star" size={10} style={{ color: "#f59e0b" }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{avgRat}</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          {reviews.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "20px 0" }}>No reviews yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {reviews.map((r) => (
+                <ReviewCardComponent key={r.id} review={r} accent={accent} accentText={accentText} wide={wide} />
+              ))}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (tab === "vouches") {
+      return (
+        <>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <p style={labelStyle}>Vouches ({localVouchCount})</p>
+            {!isOwnCard && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {wide && <span style={{ fontSize: 12, color: "#9ca3af" }}>Know this tutor?</span>}
+                <button
+                  onClick={handleVouch}
+                  disabled={isVouching}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: 20,
+                    border: "none",
+                    background: localVouched ? "#e5e7eb" : accent,
+                    color: localVouched ? "#6b7280" : accentText,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    transition: "opacity 0.15s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon name="check" size={11} />
+                  {localVouched ? "Vouched" : `Vouch for ${tutor.firstName}`}
+                </button>
+              </div>
+            )}
+          </div>
+          {vouchers.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "20px 0" }}>No vouches yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: wide ? 10 : 8 }}>
+              {vouchers.map((v) => (
+                <VouchCard key={v.id} vouch={v} accent={accent} wide={wide} />
+              ))}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (tab === "badges") {
+      return (
+        <>
+          <div style={{ marginBottom: 14 }}>
+            <p style={labelStyle}>Badges ({badges.length})</p>
+          </div>
+          {badges.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "20px 0" }}>No badges yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {badges.map((b) => (
+                <BadgeCardComponent key={b.id} badge={b} accent={accent} wide={wide} />
+              ))}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    return null;
+  }
+
   return (
     <>
-      <Navbar mode="profile" />
-      <div className="profile-page">
-        <div className="profile-card-wrap">
-          <TutorCard
-            data={tutor}
-            variant="full"
-            vouchCount={localVouchCount}
-          />
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+        @keyframes pfFadeIn { from { opacity:0 } to { opacity:1 } }
+        @keyframes pfSlideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+        .pf-link:hover { background: #fafafa !important; }
+      `}</style>
 
-          {!isOwnCard && (
-            <button
-              className={`vouch-btn${localVouched ? " vouched" : ""}`}
-              onClick={handleVouch}
-              disabled={isVouching}
-            >
-              {localVouched ? (
-                <><span className="vouch-icon">✓</span> Vouched</>
-              ) : (
-                <><span className="vouch-icon">🤝</span> Vouch for {tutor.firstName}</>
-              )}
-            </button>
-          )}
-
-          <button
-            className="vcard-btn"
-            onClick={() => downloadVCard(tutor)}
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+        {/* Header */}
+        <header style={{ background: "white", borderBottom: "1px solid #f3f4f6", padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, position: "sticky", top: 0, zIndex: 100 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>tc</span>
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#111", letterSpacing: "-0.01em" }}>tutorcard</span>
+          </Link>
+          <Link
+            href="/create"
+            style={{
+              padding: "7px 16px",
+              borderRadius: 10,
+              border: "none",
+              background: "#111",
+              color: "white",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              textDecoration: "none",
+              transition: "opacity 0.15s",
+            }}
           >
-            <span className="vcard-icon">👤</span> Save Contact
-          </button>
-          <div className="card-url" style={{ marginTop: 12 }}>
-            {typeof window !== "undefined" ? window.location.host : ""}/{tutor.slug}
+            <Icon name="plus" size={14} />Create your card
+          </Link>
+        </header>
+
+        {/* Content */}
+        <main style={{ flex: 1 }}>
+          {isMobile ? (
+            <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
+              <ProfileCard
+                tutor={tutor}
+                accent={accent}
+                vouchCount={localVouchCount}
+                averageRating={averageRating}
+                reviewCount={reviewCount}
+                featuredReview={reviews[0] || null}
+                firstBadge={badges[0] || null}
+                onMessage={() => setShowInquiry(true)}
+              />
+              <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
+                <TabBar tab={tab} setTab={setTab} accent={accent} reviewCount={reviews.length} vouchCount={localVouchCount} badgeCount={badges.length} />
+                {renderTabContent()}
+              </div>
+            </div>
+          ) : (
+            <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
+              <div style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
+                <ProfileCard
+                  tutor={tutor}
+                  accent={accent}
+                  vouchCount={localVouchCount}
+                  averageRating={averageRating}
+                  reviewCount={reviewCount}
+                  featuredReview={reviews[0] || null}
+                  firstBadge={badges[0] || null}
+                  onMessage={() => setShowInquiry(true)}
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
+                  <TabBar tab={tab} setTab={setTab} accent={accent} reviewCount={reviews.length} vouchCount={localVouchCount} badgeCount={badges.length} />
+                  {renderTabContent()}
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 32px" }}>
+          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: "space-between", gap: isMobile ? 24 : 0, textAlign: isMobile ? "center" : "left" }}>
+              <div>
+                <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: isMobile ? "center" : "flex-start", marginBottom: 6, textDecoration: "none" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 5, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "white" }}>tc</span>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>tutorcard</span>
+                </Link>
+                <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0, maxWidth: 280, lineHeight: 1.5 }}>The professional identity platform for tutors. Free to create, easy to share.</p>
+              </div>
+              <div style={{ display: "flex", gap: isMobile ? 32 : 48 }}>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Platform</p>
+                  {["Create a card", "Find a tutor", "For associations"].map((l) => (
+                    <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>
+                  ))}
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Company</p>
+                  {["About", "Blog", "Privacy", "Terms"].map((l) => (
+                    <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0 }}>
+              <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>© 2026 TutorCard · A StudySpaces product</p>
+              <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>Powered by <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span></p>
+            </div>
           </div>
-        </div>
+        </footer>
       </div>
-      <footer>
-        <Link href="/" className="logo">
-          <div className="logo-mark">
-            <LogoSvg />
-          </div>
-          <span className="logo-name">TutorCard</span>
-          <span className="logo-sub">&nbsp;by StudySpaces</span>
-        </Link>
-        <span className="footer-r">
-          © 2025 StudySpaces · Free for every tutor
-        </span>
-      </footer>
+
+      {showInquiry && (
+        <InquirySheet
+          onClose={() => setShowInquiry(false)}
+          accent={accent}
+          tutorId={viewedTutorId}
+          tutorExams={tutor.exams}
+        />
+      )}
     </>
   );
 }
