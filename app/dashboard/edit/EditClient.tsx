@@ -15,8 +15,6 @@ interface TutorRow {
   subjects: string[];
   locations: string[];
   links: TutorLink[];
-  open_to_referrals: boolean;
-  notify_on_match: boolean;
   email: string;
   business_name: string | null;
   years_experience: number | null;
@@ -38,7 +36,7 @@ export default function EditClient({ tutor }: { tutor: TutorRow }) {
       tutor.links?.length > 0
         ? tutor.links
         : [{ type: "🌐 Website", url: "", label: "" }],
-    notifyOnMatch: tutor.notify_on_match || false,
+    notifyOnMatch: false,
     email: tutor.email || "",
     businessName: tutor.business_name || "",
     profileImageUrl: tutor.profile_image_url || "",

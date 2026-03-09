@@ -7,7 +7,6 @@ import TutorCard from "@/components/TutorCard";
 import TagPicker from "@/components/TagPicker";
 import LinkBuilder from "@/components/LinkBuilder";
 import Toggle from "@/components/Toggle";
-import CommunityPicker from "@/components/CommunityPicker";
 import type { TutorLink } from "@/components/TutorCard";
 
 const EXAM_PRESETS = [
@@ -54,7 +53,7 @@ const COLORS = [
   "#92400e",
 ];
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 export interface TutorFormData {
   id?: string;
@@ -111,11 +110,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
       : [{ type: "🌐 Website", url: "", label: "" }]
   );
 
-  // Step 4 — Communities
-  const [joinedCommunities, setJoinedCommunities] = useState<string[]>([]);
-  const [pendingCommunities, setPendingCommunities] = useState<{ name: string; description: string }[]>([]);
-
-  // Step 5
+  // Step 4
   const [notifyMe, setNotifyMe] = useState(
     initialData?.notifyOnMatch || false
   );
@@ -158,53 +153,6 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
     setStep((s) => Math.max(s - 1, 1));
   }
 
-  function handleJoinCommunity(communityId: string) {
-    setJoinedCommunities((prev) =>
-      prev.includes(communityId) ? prev : [...prev, communityId]
-    );
-  }
-
-  function handleLeaveCommunity(communityId: string) {
-    setJoinedCommunities((prev) => prev.filter((id) => id !== communityId));
-  }
-
-  async function handleCreateCommunity(name: string, description: string) {
-    if (mode === "create") {
-      // During onboarding, tutor doesn't exist yet — defer creation
-      setPendingCommunities((prev) => [...prev, { name, description }]);
-      return;
-    }
-    try {
-      const res = await fetch("/api/communities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.community?.id) {
-          setJoinedCommunities((prev) => [...prev, data.community.id]);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  async function joinCommunitiesAfterCreate() {
-    for (const communityId of joinedCommunities) {
-      try {
-        await fetch("/api/communities/join", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ communityId }),
-        });
-      } catch {
-        // best effort
-      }
-    }
-  }
-
   async function handleSubmit() {
     setSubmitting(true);
     try {
@@ -242,30 +190,6 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
         }
         setSubmitting(false);
         return;
-      }
-
-      // Create any communities that were deferred during onboarding
-      for (const pc of pendingCommunities) {
-        try {
-          const cRes = await fetch("/api/communities", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: pc.name, description: pc.description }),
-          });
-          if (cRes.ok) {
-            const cData = await cRes.json();
-            if (cData.community?.id) {
-              joinedCommunities.push(cData.community.id);
-            }
-          }
-        } catch {
-          // best effort
-        }
-      }
-
-      // Join communities now that the tutor card exists
-      if (joinedCommunities.length > 0) {
-        await joinCommunitiesAfterCreate();
       }
 
       setDone(true);
@@ -322,7 +246,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
             <>
               {step === 1 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 1 of 5</div>
+                  <div className="step-eyebrow">Step 1 of {TOTAL_STEPS}</div>
                   <div className="step-title">
                     {mode === "edit" ? (
                       "Edit the basics."
@@ -530,15 +454,14 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
               {step === 2 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 2 of 5</div>
+                  <div className="step-eyebrow">Step 2 of {TOTAL_STEPS}</div>
                   <div className="step-title">
                     What do you
                     <br />
                     teach?
                   </div>
                   <div className="step-sub">
-                    Select all that apply. This is how tutors find you for
-                    referrals.
+                    Select all that apply.
                   </div>
 
                   <TagPicker
@@ -586,7 +509,7 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
               {step === 3 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 3 of 5</div>
+                  <div className="step-eyebrow">Step 3 of {TOTAL_STEPS}</div>
                   <div className="step-title">Add your links.</div>
                   <div className="step-sub">
                     These become action buttons on your card. Parents and
@@ -618,72 +541,16 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
               {step === 4 && (
                 <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 4 of 5</div>
-                  <div className="step-title">
-                    Join a<br />
-                    community.
-                  </div>
-                  <div className="step-sub">
-                    Communities are groups of tutors who share referrals,
-                    resources, and support each other.
-                  </div>
-
-                  <CommunityPicker
-                    joined={joinedCommunities}
-                    onJoin={handleJoinCommunity}
-                    onLeave={handleLeaveCommunity}
-                    onCreate={handleCreateCommunity}
-                  />
-
-                  {joinedCommunities.length > 0 && (
-                    <div className="joined-summary">
-                      You&apos;ve joined {joinedCommunities.length} communit
-                      {joinedCommunities.length === 1 ? "y" : "ies"}
-                    </div>
-                  )}
-
-                  <div className="step-nav" style={{ marginTop: 28 }}>
-                    <button className="btn-back" onClick={prevStep}>
-                      &larr; Back
-                    </button>
-                    <button className="btn-next" onClick={nextStep}>
-                      Continue
-                      <svg
-                        width="16"
-                        height="16"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                      >
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="step-skip">
-                    <button
-                      className="btn-skip"
-                      onClick={nextStep}
-                      type="button"
-                    >
-                      Skip for now
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div style={{ animation: "stepIn 0.4s ease both" }}>
-                  <div className="step-eyebrow">Step 5 of 5</div>
+                  <div className="step-eyebrow">Step 4 of {TOTAL_STEPS}</div>
                   <div className="step-title">Almost done.</div>
                   <div className="step-sub">
-                    Set your referral preferences and your card is ready to
+                    Set your notification preferences and your card is ready to
                     share.
                   </div>
 
                   <Toggle
-                    title="Notify me of matching referrals"
-                    subtitle="Get an email when a tutor posts a student that matches your subjects and location."
+                    title="Notify me of updates"
+                    subtitle="Get an email when there are important updates about your card."
                     checked={notifyMe}
                     onChange={setNotifyMe}
                   />
