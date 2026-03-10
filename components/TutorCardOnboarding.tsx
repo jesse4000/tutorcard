@@ -189,7 +189,7 @@ function CardPreview({ data, accent }: { data: OnboardingData; accent: string })
         <div style={{ width: "100%", padding: "13px", borderRadius: 14, background: accent, color: t, fontSize: 14.5, fontWeight: 600, textAlign: "center", transition: "background 0.25s" }}>Send a message</div>
       </div>
       <div style={{ textAlign: "center", paddingBottom: 16 }}>
-        <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}><span style={{ fontWeight: 600 }}>tutorcard</span>.co</p>
+        <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}><span style={{ fontWeight: 600 }}>tutorcard</span>.co/{data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "")}</p>
       </div>
     </div>
   );
@@ -199,7 +199,7 @@ function CardPreview({ data, accent }: { data: OnboardingData; accent: string })
 function StepNav({ step, goTo, isMobile }: { step: number; goTo: (n: number) => void; isMobile: boolean }) {
   const steps = ["About you", "Specialties", "Links", "Preview"];
   return (
-    <div style={{ borderBottom: "1px solid #f3f4f6", padding: "0 24px" }}>
+    <div style={{ borderBottom: "1px solid #f3f4f6", padding: isMobile ? "0 20px" : "0 32px" }}>
       <div style={{ maxWidth: 520, margin: "0 auto", display: "flex", gap: 0 }}>
         {steps.map((s, i) => {
           const sn = i + 1;
@@ -427,6 +427,10 @@ export default function TutorCardOnboarding() {
     accent: "#4f46e5",
   });
 
+  // Slug availability state
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugChecking, setSlugChecking] = useState(false);
+
   // Auth state for inline signup
   const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
   const [authEmail, setAuthEmail] = useState("");
@@ -523,6 +527,24 @@ export default function TutorCardOnboarding() {
   const autoSlug = data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "");
   const goTo = (n: number) => setScreen("step" + n);
 
+  // Debounced slug availability check
+  useEffect(() => {
+    setSlugAvailable(null);
+    if (!autoSlug) return;
+    setSlugChecking(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/tutors/check-slug?slug=${encodeURIComponent(autoSlug)}`);
+        const result = await res.json();
+        setSlugAvailable(result.available);
+      } catch {
+        setSlugAvailable(null);
+      }
+      setSlugChecking(false);
+    }, 500);
+    return () => { clearTimeout(timer); setSlugChecking(false); };
+  }, [autoSlug]);
+
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -534,7 +556,7 @@ export default function TutorCardOnboarding() {
 
   const addLink = () => {
     const id = Date.now();
-    upd("links", [...data.links, { id, type: "website", icon: "globe", value: "", label: "" }]);
+    upd("links", [...data.links, { id, type: "website", icon: "globe", value: "", label: "Website" }]);
   };
 
   const updateLink = (id: number, updated: Partial<OnboardingLink>) => {
@@ -637,7 +659,7 @@ export default function TutorCardOnboarding() {
 
         {/* STEP 1: ABOUT YOU */}
         {screen === "step1" && (
-          <StepShell step={1} totalSteps={4} goTo={goTo} title="About you" subtitle="The basics for your card." onNext={() => setScreen("step2")} nextDisabled={!data.name.trim()} isMobile={isMobile}>
+          <StepShell step={1} totalSteps={4} goTo={goTo} title="About you" subtitle="The basics for your card." onNext={() => setScreen("step2")} nextDisabled={!data.name.trim() || slugAvailable === false} isMobile={isMobile}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
               <div onClick={() => fileRef.current?.click()} style={{
                 width: 64, height: 64, borderRadius: "50%", background: data.imageUrl ? "transparent" : "#f3f4f6",
@@ -661,6 +683,19 @@ export default function TutorCardOnboarding() {
             <Input label="Professional headline" value={data.headline} onChange={v => upd("headline", v)} placeholder="SAT & ACT Specialist" />
             <LocationInput value={data.location} onChange={v => upd("location", v)} />
             <Input label="Your card URL" value={data.slug} onChange={v => upd("slug", v.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder={data.name ? data.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "yourname"} prefix="tutorcard.co/" />
+            {autoSlug && (
+              <div style={{ fontSize: 12, marginTop: -8, marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
+                {slugChecking && <span style={{ color: "#9ca3af" }}>Checking availability...</span>}
+                {!slugChecking && slugAvailable === true && (
+                  <span style={{ color: "#059669", display: "flex", alignItems: "center", gap: 4 }}>
+                    <Icon name="check" size={12} style={{ color: "#059669" }} /> Available
+                  </span>
+                )}
+                {!slugChecking && slugAvailable === false && (
+                  <span style={{ color: "#dc2626" }}>That URL is taken. Try another.</span>
+                )}
+              </div>
+            )}
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 8 }}>Do you tutor remotely?</label>
@@ -716,7 +751,7 @@ export default function TutorCardOnboarding() {
 
         {/* STEP 3: LINKS */}
         {screen === "step3" && (
-          <StepShell step={3} totalSteps={4} goTo={goTo} title="Add your links" subtitle="These become action buttons on your card. Parents and students tap them directly." onNext={() => setScreen("step4")} isMobile={isMobile}>
+          <StepShell step={3} totalSteps={4} goTo={goTo} title="Add your links" subtitle="These become action buttons on your card. Parents and students tap them directly." onNext={() => setScreen("step4")} nextDisabled={data.links.some(l => !l.value.trim())} isMobile={isMobile}>
             {data.links.map(lk => (
               <LinkRow key={lk.id} link={lk} onChange={u => updateLink(lk.id, u)} onRemove={() => removeLink(lk.id)} />
             ))}
@@ -739,7 +774,7 @@ export default function TutorCardOnboarding() {
           <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", flexDirection: "column" }}>
             <StepNav step={4} goTo={goTo} isMobile={isMobile} />
 
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "28px 16px" : "36px 32px" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "28px 20px" : "36px 32px" }}>
               <div style={{ textAlign: "center", marginBottom: 20 }}>
                 <h2 style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 6px" }}>Looking good.</h2>
                 <p style={{ fontSize: 15, color: "#9ca3af", margin: 0 }}>Pick a color and preview your card.</p>
