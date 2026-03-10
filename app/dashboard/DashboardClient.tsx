@@ -386,7 +386,7 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, onSh
       <div style={{ padding: "4px 20px 12px", display: "flex", gap: 8 }}>
         <button onClick={onShare} style={{
           flex: 1, padding: "12px", borderRadius: 14, border: "none",
-          background: "#111", color: "white", fontSize: 14, fontWeight: 600,
+          background: accent, color: t, fontSize: 14, fontWeight: 600,
           cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
           transition: "opacity 0.15s",
