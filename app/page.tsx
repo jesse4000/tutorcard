@@ -416,7 +416,7 @@ export default function TutorCardLanding() {
         </section>
 
         {/* ═══ FOOTER ═══ */}
-        <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 32px", width: "100%" }}>
+        <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 0" : "40px 0", width: "100%" }}>
           <div style={{ width: "100%", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: "space-between", gap: isMobile ? 24 : 0, textAlign: isMobile ? "center" : "left" }}>
               <div>
