@@ -416,8 +416,8 @@ export default function TutorCardLanding() {
         </section>
 
         {/* ═══ FOOTER ═══ */}
-        <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 32px" }}>
-          <div>
+        <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 32px", width: "100%" }}>
+          <div style={{ width: "100%", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: "space-between", gap: isMobile ? 24 : 0, textAlign: isMobile ? "center" : "left" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: isMobile ? "center" : "flex-start", marginBottom: 6 }}>
@@ -426,7 +426,7 @@ export default function TutorCardLanding() {
                 </div>
                 <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0, maxWidth: 280, lineHeight: 1.5 }}>The professional identity platform for tutors. Free to create, easy to share.</p>
               </div>
-              <div style={{ display: "flex", gap: isMobile ? 32 : 48 }}>
+              <div style={{ display: "flex", gap: isMobile ? 32 : 48, marginLeft: isMobile ? 0 : "auto", textAlign: "right" }}>
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Platform</p>
                   {["Create a card", "Log in", "For associations", "For parents"].map(l => <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>)}
@@ -437,9 +437,8 @@ export default function TutorCardLanding() {
                 </div>
               </div>
             </div>
-            <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0 }}>
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", justifyContent: "center" }}>
               <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>© 2026 TutorCard · A StudySpaces product</p>
-              <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>Powered by <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span></p>
             </div>
           </div>
         </footer>
