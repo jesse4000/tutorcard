@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/client";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 function LoginForm() {
   const router = useRouter();
@@ -78,6 +79,9 @@ function LoginForm() {
       >
         {loading ? "Logging in..." : "Log in"}
       </button>
+
+      <div className="auth-divider">or</div>
+      <GoogleSignInButton redirectTo={redirect} />
 
       <div className="auth-footer">
         Don&apos;t have an account?{" "}
