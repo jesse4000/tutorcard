@@ -1,7 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import TutorCardOnboarding from "@/components/TutorCardOnboarding";
 
 export default function CreatePage() {
-  return <TutorCardOnboarding />;
+  return (
+    <Suspense>
+      <TutorCardOnboarding />
+    </Suspense>
+  );
 }

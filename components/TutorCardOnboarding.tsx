@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { saveCardDraft, loadCardDraft, clearCardDraft } from "@/lib/cardDraft";
+import type { OnboardingData, OnboardingLink } from "@/lib/cardDraft";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 // ─── UTILS ──────────────────────────────────────────────
 function isLight(hex: string) {
@@ -78,26 +83,7 @@ const CITIES = [
   "Brighton, UK","Cardiff, UK","Belfast, UK","Nottingham, UK","Sheffield, UK","Southampton, UK","Newcastle, UK","Reading, UK","Aberdeen, UK","Bath, UK",
 ];
 
-// ─── TYPES ──────────────────────────────────────────────
-interface OnboardingLink {
-  id: number;
-  type: string;
-  icon: string;
-  value: string;
-  label: string;
-}
-
-interface OnboardingData {
-  name: string;
-  headline: string;
-  location: string;
-  remote: boolean;
-  slug: string;
-  imageUrl: string | null;
-  specialties: string[];
-  links: OnboardingLink[];
-  accent: string;
-}
+// ─── TYPES (imported from @/lib/cardDraft) ──────────────
 
 // ─── HEADER ─────────────────────────────────────────────
 function Header({ onLogoClick }: { onLogoClick: () => void }) {
@@ -441,11 +427,97 @@ export default function TutorCardOnboarding() {
     accent: "#4f46e5",
   });
 
+  // Auth state for inline signup
+  const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     const ck = () => setIsMobile(window.innerWidth < 800);
     ck(); window.addEventListener("resize", ck);
     return () => window.removeEventListener("resize", ck);
   }, []);
+
+  // Resume flow: after Google OAuth redirects back with ?resume=true
+  const resumeHandled = useRef(false);
+  useEffect(() => {
+    if (resumeHandled.current) return;
+    if (searchParams.get("resume") !== "true") return;
+    resumeHandled.current = true;
+
+    (async () => {
+      const draft = loadCardDraft();
+      if (!draft) {
+        alert("We couldn't restore your card data. Please fill it out again.");
+        window.history.replaceState({}, "", "/create");
+        return;
+      }
+
+      const supabase = createClient();
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        alert("Authentication failed. Please try again.");
+        window.history.replaceState({}, "", "/create");
+        return;
+      }
+
+      // Restore draft data and auto-publish
+      setData(draft);
+      window.history.replaceState({}, "", "/create");
+
+      // We need to publish with the draft data directly since setState is async
+      setSubmitting(true);
+      try {
+        const { firstName, lastName } = splitName(draft.name);
+        const locations: string[] = [];
+        if (draft.location) locations.push(draft.location);
+        if (draft.remote) locations.push("Online");
+
+        const payload = {
+          firstName,
+          lastName,
+          title: draft.headline.trim(),
+          slug: (draft.slug || draft.name.toLowerCase().replace(/[^a-z0-9]/g, "")).trim(),
+          avatarColor: draft.accent,
+          exams: draft.specialties,
+          subjects: [],
+          locations,
+          links: mapLinksToApi(draft.links),
+          notifyOnMatch: false,
+          email: authData.user.email || "",
+          profileImageUrl: draft.imageUrl || null,
+        };
+
+        const res = await fetch("/api/tutors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const result = await res.json();
+          if (result.error?.includes("slug")) {
+            alert("That card URL is already taken. Please choose another.");
+            setScreen("step1");
+          } else {
+            alert("Something went wrong. Please try again.");
+          }
+          setSubmitting(false);
+          return;
+        }
+
+        clearCardDraft();
+        setScreen("share");
+      } catch {
+        alert("Network error. Please try again.");
+      }
+      setSubmitting(false);
+    })();
+  }, [searchParams]);
 
   const upd = <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => setData(p => ({ ...p, [k]: v }));
   const autoSlug = data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "");
@@ -523,9 +595,6 @@ export default function TutorCardOnboarding() {
         if (result.error?.includes("slug")) {
           alert("That card URL is already taken. Please choose another.");
           setScreen("step1");
-        } else if (res.status === 401) {
-          alert("Please sign in to publish your card.");
-          window.location.href = `/login?redirect=/create`;
         } else {
           alert("Something went wrong. Please try again.");
         }
@@ -691,12 +760,150 @@ export default function TutorCardOnboarding() {
               </div>
 
               <div style={{ maxWidth: 380, width: "100%" }}>
-                <button onClick={handlePublish} disabled={submitting} className="cta-main" style={{
+                <button onClick={async () => {
+                  const supabase = createClient();
+                  const { data: authData } = await supabase.auth.getUser();
+                  if (authData.user) {
+                    handlePublish();
+                  } else {
+                    setScreen("signup");
+                  }
+                }} disabled={submitting} className="cta-main" style={{
                   width: "100%", padding: "14px", borderRadius: 14, border: "none",
                   background: submitting ? "#9ca3af" : "#111", color: "white", fontSize: 15, fontWeight: 600,
                   cursor: submitting ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 }}><Icon name="sparkle" size={16} />{submitting ? "Publishing..." : "Publish my TutorCard"}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SIGNUP / LOGIN (inline during card creation) */}
+        {screen === "signup" && (
+          <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? "32px 16px" : "40px 32px" }}>
+            <div style={{ maxWidth: 400, width: "100%" }}>
+              <button onClick={() => setScreen("step4")} style={{
+                background: "none", border: "none", color: "#9ca3af", fontSize: 13, fontWeight: 500,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5, marginBottom: 20,
+              }}><Icon name="arrowLeft" size={14} />Back to preview</button>
+
+              <div style={{ background: "white", borderRadius: 18, border: "1px solid #e5e7eb", padding: 36, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                <h2 style={{ fontSize: 24, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 4px" }}>
+                  {authMode === "signup" ? "Create an account" : "Welcome back"}
+                </h2>
+                <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 24px" }}>
+                  {authMode === "signup" ? "Sign up to publish your TutorCard." : "Log in to publish your TutorCard."}
+                </p>
+
+                {authError && (
+                  <div style={{ fontSize: 13, color: "#ef4444", background: "#fef2f2", border: "1px solid rgba(239,68,68,0.15)", padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
+                    {authError}
+                  </div>
+                )}
+
+                <GoogleSignInButton
+                  redirectTo="/create?resume=true"
+                  onClick={() => saveCardDraft(data)}
+                />
+
+                <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0", color: "#9ca3af", fontSize: 13 }}>
+                  <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+                  <span>or</span>
+                  <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+                </div>
+
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setAuthError("");
+
+                  if (authMode === "signup" && authPassword.length < 6) {
+                    setAuthError("Password must be at least 6 characters.");
+                    return;
+                  }
+
+                  setAuthLoading(true);
+                  const supabase = createClient();
+
+                  if (authMode === "signup") {
+                    const { error } = await supabase.auth.signUp({ email: authEmail, password: authPassword });
+                    if (error) { setAuthError(error.message); setAuthLoading(false); return; }
+                  } else {
+                    const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
+                    if (error) { setAuthError(error.message); setAuthLoading(false); return; }
+                  }
+
+                  // Publish after successful auth
+                  setAuthLoading(false);
+                  handlePublish();
+                }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Email</label>
+                    <input
+                      type="email"
+                      value={authEmail}
+                      onChange={e => setAuthEmail(e.target.value)}
+                      placeholder="you@email.com"
+                      required
+                      style={{
+                        width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb",
+                        fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box",
+                        fontFamily: "'DM Sans', sans-serif", background: "white",
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = "#111"; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = "#e5e7eb"; }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Password</label>
+                    <input
+                      type="password"
+                      value={authPassword}
+                      onChange={e => setAuthPassword(e.target.value)}
+                      placeholder={authMode === "signup" ? "At least 6 characters" : "Your password"}
+                      required
+                      style={{
+                        width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb",
+                        fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box",
+                        fontFamily: "'DM Sans', sans-serif", background: "white",
+                      }}
+                      onFocus={e => { e.currentTarget.style.borderColor = "#111"; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = "#e5e7eb"; }}
+                    />
+                  </div>
+
+                  <button type="submit" disabled={authLoading} style={{
+                    width: "100%", padding: "14px", borderRadius: 14, border: "none",
+                    background: authLoading ? "#9ca3af" : "#111", color: "white",
+                    fontSize: 15, fontWeight: 600, cursor: authLoading ? "default" : "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  }}>
+                    <Icon name="sparkle" size={16} />
+                    {authLoading
+                      ? (authMode === "signup" ? "Creating account..." : "Logging in...")
+                      : (authMode === "signup" ? "Create account & publish" : "Log in & publish")
+                    }
+                  </button>
+                </form>
+
+                <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#9ca3af" }}>
+                  {authMode === "signup" ? (
+                    <>Already have an account?{" "}
+                      <button onClick={() => { setAuthMode("login"); setAuthError(""); }} style={{
+                        background: "none", border: "none", color: "#d97706", fontWeight: 600,
+                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+                      }}>Log in</button>
+                    </>
+                  ) : (
+                    <>Don&apos;t have an account?{" "}
+                      <button onClick={() => { setAuthMode("signup"); setAuthError(""); }} style={{
+                        background: "none", border: "none", color: "#d97706", fontWeight: 600,
+                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+                      }}>Sign up</button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
