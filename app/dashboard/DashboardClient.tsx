@@ -158,11 +158,10 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
 }
 
 // ─── REVIEW REQUEST POPUP ───────────────────────────────
-function ReviewRequestPopup({ onClose, accent, slug }: { onClose: () => void; accent: string; slug: string }) {
+function ReviewRequestPopup({ onClose, slug }: { onClose: () => void; slug: string }) {
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
-  const t = toac(accent);
   const reviewUrl = typeof window !== "undefined" ? `${window.location.origin}/${slug}/review` : `/${slug}/review`;
   const displayUrl = `tutorcard.co/${slug}/review`;
 
@@ -191,12 +190,12 @@ function ReviewRequestPopup({ onClose, accent, slug }: { onClose: () => void; ac
           type="email" value={email} onChange={e => setEmail(e.target.value)}
           placeholder="parent@email.com"
           style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", fontFamily: "'DM Sans', sans-serif", background: "white" }}
-          onFocus={e => e.target.style.borderColor = accent}
+          onFocus={e => e.target.style.borderColor = "#111"}
           onBlur={e => e.target.style.borderColor = "#e5e7eb"}
         />
         <button onClick={handleSend} style={{
           padding: "11px 18px", borderRadius: 10, border: "none",
-          background: sent ? "#ecfdf5" : accent, color: sent ? "#059669" : t,
+          background: sent ? "#ecfdf5" : "#111", color: sent ? "#059669" : "white",
           fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", transition: "all 0.2s",
         }}>
@@ -231,11 +230,10 @@ function ReviewRequestPopup({ onClose, accent, slug }: { onClose: () => void; ac
 }
 
 // ─── VOUCH REQUEST POPUP ────────────────────────────────
-function VouchRequestPopup({ onClose, accent, slug }: { onClose: () => void; accent: string; slug: string }) {
+function VouchRequestPopup({ onClose, slug }: { onClose: () => void; slug: string }) {
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
-  const t = toac(accent);
   const vouchUrl = typeof window !== "undefined" ? `${window.location.origin}/${slug}/vouch` : `/${slug}/vouch`;
   const displayUrl = `tutorcard.co/${slug}/vouch`;
 
@@ -264,12 +262,12 @@ function VouchRequestPopup({ onClose, accent, slug }: { onClose: () => void; acc
           type="email" value={email} onChange={e => setEmail(e.target.value)}
           placeholder="tutor@email.com"
           style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", fontFamily: "'DM Sans', sans-serif", background: "white" }}
-          onFocus={e => e.target.style.borderColor = accent}
+          onFocus={e => e.target.style.borderColor = "#111"}
           onBlur={e => e.target.style.borderColor = "#e5e7eb"}
         />
         <button onClick={handleSend} style={{
           padding: "11px 18px", borderRadius: 10, border: "none",
-          background: sent ? "#ecfdf5" : accent, color: sent ? "#059669" : t,
+          background: sent ? "#ecfdf5" : "#111", color: sent ? "#059669" : "white",
           fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", transition: "all 0.2s",
         }}>
@@ -304,10 +302,9 @@ function VouchRequestPopup({ onClose, accent, slug }: { onClose: () => void; acc
 }
 
 // ─── EMPTY STATE ────────────────────────────────────────
-function EmptyState({ icon, title, desc, actionLabel, actionIcon, accent, onAction }: {
-  icon: string; title: string; desc: string; actionLabel: string; actionIcon: string; accent: string; onAction: () => void;
+function EmptyState({ icon, title, desc, actionLabel, actionIcon, onAction }: {
+  icon: string; title: string; desc: string; actionLabel: string; actionIcon: string; onAction: () => void;
 }) {
-  const t = toac(accent);
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "48px 24px", textAlign: "center" }}>
       <div style={{ width: 56, height: 56, borderRadius: 14, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
@@ -317,7 +314,7 @@ function EmptyState({ icon, title, desc, actionLabel, actionIcon, accent, onActi
       <p style={{ fontSize: 13.5, color: "#9ca3af", margin: "0 0 20px", maxWidth: 300, lineHeight: 1.5 }}>{desc}</p>
       <button onClick={onAction} style={{
         padding: "9px 18px", borderRadius: 10, border: "none",
-        background: accent, color: t, fontSize: 13, fontWeight: 600,
+        background: "#111", color: "white", fontSize: 13, fontWeight: 600,
         cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
         display: "flex", alignItems: "center", gap: 6, transition: "opacity 0.15s",
       }}
@@ -389,7 +386,7 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, onSh
       <div style={{ padding: "4px 20px 12px", display: "flex", gap: 8 }}>
         <button onClick={onShare} style={{
           flex: 1, padding: "12px", borderRadius: 14, border: "none",
-          background: accent, color: t, fontSize: 14, fontWeight: 600,
+          background: "#111", color: "white", fontSize: 14, fontWeight: 600,
           cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
           transition: "opacity 0.15s",
@@ -415,7 +412,7 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, onSh
 }
 
 // ─── TAB BAR ────────────────────────────────────────────
-function TabBar({ tab, setTab, accent }: { tab: string; setTab: (t: string) => void; accent: string }) {
+function TabBar({ tab, setTab }: { tab: string; setTab: (t: string) => void }) {
   const tabs = [
     { key: "reviews", label: "Reviews", icon: "star" },
     { key: "vouches", label: "Vouches", icon: "users" },
@@ -426,7 +423,7 @@ function TabBar({ tab, setTab, accent }: { tab: string; setTab: (t: string) => v
       {tabs.map(t => (
         <button key={t.key} onClick={() => setTab(t.key)} style={{
           padding: "10px 16px", border: "none", background: "none",
-          borderBottom: tab === t.key ? `2px solid ${accent}` : "2px solid transparent",
+          borderBottom: tab === t.key ? `2px solid #111` : "2px solid transparent",
           color: tab === t.key ? "#111" : "#9ca3af",
           fontSize: 13, fontWeight: 600, cursor: "pointer",
           fontFamily: "'DM Sans', sans-serif",
@@ -441,8 +438,8 @@ function TabBar({ tab, setTab, accent }: { tab: string; setTab: (t: string) => v
 }
 
 // ─── TAB CONTENT ────────────────────────────────────────
-function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest }: {
-  tab: string; accent: string; wide: boolean;
+function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest }: {
+  tab: string; wide: boolean;
   reviews: ReviewData[]; vouchers: VoucherData[]; badges: BadgeData[];
   onReviewRequest: () => void; onVouchRequest: () => void;
 }) {
@@ -451,7 +448,7 @@ function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequ
   const ActionBtn = ({ children, icon, onClick }: { children: React.ReactNode; icon: string; onClick: () => void }) => (
     <button onClick={onClick} style={{
       padding: "4px 12px", borderRadius: 20, border: "none",
-      background: accent, color: toac(accent),
+      background: "#111", color: "white",
       fontSize: 11.5, fontWeight: 600, cursor: "pointer",
       fontFamily: "'DM Sans', sans-serif",
       display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
@@ -475,13 +472,13 @@ function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequ
               <EmptyState
                 icon="trendUp" title="No reviews yet"
                 desc="Send a review request to a parent or student. Each review captures the exam, score journey, and their experience working with you."
-                actionLabel="Send review request" actionIcon="send" accent={accent} onAction={onReviewRequest}
+                actionLabel="Send review request" actionIcon="send" onAction={onReviewRequest}
               />
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {reviews.map(r => (
-                <ReviewRow key={r.id} review={r} accent={accent} wide={wide} />
+                <ReviewRow key={r.id} review={r} wide={wide} />
               ))}
             </div>
           )}
@@ -498,13 +495,13 @@ function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequ
               <EmptyState
                 icon="users" title="No vouches yet"
                 desc="Ask a fellow tutor to vouch for you. A vouch is a one-click endorsement that shows parents your peers trust your work."
-                actionLabel="Send vouch request" actionIcon="send" accent={accent} onAction={onVouchRequest}
+                actionLabel="Send vouch request" actionIcon="send" onAction={onVouchRequest}
               />
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: wide ? 10 : 8 }}>
               {vouchers.map(v => (
-                <VouchRow key={v.id} vouch={v} accent={accent} wide={wide} />
+                <VouchRow key={v.id} vouch={v} wide={wide} />
               ))}
             </div>
           )}
@@ -555,8 +552,7 @@ function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequ
 }
 
 // ─── REVIEW ROW ─────────────────────────────────────────
-function ReviewRow({ review, accent, wide }: { review: ReviewData; accent: string; wide: boolean }) {
-  const t = toac(accent);
+function ReviewRow({ review, wide }: { review: ReviewData; wide: boolean }) {
   const hasScores = review.scoreBefore && review.scoreAfter;
   const imp = hasScores ? Number(review.scoreAfter) - Number(review.scoreBefore) : null;
 
@@ -574,7 +570,7 @@ function ReviewRow({ review, accent, wide }: { review: ReviewData; accent: strin
                 <span style={{ fontSize: 13, color: "#d1d5db" }}>&rarr;</span>
                 <span style={{ fontSize: 20, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
                 {imp != null && imp > 0 && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: accent, color: t, padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#111", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
                     <Icon name="arrowUp" size={9} />+{imp}
                   </span>
                 )}
@@ -621,14 +617,15 @@ function ReviewRow({ review, accent, wide }: { review: ReviewData; accent: strin
 }
 
 // ─── VOUCH ROW ──────────────────────────────────────────
-function VouchRow({ vouch, accent, wide }: { vouch: VoucherData; accent: string; wide: boolean }) {
+function VouchRow({ vouch, wide }: { vouch: VoucherData; wide: boolean }) {
   const fullName = [vouch.firstName, vouch.lastName].filter(Boolean).join(" ");
   const initials = [vouch.firstName?.[0], vouch.lastName?.[0]].filter(Boolean).join("");
-  const t = toac(vouch.avatarColor || accent);
+  const vouchColor = vouch.avatarColor || "#0f172a";
+  const t = toac(vouchColor);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: wide ? 14 : 12, padding: wide ? "14px 22px" : "10px 12px", background: "#fafafa", borderRadius: wide ? 14 : 12, border: "1px solid #f0f0f0" }}>
-      <div style={{ width: wide ? 42 : 36, height: wide ? 42 : 36, borderRadius: "50%", background: vouch.profileImageUrl ? "transparent" : (vouch.avatarColor || accent), display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+      <div style={{ width: wide ? 42 : 36, height: wide ? 42 : 36, borderRadius: "50%", background: vouch.profileImageUrl ? "transparent" : vouchColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
         {vouch.profileImageUrl ? (
           <img src={vouch.profileImageUrl} alt={fullName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
@@ -782,8 +779,8 @@ export default function DashboardClient({
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
               <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} onShare={() => setPopup("share")} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
-                <TabBar tab={tab} setTab={setTab} accent={accent} />
-                <TabContent tab={tab} accent={accent} wide={false} reviews={reviews} vouchers={vouchers} badges={badges}
+                <TabBar tab={tab} setTab={setTab} />
+                <TabContent tab={tab} wide={false} reviews={reviews} vouchers={vouchers} badges={badges}
                   onReviewRequest={() => setPopup("review")}
                   onVouchRequest={() => setPopup("vouch")}
                 />
@@ -796,8 +793,8 @@ export default function DashboardClient({
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
-                  <TabBar tab={tab} setTab={setTab} accent={accent} />
-                  <TabContent tab={tab} accent={accent} wide={true} reviews={reviews} vouchers={vouchers} badges={badges}
+                  <TabBar tab={tab} setTab={setTab} />
+                  <TabContent tab={tab} wide={true} reviews={reviews} vouchers={vouchers} badges={badges}
                     onReviewRequest={() => setPopup("review")}
                     onVouchRequest={() => setPopup("vouch")}
                   />
@@ -814,8 +811,8 @@ export default function DashboardClient({
       </div>
 
       {popup === "share" && <SharePopup onClose={close} slug={tutor.slug} />}
-      {popup === "review" && <ReviewRequestPopup onClose={close} accent={accent} slug={tutor.slug} />}
-      {popup === "vouch" && <VouchRequestPopup onClose={close} accent={accent} slug={tutor.slug} />}
+      {popup === "review" && <ReviewRequestPopup onClose={close} slug={tutor.slug} />}
+      {popup === "vouch" && <VouchRequestPopup onClose={close} slug={tutor.slug} />}
     </>
   );
 }
