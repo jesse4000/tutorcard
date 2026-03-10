@@ -806,8 +806,8 @@ export default function DashboardClient({
             </div>
           )}
         </main>
-        <footer style={{ padding: "20px 24px", textAlign: "center", width: "100%" }}>
-          <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>
+        <footer style={{ padding: "20px 24px", display: "flex", justifyContent: "center", width: "100%" }}>
+          <p style={{ fontSize: 12, color: "#d1d5db", margin: 0, textAlign: "center" }}>
             &copy; 2026 TutorCard &middot; A <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span> product
           </p>
         </footer>
