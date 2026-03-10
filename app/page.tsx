@@ -173,7 +173,7 @@ export default function TutorCardLanding() {
             <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {!isMobile && <button className="cta-ghost" style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "transparent", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Find a tutor</button>}
+            {!isMobile && <button className="cta-ghost" onClick={() => router.push("/login")} style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "transparent", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Log in</button>}
             <button onClick={() => router.push("/create")} className="cta-main" style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#111", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
               <Icon name="plus" size={14} />Create your card
             </button>
@@ -429,7 +429,7 @@ export default function TutorCardLanding() {
               <div style={{ display: "flex", gap: isMobile ? 32 : 48 }}>
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Platform</p>
-                  {["Create a card", "Find a tutor", "For associations", "For parents"].map(l => <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>)}
+                  {["Create a card", "Log in", "For associations", "For parents"].map(l => <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>)}
                 </div>
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Company</p>
