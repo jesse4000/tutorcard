@@ -127,33 +127,9 @@ export default function InquirySheet({ onClose, accent, tutorId, tutorExams }: I
           </div>
         ) : (
           <>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={form.name}
-              onChange={set("name")}
-              style={inp}
-              onFocus={(e) => (e.target.style.borderColor = accent)}
-              onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-            />
-            <input
-              type="email"
-              placeholder="Email address"
-              value={form.email}
-              onChange={set("email")}
-              style={inp}
-              onFocus={(e) => (e.target.style.borderColor = accent)}
-              onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-            />
-            <input
-              type="tel"
-              placeholder="Phone (optional)"
-              value={form.phone}
-              onChange={set("phone")}
-              style={inp}
-              onFocus={(e) => (e.target.style.borderColor = accent)}
-              onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-            />
+            <input type="text" placeholder="Your name" value={form.name} onChange={set("name")} style={inp} onFocus={(e) => (e.target.style.borderColor = accent)} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")} />
+            <input type="email" placeholder="Email address" value={form.email} onChange={set("email")} style={inp} onFocus={(e) => (e.target.style.borderColor = accent)} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")} />
+            <input type="tel" placeholder="Phone (optional)" value={form.phone} onChange={set("phone")} style={inp} onFocus={(e) => (e.target.style.borderColor = accent)} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")} />
 
             {tutorExams.length > 0 && (
               <>

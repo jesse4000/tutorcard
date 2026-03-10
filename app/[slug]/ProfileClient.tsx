@@ -245,9 +245,11 @@ export default function ProfileClient({
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+        * { box-sizing: border-box; }
         @keyframes pfFadeIn { from { opacity:0 } to { opacity:1 } }
         @keyframes pfSlideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
         .pf-link:hover { background: #fafafa !important; }
+        .pf-view-btn:hover { border-color: ${accent} !important; color: ${accent} !important; }
       `}</style>
 
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
