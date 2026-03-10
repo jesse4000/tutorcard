@@ -470,8 +470,8 @@ function CardPreview({
             width: "100%",
             padding: "12px",
             borderRadius: 14,
-            background: accent,
-            color: t,
+            background: "#111",
+            color: "white",
             fontSize: 14,
             fontWeight: 600,
             textAlign: "center",
@@ -729,7 +729,7 @@ export default function EditClient({
       }
 
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => router.push("/dashboard"), 800);
     } catch {
       alert("Network error. Please try again.");
     }
@@ -737,12 +737,7 @@ export default function EditClient({
   };
 
   const handleDiscard = () => {
-    setData(buildInitialData(tutor));
-    setAccent(
-      ACCENT_PRESETS.includes(tutor.avatar_color)
-        ? tutor.avatar_color
-        : "#111111"
-    );
+    router.push("/dashboard");
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
