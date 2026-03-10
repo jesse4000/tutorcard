@@ -328,57 +328,6 @@ function EmptyState({ icon, title, desc, actionLabel, actionIcon, accent, onActi
   );
 }
 
-// ─── PLACEHOLDER ROWS ───────────────────────────────────
-function PlaceholderReview({ wide }: { wide: boolean }) {
-  return (
-    <div style={{ background: "#fafafa", borderRadius: 14, padding: wide ? "18px 22px" : "14px 16px", border: "1.5px dashed #e5e7eb" }}>
-      {wide ? (
-        <div style={{ display: "flex", gap: 20 }}>
-          <div style={{ flex: "0 0 auto", minWidth: 160, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <div style={{ width: 40, height: 14, borderRadius: 4, background: "#e5e7eb", marginBottom: 10 }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 50, height: 24, borderRadius: 4, background: "#e5e7eb" }} />
-              <span style={{ fontSize: 14, color: "#e5e7eb" }}>&rarr;</span>
-              <div style={{ width: 50, height: 24, borderRadius: 4, background: "#e5e7eb" }} />
-            </div>
-            <div style={{ display: "flex", gap: 3, marginTop: 8 }}>{[1,2,3,4,5].map(i => <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: "#e5e7eb" }} />)}</div>
-          </div>
-          <div style={{ flex: 1, borderLeft: "1px dashed #e5e7eb", paddingLeft: 20, display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
-            <div style={{ width: "90%", height: 12, borderRadius: 4, background: "#e5e7eb" }} />
-            <div style={{ width: "70%", height: 12, borderRadius: 4, background: "#e5e7eb" }} />
-            <div style={{ width: "40%", height: 10, borderRadius: 4, background: "#e5e7eb", marginTop: 4 }} />
-          </div>
-        </div>
-      ) : (
-        <>
-          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-            <div style={{ width: 36, height: 14, borderRadius: 4, background: "#e5e7eb" }} />
-            <div style={{ width: 40, height: 14, borderRadius: 4, background: "#e5e7eb" }} />
-            <span style={{ color: "#e5e7eb" }}>&rarr;</span>
-            <div style={{ width: 40, height: 14, borderRadius: 4, background: "#e5e7eb" }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px dashed #e5e7eb", paddingTop: 10 }}>
-            <div style={{ width: "85%", height: 10, borderRadius: 4, background: "#e5e7eb" }} />
-            <div style={{ width: "60%", height: 10, borderRadius: 4, background: "#e5e7eb" }} />
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function PlaceholderVouch({ wide }: { wide: boolean }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: wide ? 14 : 12, padding: wide ? "14px 22px" : "10px 12px", background: "#fafafa", borderRadius: wide ? 14 : 12, border: "1.5px dashed #e5e7eb" }}>
-      <div style={{ width: wide ? 42 : 36, height: wide ? 42 : 36, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0 }} />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ width: 120, height: 12, borderRadius: 4, background: "#e5e7eb" }} />
-        <div style={{ width: 80, height: 10, borderRadius: 4, background: "#e5e7eb" }} />
-      </div>
-    </div>
-  );
-}
-
 // ─── OWNER CARD ─────────────────────────────────────────
 function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, onShare }: {
   tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; onShare: () => void;
@@ -523,10 +472,6 @@ function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequ
           </div>
           {reviews.length === 0 ? (
             <>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-                <PlaceholderReview wide={wide} />
-                <PlaceholderReview wide={wide} />
-              </div>
               <EmptyState
                 icon="trendUp" title="No reviews yet"
                 desc="Send a review request to a parent or student. Each review captures the exam, score journey, and their experience working with you."
@@ -550,10 +495,6 @@ function TabContent({ tab, accent, wide, reviews, vouchers, badges, onReviewRequ
           </div>
           {vouchers.length === 0 ? (
             <>
-              <div style={{ display: "flex", flexDirection: "column", gap: wide ? 10 : 8, marginBottom: 16 }}>
-                <PlaceholderVouch wide={wide} />
-                <PlaceholderVouch wide={wide} />
-              </div>
               <EmptyState
                 icon="users" title="No vouches yet"
                 desc="Ask a fellow tutor to vouch for you. A vouch is a one-click endorsement that shows parents your peers trust your work."
@@ -865,6 +806,11 @@ export default function DashboardClient({
             </div>
           )}
         </main>
+        <footer style={{ padding: "20px 24px", textAlign: "center", width: "100%" }}>
+          <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>
+            &copy; 2026 TutorCard &middot; A <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span> product
+          </p>
+        </footer>
       </div>
 
       {popup === "share" && <SharePopup onClose={close} slug={tutor.slug} />}

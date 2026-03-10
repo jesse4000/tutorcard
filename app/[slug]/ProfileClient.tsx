@@ -121,6 +121,31 @@ export default function ProfileClient({
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: wide ? 0 : 8 }}>
               <p style={labelStyle}>Reviews ({reviews.length})</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {!isOwnCard && (
+                <button
+                  onClick={() => router.push(`/${tutor.slug}/review`)}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: 20,
+                    border: "none",
+                    background: accent,
+                    color: accentText,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    transition: "opacity 0.15s",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon name="star" size={11} />
+                  Leave a review
+                </button>
+              )}
               {wide && reviews.length > 0 && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   {avgImp > 0 && (
@@ -139,6 +164,7 @@ export default function ProfileClient({
                   )}
                 </div>
               )}
+              </div>
             </div>
             {!wide && reviews.length > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
