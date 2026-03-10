@@ -59,7 +59,7 @@ export default function ProfileClient({
 
   async function handleVouch() {
     if (!currentTutorId) {
-      router.push(`/login?redirect=/${tutor.slug}`);
+      router.push(`/vouch/${tutor.slug}`);
       return;
     }
     if (isVouching) return;
