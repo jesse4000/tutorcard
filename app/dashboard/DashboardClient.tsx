@@ -157,13 +157,74 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
   );
 }
 
+// ─── REVIEW PREVIEW (inline in popup) ───────────────────
+function ReviewPreview({ exam, beforeScore, afterScore, timeframe, accent }: {
+  exam: string; beforeScore: string; afterScore: string; timeframe: string; accent: string;
+}) {
+  const t = toac(accent);
+  const imp = beforeScore && afterScore ? Number(afterScore) - Number(beforeScore) : null;
+  const hasLeft = exam || beforeScore || afterScore || timeframe;
+
+  return (
+    <div style={{ background: "#fafafa", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f0f0" }}>
+      {hasLeft && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            {exam && (
+              <span style={{
+                fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
+                color: "#6b7280", background: "#e5e7eb", padding: "3px 8px", borderRadius: 5, flexShrink: 0,
+              }}>{exam}</span>
+            )}
+            {(beforeScore || afterScore) && (
+              <>
+                <span style={{ fontSize: 22, fontWeight: 700, color: beforeScore ? "#b0b0b0" : "#e5e7eb" }}>{beforeScore || "---"}</span>
+                <span style={{ fontSize: 13, color: "#d1d5db" }}>→</span>
+                <span style={{ fontSize: 22, fontWeight: 700, color: afterScore ? "#111" : "#e5e7eb" }}>{afterScore || "---"}</span>
+              </>
+            )}
+            {imp !== null && imp > 0 && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 2,
+                background: accent, color: t, padding: "2px 8px", borderRadius: 20,
+                fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
+              }}>
+                <Icon name="arrowUp" size={9} />+{imp}
+              </span>
+            )}
+          </div>
+          {timeframe && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 12, color: "#9ca3af" }}>{timeframe}</span>
+            </div>
+          )}
+          <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
+        </>
+      )}
+      <p style={{ fontSize: 13.5, color: "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
+        &ldquo;Review will appear here...&rdquo;
+      </p>
+      <p style={{ fontSize: 12, color: "#d1d5db", margin: 0, fontWeight: 500 }}>
+        — Parent name
+      </p>
+    </div>
+  );
+}
+
 // ─── REVIEW REQUEST POPUP ───────────────────────────────
-function ReviewRequestPopup({ onClose, slug }: { onClose: () => void; slug: string }) {
+function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slug: string; tutor: TutorRow }) {
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
+  const [exam, setExam] = useState("");
+  const [scoreBefore, setScoreBefore] = useState("");
+  const [scoreAfter, setScoreAfter] = useState("");
+  const [timeframe, setTimeframe] = useState("");
   const reviewUrl = typeof window !== "undefined" ? `${window.location.origin}/${slug}/review` : `/${slug}/review`;
   const displayUrl = `tutorcard.co/${slug}/review`;
+  const accent = tutor.avatar_color || "#4f46e5";
+
+  const specialties = [...new Set([...(tutor.exams || []), ...(tutor.subjects || [])])];
 
   const handleCopy = () => {
     navigator.clipboard.writeText(reviewUrl);
@@ -177,19 +238,108 @@ function ReviewRequestPopup({ onClose, slug }: { onClose: () => void; slug: stri
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "11px 14px", borderRadius: 10,
+    border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111",
+    outline: "none", boxSizing: "border-box", background: "white",
+    fontFamily: "'DM Sans', sans-serif",
+  };
+
   return (
     <Modal onClose={onClose}>
       <ModalHeader title="Request a review" onClose={onClose} />
       <p style={{ fontSize: 13.5, color: "#6b7280", margin: "0 0 20px", lineHeight: 1.5 }}>
-        Send this link to a parent or student after a session. They will be guided through leaving a structured review with their score journey and experience.
+        Fill in what you know. The parent fills the rest.
       </p>
 
+      {/* Exam / subject selector */}
+      {specialties.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+            Exam or subject <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+          </label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {specialties.map(s => (
+              <button key={s} onClick={() => setExam(exam === s ? "" : s)} style={{
+                padding: "6px 14px", borderRadius: 8, cursor: "pointer",
+                border: exam === s ? "1.5px solid #111" : "1.5px solid #e5e7eb",
+                background: exam === s ? "#111" : "white",
+                color: exam === s ? "white" : "#374151",
+                fontSize: 12.5, fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
+                transition: "all 0.15s",
+              }}>{s}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Score improvement */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+          Score / grade improvement <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+        </label>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <input type="number" value={scoreBefore} onChange={e => setScoreBefore(e.target.value)}
+            placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+            onFocus={e => e.target.style.borderColor = "#111"}
+            onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+          <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>→</span>
+          <input type="number" value={scoreAfter} onChange={e => setScoreAfter(e.target.value)}
+            placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+            onFocus={e => e.target.style.borderColor = "#111"}
+            onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+        </div>
+      </div>
+
+      {/* Timeframe */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+          Timeframe <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+        </label>
+        <input value={timeframe} onChange={e => setTimeframe(e.target.value)}
+          placeholder="e.g. 4 months" style={inputStyle}
+          onFocus={e => e.target.style.borderColor = "#111"}
+          onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+      </div>
+
+      <p style={{ fontSize: 12, color: "#d1d5db", margin: "0 0 16px" }}>
+        All fields are optional. The parent will fill in scores, review, and rating.
+      </p>
+
+      {/* Live preview */}
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Preview</p>
+        <ReviewPreview exam={exam} beforeScore={scoreBefore} afterScore={scoreAfter} timeframe={timeframe} accent={accent} />
+        <p style={{ fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 }}>Updates as the parent fills in their review</p>
+      </div>
+
+      {/* Preview parent view */}
+      <button
+        onClick={() => window.open(`/${slug}/review`, "_blank")}
+        style={{
+          width: "100%", padding: "10px", borderRadius: 10,
+          border: "1px solid #e5e7eb", background: "white", color: "#374151",
+          fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          transition: "background 0.15s", marginBottom: 20,
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+        onMouseLeave={e => e.currentTarget.style.background = "white"}
+      >
+        Preview what the parent sees
+        <Icon name="ext" size={13} />
+      </button>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 20px" }} />
+
+      {/* Send via email */}
       <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 6px" }}>Send via email</p>
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <input
           type="email" value={email} onChange={e => setEmail(e.target.value)}
           placeholder="parent@email.com"
-          style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", fontFamily: "'DM Sans', sans-serif", background: "white" }}
+          style={{ ...inputStyle, flex: 1 }}
           onFocus={e => e.target.style.borderColor = "#111"}
           onBlur={e => e.target.style.borderColor = "#e5e7eb"}
         />
@@ -211,17 +361,7 @@ function ReviewRequestPopup({ onClose, slug }: { onClose: () => void; slug: stri
       </div>
 
       <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 6px" }}>Copy review link</p>
-      <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ flex: 1, padding: "11px 14px", fontSize: 13, color: "#6b7280", background: "white", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {displayUrl}
-        </div>
-        <button onClick={handleCopy} style={{
-          padding: "11px 16px", border: "none", borderLeft: "1.5px solid #e5e7eb",
-          background: copied ? "#ecfdf5" : "#f9fafb", color: copied ? "#059669" : "#374151",
-          fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-          display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", transition: "all 0.2s",
-        }}><Icon name={copied ? "check" : "copy"} size={14} />{copied ? "Copied!" : "Copy"}</button>
-      </div>
+      <CopyLinkRow url={displayUrl} copied={copied} onCopy={handleCopy} />
       <p style={{ fontSize: 12, color: "#9ca3af", margin: "10px 0 0", lineHeight: 1.45 }}>
         Share this link via text, WhatsApp, or however you usually communicate with parents.
       </p>
@@ -811,7 +951,7 @@ export default function DashboardClient({
       </div>
 
       {popup === "share" && <SharePopup onClose={close} slug={tutor.slug} />}
-      {popup === "review" && <ReviewRequestPopup onClose={close} slug={tutor.slug} />}
+      {popup === "review" && <ReviewRequestPopup onClose={close} slug={tutor.slug} tutor={tutor} />}
       {popup === "vouch" && <VouchRequestPopup onClose={close} slug={tutor.slug} />}
     </>
   );
