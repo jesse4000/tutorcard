@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateCodesForUser, claimInviteCode } from "@/lib/inviteCodes";
+import { containsProfanity } from "@/lib/profanityFilter";
 
 function sanitizeSlug(slug: string) {
   return slug
@@ -8,6 +9,28 @@ function sanitizeSlug(slug: string) {
     .replace(/[^a-z0-9-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function checkContentProfanity(body: Record<string, unknown>): string | null {
+  const texts: string[] = [];
+  if (body.firstName) texts.push(String(body.firstName));
+  if (body.lastName) texts.push(String(body.lastName));
+  if (body.title) texts.push(String(body.title));
+  if (Array.isArray(body.exams)) texts.push(...body.exams.map(String));
+  if (Array.isArray(body.subjects)) texts.push(...body.subjects.map(String));
+  if (Array.isArray(body.links)) {
+    for (const link of body.links) {
+      if (link && typeof link === "object" && "label" in link) {
+        texts.push(String((link as { label: string }).label));
+      }
+    }
+  }
+  for (const text of texts) {
+    if (containsProfanity(text)) {
+      return "Content contains inappropriate language. Please revise and try again.";
+    }
+  }
+  return null;
 }
 
 export async function POST(request: Request) {
@@ -47,6 +70,12 @@ export async function POST(request: Request) {
         { error: "First name and card URL are required" },
         { status: 400 }
       );
+    }
+
+    // Profanity check
+    const profanityMsg = checkContentProfanity(body);
+    if (profanityMsg) {
+      return NextResponse.json({ error: profanityMsg }, { status: 400 });
     }
 
     const cleanSlug = sanitizeSlug(slug);
@@ -153,6 +182,12 @@ export async function PUT(request: Request) {
         { error: "Tutor card ID is required" },
         { status: 400 }
       );
+    }
+
+    // Profanity check
+    const profanityMsg = checkContentProfanity(fields);
+    if (profanityMsg) {
+      return NextResponse.json({ error: profanityMsg }, { status: 400 });
     }
 
     const updateData: Record<string, unknown> = {};
