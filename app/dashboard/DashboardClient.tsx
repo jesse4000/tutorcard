@@ -691,14 +691,22 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
         {(tutor.links || []).map((link: TutorLink, i: number) => {
           const iconName = LINK_TYPE_ICONS[link.type] || "link";
           const label = link.label || link.url || link.type.replace(/^\S+\s/, "");
+          const href =
+            link.type === "📞 Phone"
+              ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+              : link.url.startsWith("http")
+                ? link.url
+                : link.url.includes("@")
+                  ? `mailto:${link.url}`
+                  : `https://${link.url}`;
           return (
-            <div key={i} className="tc-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, cursor: "pointer", transition: "background 0.15s" }}>
+            <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="tc-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, cursor: "pointer", transition: "background 0.15s", textDecoration: "none", color: "inherit" }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name={iconName} size={15} style={{ color: "#374151" }} />
               </div>
               <span style={{ fontSize: 14, fontWeight: 500, color: "#111", flex: 1 }}>{label}</span>
               <Icon name="chevron" size={13} style={{ color: "#d1d5db" }} />
-            </div>
+            </a>
           );
         })}
       </div>
