@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import HomepageHeader from "@/components/HomepageHeader";
 import HomepageFooter from "@/components/HomepageFooter";
 
@@ -140,10 +141,16 @@ function DeepDive({ icon, badge, title, subtitle, desc, children, flipped, isMob
 export default function TutorCardLanding() {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     const ck = () => setIsMobile(window.innerWidth < 800);
     ck(); window.addEventListener("resize", ck);
     return () => window.removeEventListener("resize", ck);
+  }, []);
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      if (data.user) setIsLoggedIn(true);
+    });
   }, []);
 
   const accent = "#4f46e5";
@@ -163,7 +170,7 @@ export default function TutorCardLanding() {
       <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111" }}>
 
         {/* ═══ HEADER ═══ */}
-        <HomepageHeader isMobile={isMobile} />
+        <HomepageHeader isMobile={isMobile} isLoggedIn={isLoggedIn} />
 
         {/* ═══ HERO ═══ */}
         <section style={{

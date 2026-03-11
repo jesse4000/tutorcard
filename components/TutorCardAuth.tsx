@@ -263,9 +263,23 @@ function AuthForm({ mode, onToggle, redirectTo }: { mode: string; onToggle: () =
 }
 
 function TutorCardAuthInner({ defaultMode = "login" }: { defaultMode?: string }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/dashboard";
   const [mode, setMode] = useState(defaultMode);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => {
+      if (data.user) {
+        router.replace(redirect);
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+  }, [router, redirect]);
+
+  if (checkingAuth) return null;
 
   return (
     <>
