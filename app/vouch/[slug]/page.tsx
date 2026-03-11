@@ -72,6 +72,8 @@ export default async function VouchPage({ params, searchParams }: PageProps) {
   let hasTutorCard = false;
   let hasAlreadyVouched = false;
 
+  let isOwnCard = false;
+
   if (user) {
     isAuthenticated = true;
     const { data: currentTutor } = await supabase
@@ -82,6 +84,7 @@ export default async function VouchPage({ params, searchParams }: PageProps) {
 
     if (currentTutor) {
       hasTutorCard = true;
+      isOwnCard = currentTutor.id === tutor.id;
       const { data: vouch } = await supabase
         .from("vouches")
         .select("id")
@@ -113,6 +116,7 @@ export default async function VouchPage({ params, searchParams }: PageProps) {
       isAuthenticated={isAuthenticated}
       hasTutorCard={hasTutorCard}
       hasAlreadyVouched={hasAlreadyVouched}
+      isOwnCard={isOwnCard}
       autoComplete={action === "complete"}
     />
   );
