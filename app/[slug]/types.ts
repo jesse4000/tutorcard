@@ -8,6 +8,8 @@ export interface ReviewData {
   months?: number;
   rating: number;
   quote: string;
+  recommends?: boolean;
+  reviewerEmail?: string;
 }
 
 export interface VoucherData {

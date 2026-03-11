@@ -80,6 +80,8 @@ const iconPaths: Record<string, React.ReactNode> = {
   facebook: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>,
   whatsapp: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>,
   link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+  arrowRight: <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
+  arrowLeft: <><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>,
 };
 
 function Icon({ name, size = 16, ...props }: { name: string; size?: number } & React.SVGProps<SVGSVGElement>) {
@@ -159,6 +161,65 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
 }
 
 // ─── REVIEW PREVIEW (inline in popup) ───────────────────
+function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe, accent }: {
+  exam: string; beforeScore: string; afterScore: string; timeframe: string; accent: string;
+}) {
+  const t = toac(accent);
+  const imp = beforeScore && afterScore ? Number(afterScore) - Number(beforeScore) : null;
+  const hasLeft = exam || beforeScore || afterScore || timeframe;
+
+  const rightContent = (
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <p style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
+        {"\u201CReview will appear here...\u201D"}
+      </p>
+      <p style={{ fontSize: 11.5, color: "#d1d5db", margin: 0, fontWeight: 500 }}>
+        {"- Parent name"}
+      </p>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "#fafafa", borderRadius: 14, padding: "16px 18px", border: "1px solid #f0f0f0" }}>
+      {hasLeft && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            {exam && (
+              <span style={{
+                fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
+                color: "#6b7280", background: "#e5e7eb", padding: "3px 8px", borderRadius: 5, flexShrink: 0,
+              }}>{exam}</span>
+            )}
+            {(beforeScore || afterScore) && (
+              <>
+                <span style={{ fontSize: 22, fontWeight: 700, color: beforeScore ? "#b0b0b0" : "#e5e7eb" }}>{beforeScore || "---"}</span>
+                <span style={{ fontSize: 13, color: "#d1d5db" }}>{"\u2192"}</span>
+                <span style={{ fontSize: 22, fontWeight: 700, color: afterScore ? "#111" : "#e5e7eb" }}>{afterScore || "---"}</span>
+              </>
+            )}
+            {imp !== null && imp > 0 && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 2,
+                background: accent, color: t, padding: "2px 8px", borderRadius: 20,
+                fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
+              }}>
+                <Icon name="arrowUp" size={9} />+{imp}
+              </span>
+            )}
+          </div>
+          {timeframe && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 12, color: "#9ca3af" }}>{timeframe}</span>
+            </div>
+          )}
+          <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
+        </>
+      )}
+      {rightContent}
+    </div>
+  );
+}
+
 // ─── REVIEW REQUEST POPUP ───────────────────────────────
 function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slug: string; tutor: TutorRow }) {
   const [email, setEmail] = useState("");
@@ -255,7 +316,7 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
             placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
             onFocus={e => e.target.style.borderColor = "#111"}
             onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-          <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>→</span>
+          <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>{"\u2192"}</span>
           <input type="number" value={scoreAfter} onChange={e => setScoreAfter(e.target.value)}
             placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
             onFocus={e => e.target.style.borderColor = "#111"}
@@ -274,6 +335,34 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
           onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
       </div>
 
+      <p style={{ fontSize: 12, color: "#d1d5db", margin: "0 0 16px" }}>
+        All fields are optional. The parent will fill in scores, review, and rating.
+      </p>
+
+      {/* Live preview */}
+      <div style={{ marginBottom: 20 }}>
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Preview</p>
+        <DashboardReviewPreview
+          exam={exam}
+          beforeScore={scoreBefore}
+          afterScore={scoreAfter}
+          timeframe={timeframe}
+          accent={accent}
+        />
+        <p style={{ fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 }}>Updates as the parent fills in their review</p>
+      </div>
+
+      <a href={reviewUrl} target="_blank" rel="noopener noreferrer" style={{
+        width: "100%", padding: "12px", borderRadius: 12,
+        border: "1px solid #e5e7eb", background: "white", color: "#374151",
+        fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        textDecoration: "none", marginBottom: 20, boxSizing: "border-box",
+      }}>
+        Preview what the parent sees
+        <Icon name="arrowRight" size={14} />
+      </a>
+
       {/* Divider */}
       <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 20px" }} />
 
@@ -284,12 +373,12 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
           type="email" value={email} onChange={e => setEmail(e.target.value)}
           placeholder="parent@email.com"
           style={{ ...inputStyle, flex: 1 }}
-          onFocus={e => e.target.style.borderColor = "#111"}
+          onFocus={e => e.target.style.borderColor = accent}
           onBlur={e => e.target.style.borderColor = "#e5e7eb"}
         />
         <button onClick={handleSend} style={{
           padding: "11px 18px", borderRadius: 10, border: "none",
-          background: sent ? "#ecfdf5" : "#111", color: sent ? "#059669" : "white",
+          background: sent ? "#ecfdf5" : accent, color: sent ? "#059669" : toac(accent),
           fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", transition: "all 0.2s",
         }}>
@@ -298,7 +387,7 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
         </button>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "4px 0 16px" }}>
         <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
         <span style={{ fontSize: 12, color: "#d1d5db", fontWeight: 500 }}>or</span>
         <div style={{ flex: 1, height: 1, background: "#f3f4f6" }} />
@@ -306,9 +395,6 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
 
       <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 6px" }}>Copy review link</p>
       <CopyLinkRow url={displayUrl} copied={copied} onCopy={handleCopy} />
-      <p style={{ fontSize: 12, color: "#9ca3af", margin: "10px 0 0", lineHeight: 1.45 }}>
-        Share this link via text, WhatsApp, or however you usually communicate with parents.
-      </p>
     </Modal>
   );
 }

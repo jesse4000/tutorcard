@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { tutorId, reviewerName, reviewerRole, exam, scoreBefore, scoreAfter, months, rating, quote } = body;
+    const { tutorId, reviewerName, reviewerRole, exam, scoreBefore, scoreAfter, months, rating, quote, reviewerEmail, recommends } = body;
 
     if (!tutorId || !reviewerName || !rating || !quote) {
       return NextResponse.json(
@@ -50,6 +50,8 @@ export async function POST(request: Request) {
       months: months || null,
       rating,
       quote: trimmedQuote,
+      reviewer_email: reviewerEmail || null,
+      recommends: typeof recommends === "boolean" ? recommends : null,
     });
 
     if (error) {
