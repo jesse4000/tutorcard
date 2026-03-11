@@ -7,6 +7,7 @@ import { saveCardDraft, loadCardDraft, clearCardDraft } from "@/lib/cardDraft";
 import type { OnboardingData, OnboardingLink } from "@/lib/cardDraft";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { containsProfanity } from "@/lib/profanityFilter";
+import { QRCodeSVG } from "qrcode.react";
 
 // ─── UTILS ──────────────────────────────────────────────
 function isLight(hex: string) {
@@ -444,6 +445,7 @@ export default function TutorCardOnboarding() {
   const [otherInput, setOtherInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<OnboardingData>({
     name: "", headline: "", location: "", remote: true, slug: "",
     imageUrl: null, specialties: [],
@@ -504,6 +506,21 @@ export default function TutorCardOnboarding() {
       // Restore draft data and auto-publish
       setData(draft);
       window.history.replaceState({}, "", "/create");
+
+      // Check profanity on restored draft before publishing
+      const draftFields = [
+        draft.name,
+        draft.headline,
+        ...draft.specialties,
+        ...draft.links.map((l: OnboardingLink) => l.label),
+      ];
+      for (const field of draftFields) {
+        if (containsProfanity(field)) {
+          setProfanityError("Please remove inappropriate language before continuing.");
+          setScreen("step1");
+          return;
+        }
+      }
 
       // We need to publish with the draft data directly since setState is async
       setSubmitting(true);
@@ -633,6 +650,32 @@ export default function TutorCardOnboarding() {
     navigator.clipboard?.writeText(url).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadQr = () => {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg) return;
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(svg);
+    const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.drawImage(img, 0, 0, 512, 512);
+      URL.revokeObjectURL(url);
+      const a = document.createElement("a");
+      a.download = `tutorcard-${autoSlug}-qr.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    img.src = url;
   };
 
   const checkProfanity = (): boolean => {
@@ -793,7 +836,7 @@ export default function TutorCardOnboarding() {
 
         {/* STEP 2: SPECIALTIES */}
         {screen === "step2" && (
-          <StepShell step={2} totalSteps={4} goTo={goTo} title="Your specialties" subtitle="Select the exams and subjects you teach." onNext={() => setScreen("step3")} nextDisabled={data.specialties.length === 0} isMobile={isMobile}>
+          <StepShell step={2} totalSteps={4} goTo={goTo} title="Your specialties" subtitle="Select the exams and subjects you teach." onNext={() => { if (checkProfanity()) return; setScreen("step3"); }} nextDisabled={data.specialties.length === 0} isMobile={isMobile}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {[...EXAMS, ...customOthers].map(ex => {
                 const sel = data.specialties.includes(ex);
@@ -828,7 +871,7 @@ export default function TutorCardOnboarding() {
 
         {/* STEP 3: LINKS */}
         {screen === "step3" && (
-          <StepShell step={3} totalSteps={4} goTo={goTo} title="Add your links" subtitle="These become action buttons on your card. Parents and students tap them directly." onNext={() => setScreen("step4")} nextDisabled={data.links.some(l => !l.value.trim())} isMobile={isMobile}>
+          <StepShell step={3} totalSteps={4} goTo={goTo} title="Add your links" subtitle="These become action buttons on your card. Parents and students tap them directly." onNext={() => { if (checkProfanity()) return; setScreen("step4"); }} nextDisabled={data.links.some(l => !l.value.trim())} isMobile={isMobile}>
             {data.links.map(lk => (
               <LinkRow key={lk.id} link={lk} onChange={u => updateLink(lk.id, u)} onRemove={() => removeLink(lk.id)} />
             ))}
@@ -1112,7 +1155,10 @@ export default function TutorCardOnboarding() {
                     ))}
                   </div>
                 </div>
-                <button className="share-btn" style={{
+                <div ref={qrRef} style={{ position: "absolute", left: -9999, top: -9999, pointerEvents: "none" }}>
+                  <QRCodeSVG value={`${typeof window !== "undefined" ? window.location.origin : "https://tutorcard.co"}/${autoSlug}`} size={128} level="M" />
+                </div>
+                <button onClick={handleDownloadQr} className="share-btn" style={{
                   display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", borderRadius: 12, width: "100%",
                   border: "1px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 }}>

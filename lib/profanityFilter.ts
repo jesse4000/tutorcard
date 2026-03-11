@@ -11,7 +11,7 @@ const PROFANE_WORDS = new Set([
   "chink", "fag", "faggot", "kike", "spic",
   "retard", "retarded", "tranny",
   // Variations
-  "assh0le", "b1tch", "biatch", "f*ck", "fuk",
+  "assh0le", "b1tch", "biatch", "fck", "fuk",
   "fuq", "sh1t", "stfu", "gtfo", "wtf",
 ]);
 
