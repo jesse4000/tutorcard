@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Icon, { textOnAccent } from "@/app/[slug]/Icon";
 
 interface TutorData {
@@ -310,7 +311,7 @@ function ReviewConfirmation({ tutor, accent, submittedReview }: {
 
       <div>
         <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>Are you a tutor yourself?</p>
-        <a href="/" style={{ textDecoration: "none" }}>
+        <Link href="/" style={{ textDecoration: "none" }}>
           <button style={{
             padding: "11px 22px", borderRadius: 12, border: "none",
             background: "#111", color: "white", fontSize: 13, fontWeight: 600,
@@ -319,7 +320,7 @@ function ReviewConfirmation({ tutor, accent, submittedReview }: {
           }}>
             Create your own TutorCard <Icon name="arrowRight" size={13} />
           </button>
-        </a>
+        </Link>
       </div>
     </div>
   );
