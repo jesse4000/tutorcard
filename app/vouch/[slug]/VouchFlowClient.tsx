@@ -166,18 +166,21 @@ function VouchLanding({
   );
 }
 
-// ─── SCREEN 2: QUICK SIGNUP ─────────────────────────────
-function QuickSignup({ tutor, accent, onComplete }: {
+// ─── SCREEN 2: AUTH (SIGNUP + LOGIN) ────────────────────
+function AuthToVouch({ tutor, accent, onComplete }: {
   tutor: TutorData; accent: string;
   onComplete: (newVouchCount: number) => void;
 }) {
   const router = useRouter();
+  const [mode, setMode] = useState<"signup" | "login">("signup");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const isSignup = mode === "signup";
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "12px 14px 12px 42px", borderRadius: 10,
@@ -190,7 +193,7 @@ function QuickSignup({ tutor, accent, onComplete }: {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
+    if (isSignup && password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
@@ -198,16 +201,27 @@ function QuickSignup({ tutor, accent, onComplete }: {
     setLoading(true);
     const supabase = createClient();
 
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name } },
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
+    if (isSignup) {
+      const { error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name } },
+      });
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
+    } else {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
     }
 
     // Now vouch
@@ -264,10 +278,12 @@ function QuickSignup({ tutor, accent, onComplete }: {
         {/* Heading */}
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 6px" }}>
-            Create your card to vouch
+            {isSignup ? "Create your card to vouch" : "Sign in to vouch"}
           </h2>
           <p style={{ fontSize: 14, color: "#9ca3af", margin: 0, lineHeight: 1.5 }}>
-            You need a TutorCard to vouch. It takes 30 seconds and it is free.
+            {isSignup
+              ? "You need a TutorCard to vouch. It takes 30 seconds and it is free."
+              : "Sign in with your TutorCard account to vouch."}
           </p>
         </div>
 
@@ -293,11 +309,13 @@ function QuickSignup({ tutor, accent, onComplete }: {
         {/* Fields */}
         <form onSubmit={handleSubmit}>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ position: "relative" }}>
-              <Icon name="user" size={16} style={{ position: "absolute", left: 14, top: 14, color: "#9ca3af" }} />
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "#111"} onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-            </div>
+            {isSignup && (
+              <div style={{ position: "relative" }}>
+                <Icon name="user" size={16} style={{ position: "absolute", left: 14, top: 14, color: "#9ca3af" }} />
+                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = "#111"} onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+              </div>
+            )}
             <div style={{ position: "relative" }}>
               <Icon name="mail" size={16} style={{ position: "absolute", left: 14, top: 14, color: "#9ca3af" }} />
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" style={inputStyle}
@@ -305,7 +323,7 @@ function QuickSignup({ tutor, accent, onComplete }: {
             </div>
             <div style={{ position: "relative" }}>
               <Icon name="lock" size={16} style={{ position: "absolute", left: 14, top: 14, color: "#9ca3af" }} />
-              <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a password" style={{ ...inputStyle, paddingRight: 42 }}
+              <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder={isSignup ? "Create a password" : "Password"} style={{ ...inputStyle, paddingRight: 42 }}
                 onFocus={e => e.target.style.borderColor = "#111"} onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
               <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0 }}>
                 <Icon name={showPass ? "eyeOff" : "eye"} size={16} />
@@ -325,13 +343,24 @@ function QuickSignup({ tutor, accent, onComplete }: {
             onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = "0.88"; }}
             onMouseLeave={e => { e.currentTarget.style.opacity = loading ? "0.7" : "1"; }}
           >
-            {loading ? "Creating..." : "Create card and vouch"}
+            {loading
+              ? (isSignup ? "Creating..." : "Signing in...")
+              : (isSignup ? "Create card and vouch" : "Sign in and vouch")}
             {!loading && <Icon name="arrowRight" size={16} />}
           </button>
         </form>
 
-        <p style={{ fontSize: 12, color: "#d1d5db", textAlign: "center", marginTop: 12, lineHeight: 1.45 }}>
-          You can finish setting up your card later from your dashboard.
+        {/* Toggle between signup and login */}
+        <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", marginTop: 14, lineHeight: 1.45 }}>
+          {isSignup ? "Already have a card? " : "Don\u2019t have a card? "}
+          <button type="button" onClick={() => { setMode(isSignup ? "login" : "signup"); setError(""); }} style={{
+            background: "none", border: "none", color: "#111",
+            fontSize: 13, fontWeight: 600, cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif", textDecoration: "underline",
+            textUnderlineOffset: 2,
+          }}>
+            {isSignup ? "Sign in" : "Create one free"}
+          </button>
         </p>
       </div>
     </div>
@@ -339,8 +368,8 @@ function QuickSignup({ tutor, accent, onComplete }: {
 }
 
 // ─── SCREEN 3: CONFIRMATION ─────────────────────────────
-function VouchConfirmation({ tutor, accent, newVouchCount }: {
-  tutor: TutorData; accent: string; newVouchCount: number;
+function VouchConfirmation({ tutor, accent, newVouchCount, wasAlreadyAuthenticated }: {
+  tutor: TutorData; accent: string; newVouchCount: number; wasAlreadyAuthenticated: boolean;
 }) {
   const t = textOnAccent(accent);
   const initials = `${tutor.firstName[0] || ""}${tutor.lastName[0] || ""}`.toUpperCase();
@@ -394,48 +423,66 @@ function VouchConfirmation({ tutor, accent, newVouchCount }: {
           <Icon name="check" size={16} style={{ color: "#059669" }} />
         </div>
 
-        {/* Divider */}
-        <div style={{ height: 1, background: "#f3f4f6", marginBottom: 24 }} />
-
-        {/* Own card prompt */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: "#f3f4f6", display: "flex", alignItems: "center",
-            justifyContent: "center", margin: "0 auto 12px",
-          }}>
-            <Icon name="sparkle" size={20} style={{ color: "#6b7280" }} />
-          </div>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: "#111", margin: "0 0 6px" }}>Your card is ready to set up</h3>
-          <p style={{ fontSize: 13.5, color: "#9ca3af", margin: 0, lineHeight: 1.5, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
-            Add your specialties, links, and photo to start sharing your own TutorCard with parents and students.
-          </p>
-        </div>
-
-        <Link href="/dashboard/edit" style={{ textDecoration: "none" }}>
-          <button style={{
-            width: "100%", padding: "14px", borderRadius: 14, border: "none",
-            background: "#111", color: "white", fontSize: 15, fontWeight: 600,
-            cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+        {wasAlreadyAuthenticated ? (
+          /* Already logged in — simple link back to the tutor's card */
+          <Link href={`/${tutor.slug}`} style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "12px 24px", borderRadius: 12, background: "#111",
+            color: "white", fontSize: 14, fontWeight: 600,
+            textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
             transition: "opacity 0.15s",
           }}
             onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
             onMouseLeave={e => e.currentTarget.style.opacity = "1"}
           >
-            Set up my card
-            <Icon name="arrowRight" size={16} />
-          </button>
-        </Link>
+            Back to {tutor.firstName}&apos;s card <Icon name="arrowRight" size={14} />
+          </Link>
+        ) : (
+          /* Just signed up or logged in — prompt to visit dashboard */
+          <>
+            {/* Divider */}
+            <div style={{ height: 1, background: "#f3f4f6", marginBottom: 24 }} />
 
-        <Link href={`/${tutor.slug}`} style={{
-          background: "none", border: "none", color: "#9ca3af",
-          fontSize: 13, fontWeight: 500, textDecoration: "none",
-          fontFamily: "'DM Sans', sans-serif", marginTop: 12,
-          display: "inline-flex", alignItems: "center", gap: 4,
-        }}>
-          I&apos;ll do this later
-        </Link>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: "#f3f4f6", display: "flex", alignItems: "center",
+                justifyContent: "center", margin: "0 auto 12px",
+              }}>
+                <Icon name="sparkle" size={20} style={{ color: "#6b7280" }} />
+              </div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: "#111", margin: "0 0 6px" }}>Check out your dashboard</h3>
+              <p style={{ fontSize: 13.5, color: "#9ca3af", margin: 0, lineHeight: 1.5, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
+                Manage your TutorCard, view your vouches, and share your card with parents and students.
+              </p>
+            </div>
+
+            <Link href="/dashboard" style={{ textDecoration: "none" }}>
+              <button style={{
+                width: "100%", padding: "14px", borderRadius: 14, border: "none",
+                background: "#111", color: "white", fontSize: 15, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                transition: "opacity 0.15s",
+              }}
+                onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+              >
+                Go to dashboard
+                <Icon name="arrowRight" size={16} />
+              </button>
+            </Link>
+
+            <Link href={`/${tutor.slug}`} style={{
+              background: "none", border: "none", color: "#9ca3af",
+              fontSize: 13, fontWeight: 500, textDecoration: "none",
+              fontFamily: "'DM Sans', sans-serif", marginTop: 12,
+              display: "inline-flex", alignItems: "center", gap: 4,
+            }}>
+              View {tutor.firstName}&apos;s card
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );
@@ -556,7 +603,7 @@ export default function VouchFlowClient({
                 />
               )}
               {screen === "signup" && (
-                <QuickSignup
+                <AuthToVouch
                   tutor={tutor}
                   accent={tutor.avatarColor}
                   onComplete={handleSignupComplete}
@@ -567,6 +614,7 @@ export default function VouchFlowClient({
                   tutor={tutor}
                   accent={tutor.avatarColor}
                   newVouchCount={finalVouchCount}
+                  wasAlreadyAuthenticated={isAuthenticated}
                 />
               )}
             </>
