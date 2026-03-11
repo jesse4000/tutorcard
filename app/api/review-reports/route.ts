@@ -34,13 +34,14 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
 
     // Verify the review exists and belongs to this tutor
-    const { data: review } = await admin
+    const { data: review, error: reviewError } = await admin
       .from("reviews")
-      .select("id, tutor_id, reviewer_name, reviewer_email, exam, quote")
+      .select("*")
       .eq("id", reviewId)
       .single();
 
-    if (!review) {
+    if (reviewError || !review) {
+      console.error("Review lookup error:", reviewError);
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 

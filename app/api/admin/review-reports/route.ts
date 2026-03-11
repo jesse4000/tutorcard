@@ -48,7 +48,7 @@ export async function GET() {
 
     // Fetch reviews and tutors in parallel
     const [{ data: reviews }, { data: tutors }] = await Promise.all([
-      admin.from("reviews").select("id, reviewer_name, reviewer_email, exam, quote, score_before, score_after, rating").in("id", reviewIds),
+      admin.from("reviews").select("*").in("id", reviewIds),
       admin.from("tutors").select("id, first_name, last_name, slug").in("id", tutorIds),
     ]);
 
