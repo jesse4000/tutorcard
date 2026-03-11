@@ -13,10 +13,26 @@ export function generateCodeString(): string {
   return CODE_PREFIX + result;
 }
 
-export async function generateCodesForUser(userId: string): Promise<void> {
+export async function generateCodesForUser(
+  userId: string,
+  retries = 3
+): Promise<void> {
   const admin = createAdminClient();
+
+  // Check how many codes already exist for this user
+  const { count, error: countError } = await admin
+    .from("invite_codes")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", userId);
+
+  if (countError) throw countError;
+
+  const existing = count ?? 0;
+  const needed = CODES_PER_USER - existing;
+  if (needed <= 0) return;
+
   const codes = [];
-  for (let i = 0; i < CODES_PER_USER; i++) {
+  for (let i = 0; i < needed; i++) {
     codes.push({
       code: generateCodeString(),
       owner_id: userId,
@@ -25,8 +41,8 @@ export async function generateCodesForUser(userId: string): Promise<void> {
   const { error } = await admin.from("invite_codes").insert(codes);
   if (error) {
     // Retry with fresh codes on uniqueness collision
-    if (error.code === "23505") {
-      return generateCodesForUser(userId);
+    if (error.code === "23505" && retries > 0) {
+      return generateCodesForUser(userId, retries - 1);
     }
     throw error;
   }
