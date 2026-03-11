@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
@@ -94,6 +94,7 @@ const iconPaths: Record<string, React.ReactNode> = {
   arrowLeft: <><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>,
   gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
   ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
+  download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
 };
 
 function Icon({ name, size = 16, ...props }: { name: string; size?: number } & React.SVGProps<SVGSVGElement>) {
@@ -143,6 +144,7 @@ function CopyLinkRow({ url, copied, onCopy }: { url: string; copied: boolean; on
 // ─── SHARE POPUP ────────────────────────────────────────
 function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
   const [copied, setCopied] = useState(false);
+  const qrRef = useRef<HTMLDivElement>(null);
   const cardUrl = typeof window !== "undefined" ? `${window.location.origin}/${slug}` : `/${slug}`;
   const displayUrl = `tutorcard.co/${slug}`;
 
@@ -152,22 +154,44 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownloadQr = () => {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg) return;
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(svg);
+    const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.drawImage(img, 0, 0, 512, 512);
+      URL.revokeObjectURL(url);
+      const a = document.createElement("a");
+      a.download = `tutorcard-${slug}-qr.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    img.src = url;
+  };
+
   return (
     <Modal onClose={onClose}>
       <ModalHeader title="Share your card" onClose={onClose} />
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-        <div style={{ width: 160, height: 160, borderRadius: 16, background: "#fafafa", border: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div ref={qrRef} style={{ width: 160, height: 160, borderRadius: 16, background: "#fafafa", border: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <QRCodeSVG value={cardUrl} size={128} level="M" />
         </div>
       </div>
       <CopyLinkRow url={displayUrl} copied={copied} onCopy={handleCopy} />
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        {[{ label: "Email", icon: "mail" }, { label: "Text", icon: "send" }, { label: "LinkedIn", icon: "globe" }].map(s => (
-          <button key={s.label} className="action-btn" style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 13, fontWeight: 500, color: "#374151", transition: "background 0.15s" }}>
-            <Icon name={s.icon} size={14} style={{ color: "#6b7280" }} />{s.label}
-          </button>
-        ))}
-      </div>
+      <button onClick={handleDownloadQr} className="action-btn" style={{ width: "100%", padding: "10px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 13, fontWeight: 500, color: "#374151", transition: "background 0.15s", marginTop: 12 }}>
+        <Icon name="download" size={14} style={{ color: "#6b7280" }} />Download QR code
+      </button>
     </Modal>
   );
 }

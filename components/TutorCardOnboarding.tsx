@@ -74,13 +74,36 @@ const LINK_TYPE_OPTIONS = [
 ];
 
 const CITIES = [
+  // ── US Cities ──
   "New York, NY","Los Angeles, CA","Chicago, IL","Houston, TX","Phoenix, AZ","Philadelphia, PA","San Antonio, TX","San Diego, CA","Dallas, TX","San Jose, CA",
   "Austin, TX","Jacksonville, FL","Fort Worth, TX","Columbus, OH","Indianapolis, IN","Charlotte, NC","San Francisco, CA","Seattle, WA","Denver, CO","Washington, DC",
   "Nashville, TN","Oklahoma City, OK","El Paso, TX","Boston, MA","Portland, OR","Las Vegas, NV","Memphis, TN","Louisville, KY","Baltimore, MD","Milwaukee, WI",
   "Albuquerque, NM","Tucson, AZ","Fresno, CA","Mesa, AZ","Sacramento, CA","Atlanta, GA","Kansas City, MO","Omaha, NE","Colorado Springs, CO","Raleigh, NC",
   "Virginia Beach, VA","Long Beach, CA","Miami, FL","Oakland, CA","Minneapolis, MN","Tampa, FL","Tulsa, OK","Arlington, TX","New Orleans, LA","Cleveland, OH",
+  "Detroit, MI","St. Louis, MO","Pittsburgh, PA","Cincinnati, OH","Orlando, FL","St. Petersburg, FL","Newark, NJ","Jersey City, NJ","Honolulu, HI","Anchorage, AK",
+  "Madison, WI","Salt Lake City, UT","Boise, ID","Richmond, VA","Charleston, SC","Savannah, GA","Scottsdale, AZ","Santa Fe, NM","Lexington, KY","Knoxville, TN",
+  "Providence, RI","Hartford, CT","Des Moines, IA","Little Rock, AR","Baton Rouge, LA","Springfield, IL","Wichita, KS","Norfolk, VA","Spokane, WA","Tacoma, WA",
+  "Bakersfield, CA","Riverside, CA","Stockton, CA","Irvine, CA","Santa Ana, CA","Anaheim, CA","Santa Clarita, CA","Pasadena, CA","Fremont, CA","Modesto, CA",
+  "Huntsville, AL","Montgomery, AL","Mobile, AL","Birmingham, AL","Chattanooga, TN","Akron, OH","Toledo, OH","Dayton, OH","Durham, NC","Greensboro, NC",
+  "Winston-Salem, NC","Wilmington, NC","Columbia, SC","Greenville, SC","Tallahassee, FL","Fort Lauderdale, FL","West Palm Beach, FL","Gainesville, FL",
+  "Naperville, IL","Aurora, IL","Rockford, IL","Peoria, IL","Ann Arbor, MI","Grand Rapids, MI","Lansing, MI","Rochester, NY","Buffalo, NY","Syracuse, NY",
+  "Albany, NY","Yonkers, NY","White Plains, NY","Stamford, CT","New Haven, CT","Bridgeport, CT","Trenton, NJ","Princeton, NJ","Hoboken, NJ",
+  "Tempe, AZ","Gilbert, AZ","Chandler, AZ","Glendale, AZ","Laredo, TX","Lubbock, TX","Amarillo, TX","Plano, TX","Irving, TX","Frisco, TX","McKinney, TX",
+  "Corpus Christi, TX","Brownsville, TX","McAllen, TX","Midland, TX","Reno, NV","Henderson, NV","Provo, UT","Ogden, UT","Eugene, OR","Salem, OR","Bend, OR",
+  "Bellevue, WA","Olympia, WA","Vancouver, WA","Fargo, ND","Sioux Falls, SD","Billings, MT","Missoula, MT","Cheyenne, WY","Burlington, VT","Portland, ME",
+  "Concord, NH","Santa Barbara, CA","San Luis Obispo, CA","Monterey, CA","Santa Cruz, CA","Napa, CA","Berkeley, CA","Palo Alto, CA","Mountain View, CA",
+  "Coral Gables, FL","Boca Raton, FL","Naples, FL","Sarasota, FL","Clearwater, FL","Pensacola, FL","Key West, FL",
+  "Charlottesville, VA","Alexandria, VA","Arlington, VA","Bethesda, MD","Silver Spring, MD","Annapolis, MD","Columbia, MD",
+  "Ithaca, NY","Saratoga Springs, NY","New Rochelle, NY","Garden City, NY","Manhasset, NY","Great Neck, NY","Scarsdale, NY",
+  // ── UK Cities ──
   "London, UK","Manchester, UK","Birmingham, UK","Edinburgh, UK","Glasgow, UK","Liverpool, UK","Bristol, UK","Leeds, UK","Oxford, UK","Cambridge, UK",
   "Brighton, UK","Cardiff, UK","Belfast, UK","Nottingham, UK","Sheffield, UK","Southampton, UK","Newcastle, UK","Reading, UK","Aberdeen, UK","Bath, UK",
+  "Exeter, UK","Leicester, UK","Coventry, UK","Plymouth, UK","Dundee, UK","Swansea, UK","York, UK","Norwich, UK","Derby, UK","Bournemouth, UK",
+  "Cheltenham, UK","Durham, UK","St Andrews, UK","Canterbury, UK","Warwick, UK","Winchester, UK","Stirling, UK","Inverness, UK","Peterborough, UK","Sunderland, UK",
+  "Wolverhampton, UK","Milton Keynes, UK","Northampton, UK","Stoke-on-Trent, UK","Ipswich, UK","Colchester, UK","Guildford, UK","Harrogate, UK","Chester, UK","Lincoln, UK",
+  "Worcester, UK","Hereford, UK","Salisbury, UK","Truro, UK","St Albans, UK","Kingston upon Thames, UK","Richmond, UK","Epsom, UK","Tunbridge Wells, UK","Margate, UK",
+  // ── Online ──
+  "Online",
 ];
 
 // ─── TYPES (imported from @/lib/cardDraft) ──────────────
@@ -1066,8 +1089,7 @@ export default function TutorCardOnboarding() {
                   border: "1px solid #e5e7eb", background: "white", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 }}>
                   <Icon name="download" size={16} style={{ color: "#6b7280" }} />
-                  <span style={{ fontSize: 14, fontWeight: 500, color: "#111", flex: 1, textAlign: "left" }}>Download card image</span>
-                  <span style={{ fontSize: 11, color: "#9ca3af" }}>PNG</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: "#111", flex: 1, textAlign: "left" }}>Download your TutorCard QR code</span>
                 </button>
                 <div style={{ textAlign: "center", marginTop: 24 }}>
                   <button onClick={() => { window.location.href = "/dashboard"; }} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 5 }}>
