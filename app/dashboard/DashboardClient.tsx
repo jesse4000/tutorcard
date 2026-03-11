@@ -37,24 +37,17 @@ interface DashboardClientProps {
   vouchers: VoucherData[];
   badges: BadgeData[];
   inquiryCount: number;
+  inviteCodes: InviteCode[];
 }
 
 // ─── INVITE CODES ───────────────────────────────────────
 interface InviteCode {
-  id: number;
+  id: string;
   code: string;
   claimed: boolean;
   name: string | null;
   slug: string | null;
 }
-
-const INITIAL_CODES: InviteCode[] = [
-  { id: 1, code: "TC-4KF92X", claimed: true, name: "James Chen", slug: "jameschen" },
-  { id: 2, code: "TC-R8MN3A", claimed: true, name: "Priya Patel", slug: "priyapatel" },
-  { id: 3, code: "TC-7WPL5D", claimed: false, name: null, slug: null },
-  { id: 4, code: "TC-2YHJ8V", claimed: false, name: null, slug: null },
-  { id: 5, code: "TC-6QBT4E", claimed: false, name: null, slug: null },
-];
 
 // ─── UTILITIES ──────────────────────────────────────────
 function isLight(hex: string): boolean {
@@ -969,6 +962,7 @@ export default function DashboardClient({
   vouchers,
   badges,
   inquiryCount,
+  inviteCodes,
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
@@ -1067,13 +1061,13 @@ export default function DashboardClient({
             }}>
               <Icon name="gift" size={14} />
               Invites
-              {INITIAL_CODES.filter(c => !c.claimed).length > 0 && (
+              {inviteCodes.filter(c => !c.claimed).length > 0 && (
                 <span style={{
                   background: "#111", color: "white", fontSize: 10, fontWeight: 700,
                   width: 18, height: 18, borderRadius: "50%",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   marginLeft: -2,
-                }}>{INITIAL_CODES.filter(c => !c.claimed).length}</span>
+                }}>{inviteCodes.filter(c => !c.claimed).length}</span>
               )}
             </button>
             <button onClick={handleSignOut} style={{
@@ -1127,7 +1121,7 @@ export default function DashboardClient({
       {popup === "share" && <SharePopup onClose={close} slug={tutor.slug} />}
       {popup === "review" && <ReviewRequestPopup onClose={close} slug={tutor.slug} tutor={tutor} />}
       {popup === "vouch" && <VouchRequestPopup onClose={close} slug={tutor.slug} />}
-      {popup === "invite" && <InvitePopup onClose={close} codes={INITIAL_CODES} />}
+      {popup === "invite" && <InvitePopup onClose={close} codes={inviteCodes} />}
     </>
   );
 }

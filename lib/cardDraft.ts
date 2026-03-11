@@ -16,6 +16,7 @@ export interface OnboardingData {
   specialties: string[];
   links: OnboardingLink[];
   accent: string;
+  inviteCode?: string;
 }
 
 const DRAFT_KEY = "tutorcard_draft";

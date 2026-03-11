@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { generateCodesForUser } from "@/lib/inviteCodes";
 import DashboardClient from "./DashboardClient";
 import type { ReviewData, VoucherData, BadgeData } from "../[slug]/types";
 
@@ -26,7 +27,7 @@ export default async function DashboardPage() {
   const tutor = tutors?.[0] || null;
 
   if (!tutor) {
-    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} />;
+    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inviteCodes={[]} />;
   }
 
   // Parallel data fetching (same pattern as [slug]/page.tsx)
@@ -104,6 +105,35 @@ export default async function DashboardPage() {
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null;
 
+  // Fetch invite codes (auto-generate for existing users who have none)
+  let { data: inviteCodesRaw } = await supabase
+    .from("invite_codes")
+    .select("id, code, claimed, claimed_name, claimed_slug")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true });
+
+  if (!inviteCodesRaw || inviteCodesRaw.length === 0) {
+    try {
+      await generateCodesForUser(user.id);
+      const result = await supabase
+        .from("invite_codes")
+        .select("id, code, claimed, claimed_name, claimed_slug")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: true });
+      inviteCodesRaw = result.data;
+    } catch (e) {
+      console.error("Failed to generate invite codes:", e);
+    }
+  }
+
+  const inviteCodes = (inviteCodesRaw || []).map((c: Record<string, unknown>) => ({
+    id: c.id as string,
+    code: c.code as string,
+    claimed: c.claimed as boolean,
+    name: (c.claimed_name as string) || null,
+    slug: (c.claimed_slug as string) || null,
+  }));
+
   return (
     <DashboardClient
       tutor={tutor}
@@ -115,6 +145,7 @@ export default async function DashboardPage() {
       vouchers={vouchers}
       badges={badges}
       inquiryCount={inquiryCount ?? 0}
+      inviteCodes={inviteCodes}
     />
   );
 }

@@ -438,6 +438,11 @@ export default function TutorCardOnboarding() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
+  // Invite code state
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCodeValid, setInviteCodeValid] = useState<boolean | null>(null);
+  const [inviteCodeChecking, setInviteCodeChecking] = useState(false);
+
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -494,6 +499,7 @@ export default function TutorCardOnboarding() {
           notifyOnMatch: false,
           email: authData.user.email || "",
           profileImageUrl: draft.imageUrl || null,
+          inviteCode: draft.inviteCode || undefined,
         };
 
         const res = await fetch("/api/tutors", {
@@ -544,6 +550,25 @@ export default function TutorCardOnboarding() {
     }, 500);
     return () => { clearTimeout(timer); setSlugChecking(false); };
   }, [autoSlug]);
+
+  // Debounced invite code validation
+  useEffect(() => {
+    setInviteCodeValid(null);
+    const trimmed = inviteCode.trim();
+    if (!trimmed) return;
+    setInviteCodeChecking(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/invite-codes/validate?code=${encodeURIComponent(trimmed)}`);
+        const result = await res.json();
+        setInviteCodeValid(result.valid);
+      } catch {
+        setInviteCodeValid(null);
+      }
+      setInviteCodeChecking(false);
+    }, 500);
+    return () => { clearTimeout(timer); setInviteCodeChecking(false); };
+  }, [inviteCode]);
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -604,6 +629,7 @@ export default function TutorCardOnboarding() {
         notifyOnMatch: false,
         email: "",
         profileImageUrl: data.imageUrl || null,
+        inviteCode: inviteCode.trim() || undefined,
       };
 
       const res = await fetch("/api/tutors", {
@@ -839,7 +865,7 @@ export default function TutorCardOnboarding() {
 
                 <GoogleSignInButton
                   redirectTo="/create?resume=true"
-                  onClick={() => saveCardDraft(data)}
+                  onClick={() => saveCardDraft({ ...data, inviteCode: inviteCode.trim() || undefined })}
                 />
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0", color: "#9ca3af", fontSize: 13 }}>
@@ -889,7 +915,7 @@ export default function TutorCardOnboarding() {
                       onBlur={e => { e.currentTarget.style.borderColor = "#e5e7eb"; }}
                     />
                   </div>
-                  <div style={{ marginBottom: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Password</label>
                     <input
                       type="password"
@@ -906,6 +932,49 @@ export default function TutorCardOnboarding() {
                       onBlur={e => { e.currentTarget.style.borderColor = "#e5e7eb"; }}
                     />
                   </div>
+
+                  {authMode === "signup" && (
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>
+                        Invite code <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+                      </label>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          value={inviteCode}
+                          onChange={e => setInviteCode(e.target.value.toUpperCase())}
+                          placeholder="TC-XXXXXX"
+                          style={{
+                            width: "100%", padding: "11px 14px", paddingRight: 38, borderRadius: 10,
+                            border: `1.5px solid ${inviteCode.trim() ? (inviteCodeValid === true ? "#059669" : inviteCodeValid === false ? "#ef4444" : "#e5e7eb") : "#e5e7eb"}`,
+                            fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box",
+                            fontFamily: "monospace", letterSpacing: "0.05em", background: "white",
+                          }}
+                          onFocus={e => { if (!inviteCode.trim()) e.currentTarget.style.borderColor = "#111"; }}
+                          onBlur={e => { if (!inviteCode.trim()) e.currentTarget.style.borderColor = "#e5e7eb"; }}
+                        />
+                        {inviteCode.trim() && (
+                          <span style={{
+                            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                            display: "flex", alignItems: "center",
+                          }}>
+                            {inviteCodeChecking ? (
+                              <span style={{ fontSize: 12, color: "#9ca3af" }}>...</span>
+                            ) : inviteCodeValid === true ? (
+                              <Icon name="check" size={14} style={{ color: "#059669" }} />
+                            ) : inviteCodeValid === false ? (
+                              <Icon name="x" size={14} style={{ color: "#ef4444" }} />
+                            ) : null}
+                          </span>
+                        )}
+                      </div>
+                      {inviteCode.trim() && inviteCodeValid === false && !inviteCodeChecking && (
+                        <p style={{ fontSize: 11, color: "#ef4444", margin: "4px 0 0", lineHeight: 1.3 }}>
+                          Invalid or already used code
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <button type="submit" disabled={authLoading} style={{
                     width: "100%", padding: "14px", borderRadius: 14, border: "none",
