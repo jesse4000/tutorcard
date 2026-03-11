@@ -111,7 +111,7 @@ export default function ProfileCard({
                   </>
                 )}
                 {imp != null && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: accent, color: t, padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
                     <Icon name="arrowUp" size={9} />+{imp}
                   </span>
                 )}
