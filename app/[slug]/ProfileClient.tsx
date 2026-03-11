@@ -11,6 +11,7 @@ import VouchCard from "./VouchCard";
 import BadgeCardComponent from "./BadgeCard";
 import TabBar from "./TabBar";
 import InquirySheet from "./InquirySheet";
+import ReviewSheet from "./ReviewSheet";
 import HomepageHeader from "@/components/HomepageHeader";
 import HomepageFooter from "@/components/HomepageFooter";
 
@@ -42,6 +43,7 @@ export default function ProfileClient({
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
   const [showInquiry, setShowInquiry] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [localVouched, setLocalVouched] = useState(hasVouched);
   const [localVouchCount, setLocalVouchCount] = useState(vouchCount);
@@ -125,7 +127,7 @@ export default function ProfileClient({
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {!isOwnCard && (
                 <button
-                  onClick={() => router.push(`/${tutor.slug}/review`)}
+                  onClick={() => setShowReview(true)}
                   style={{
                     padding: "4px 12px",
                     borderRadius: 20,
@@ -336,6 +338,24 @@ export default function ProfileClient({
           accent={accent}
           tutorId={viewedTutorId}
           tutorExams={tutor.exams}
+        />
+      )}
+
+      {showReview && (
+        <ReviewSheet
+          onClose={() => setShowReview(false)}
+          tutor={{
+            id: viewedTutorId,
+            firstName: tutor.firstName,
+            lastName: tutor.lastName,
+            title: tutor.title || "",
+            slug: tutor.slug,
+            avatarColor: tutor.avatarColor || accent,
+            exams: tutor.exams,
+            locations: tutor.locations || [],
+            profileImageUrl: tutor.profileImageUrl || "",
+          }}
+          accent={accent}
         />
       )}
     </>
