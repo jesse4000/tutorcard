@@ -39,6 +39,18 @@ const paths: Record<string, React.ReactNode> = {
 
 // Map link types to icon names
 export const LINK_TYPE_ICONS: Record<string, string> = {
+  // Current plain format (used by onboarding & edit flows)
+  "Website": "globe",
+  "Booking": "calendar",
+  "Resource": "clipboard",
+  "Email": "mail",
+  "Phone": "phone",
+  "WhatsApp": "whatsapp",
+  "Facebook": "facebook",
+  "Instagram": "instagram",
+  "LinkedIn": "linkedin",
+  "Zoom": "globe",
+  // Legacy emoji-prefixed format
   "🌐 Website": "globe",
   "📅 Booking": "calendar",
   "📋 Resource": "clipboard",
