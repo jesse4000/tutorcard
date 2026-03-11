@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import ProfileClient from "./ProfileClient";
 import type { ReviewData, VoucherData, BadgeData } from "./types";
 
@@ -51,6 +53,9 @@ export default async function ProfilePage({ params }: PageProps) {
     redirect("/dashboard");
   }
 
+  // Auto-revoke any expired pending reports (replaces cron job)
+  await autoRevokeExpiredReports(createAdminClient());
+
   // Parallel data fetching
   const [
     { count: vouchCount },
@@ -66,6 +71,7 @@ export default async function ProfilePage({ params }: PageProps) {
       .from("reviews")
       .select("*")
       .eq("tutor_id", tutor.id)
+      .eq("is_revoked", false)
       .order("created_at", { ascending: false }),
     supabase
       .from("badges")

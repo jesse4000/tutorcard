@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { generateCodesForUser } from "@/lib/inviteCodes";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import DashboardClient from "./DashboardClient";
 import type { ReviewData, VoucherData, BadgeData } from "../[slug]/types";
 
@@ -64,6 +65,31 @@ export default async function DashboardPage() {
       .eq("tutor_id", tutor.id),
   ]);
 
+  const admin = createAdminClient();
+
+  // Auto-revoke any expired pending reports (replaces cron job)
+  await autoRevokeExpiredReports(admin);
+
+  // Fetch review report statuses
+  const reviewIds = (reviewsRaw || []).map((r: Record<string, unknown>) => r.id as string);
+  let reportStatusMap: Record<string, string> = {};
+  if (reviewIds.length > 0) {
+    const { data: reportsRaw } = await admin
+      .from("review_reports")
+      .select("review_id, status")
+      .in("review_id", reviewIds)
+      .in("status", ["pending", "responded", "revoked", "denied"]);
+    if (reportsRaw) {
+      for (const rp of reportsRaw) {
+        // Keep the most recent/active status per review
+        const existing = reportStatusMap[rp.review_id];
+        if (!existing || rp.status === "pending" || rp.status === "responded") {
+          reportStatusMap[rp.review_id] = rp.status;
+        }
+      }
+    }
+  }
+
   // Map reviews
   const reviews: ReviewData[] = (reviewsRaw || []).map((r: Record<string, unknown>) => ({
     id: r.id as string,
@@ -75,6 +101,7 @@ export default async function DashboardPage() {
     months: (r.months as number) || undefined,
     rating: r.rating as number,
     quote: r.quote as string,
+    reportStatus: (reportStatusMap[r.id as string] as ReviewData["reportStatus"]) || undefined,
   }));
 
   // Map badges
@@ -107,7 +134,6 @@ export default async function DashboardPage() {
     : null;
 
   // Fetch invite codes using admin client to bypass RLS issues in server components
-  const admin = createAdminClient();
   let { data: inviteCodesRaw, error: inviteError } = await admin
     .from("invite_codes")
     .select("id, code, claimed, claimed_name, claimed_slug")
