@@ -10,6 +10,7 @@ export interface ReviewData {
   quote: string;
   recommends?: boolean;
   reviewerEmail?: string;
+  reportStatus?: "pending" | "responded" | "revoked" | "denied";
 }
 
 export interface VoucherData {

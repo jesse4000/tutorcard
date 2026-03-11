@@ -50,12 +50,14 @@ export default async function AdminPage() {
     { data: vouchesRaw },
     { data: badgesRaw },
     { data: inquiriesRaw },
+    { data: reportsRaw },
   ] = await Promise.all([
     admin.from("tutors").select("*"),
     admin.from("reviews").select("id, tutor_id, created_at"),
     admin.from("vouches").select("id, vouched_tutor_id, created_at"),
     admin.from("badges").select("id, tutor_id, created_at"),
     admin.from("inquiries").select("id, tutor_id, created_at"),
+    admin.from("review_reports").select("id, review_id, tutor_id, reason, reviewer_response, status, created_at, deadline_at, responded_at, resolved_at, resolved_by").order("created_at", { ascending: false }),
   ]);
 
   const tutors = tutorsRaw || [];
@@ -63,6 +65,7 @@ export default async function AdminPage() {
   const vouches = vouchesRaw || [];
   const badges = badgesRaw || [];
   const inquiries = inquiriesRaw || [];
+  const reports = reportsRaw || [];
 
   // --- Stats ---
   const stats = {
@@ -183,6 +186,47 @@ export default async function AdminPage() {
     for (const exam of (t.exams as string[]) || []) allExams.add(exam);
   }
 
+  // --- Build review report rows for admin ---
+  // We need to get review details for reports
+  const reportReviewIds = [...new Set(reports.map((r) => r.review_id))];
+  let reviewDetailsMap = new Map<string, Record<string, unknown>>();
+  if (reportReviewIds.length > 0) {
+    const { data: reviewDetails } = await admin
+      .from("reviews")
+      .select("id, reviewer_name, reviewer_email, exam, quote, rating")
+      .in("id", reportReviewIds);
+    if (reviewDetails) {
+      reviewDetailsMap = new Map(reviewDetails.map((r) => [r.id, r]));
+    }
+  }
+
+  // Build tutor name map from already-fetched tutors
+  const tutorNameMap = new Map(tutors.map((t) => [t.id, { name: [t.first_name, t.last_name].filter(Boolean).join(" "), slug: t.slug as string }]));
+
+  const reviewReports = reports.map((r) => {
+    const review = reviewDetailsMap.get(r.review_id) || {};
+    const tutorInfo = tutorNameMap.get(r.tutor_id) || { name: "Unknown", slug: "" };
+    return {
+      id: r.id as string,
+      reviewId: r.review_id as string,
+      tutorName: tutorInfo.name,
+      tutorSlug: tutorInfo.slug,
+      reviewerName: (review.reviewer_name as string) || "Unknown",
+      reviewerEmail: (review.reviewer_email as string) || null,
+      reviewExam: (review.exam as string) || null,
+      reviewQuote: (review.quote as string) || "",
+      reviewRating: (review.rating as number) || 0,
+      reason: r.reason as string,
+      reviewerResponse: (r.reviewer_response as string) || null,
+      status: r.status as string,
+      createdAt: r.created_at as string,
+      deadlineAt: r.deadline_at as string,
+      respondedAt: (r.responded_at as string) || null,
+      resolvedAt: (r.resolved_at as string) || null,
+      resolvedBy: (r.resolved_by as string) || null,
+    };
+  });
+
   return (
     <SuperAdminDashboard
       stats={stats}
@@ -190,6 +234,7 @@ export default async function AdminPage() {
       tutors={tutorRows}
       locations={Array.from(allLocations).sort()}
       exams={Array.from(allExams).sort()}
+      reviewReports={reviewReports}
     />
   );
 }

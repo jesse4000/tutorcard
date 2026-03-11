@@ -66,6 +66,7 @@ export default async function ProfilePage({ params }: PageProps) {
       .from("reviews")
       .select("*")
       .eq("tutor_id", tutor.id)
+      .eq("is_revoked", false)
       .order("created_at", { ascending: false }),
     supabase
       .from("badges")

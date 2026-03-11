@@ -94,6 +94,7 @@ const iconPaths: Record<string, React.ReactNode> = {
   arrowLeft: <><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>,
   gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
   ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
+  flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></>,
   download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
 };
 
@@ -757,10 +758,10 @@ function TabBar({ tab, setTab }: { tab: string; setTab: (t: string) => void }) {
 }
 
 // ─── TAB CONTENT ────────────────────────────────────────
-function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest }: {
+function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport }: {
   tab: string; wide: boolean;
   reviews: ReviewData[]; vouchers: VoucherData[]; badges: BadgeData[];
-  onReviewRequest: () => void; onVouchRequest: () => void;
+  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void;
 }) {
   const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: 0 };
 
@@ -797,7 +798,7 @@ function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onV
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {reviews.map(r => (
-                <ReviewRow key={r.id} review={r} wide={wide} />
+                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} />
               ))}
             </div>
           )}
@@ -870,19 +871,58 @@ function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onV
   );
 }
 
+// ─── REPORT STATUS BADGE ────────────────────────────────
+function ReportStatusBadge({ status }: { status: string }) {
+  const config: Record<string, { color: string; bg: string; label: string; icon: string }> = {
+    pending: { color: "#d97706", bg: "#fffbeb", label: "Under review", icon: "clock" },
+    responded: { color: "#0284c7", bg: "#f0f9ff", label: "Response received", icon: "mail" },
+    revoked: { color: "#dc2626", bg: "#fef2f2", label: "Removed", icon: "x" },
+    denied: { color: "#6b7280", bg: "#f3f4f6", label: "Report denied", icon: "check" },
+  };
+  const c = config[status] || config.pending;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 20, background: c.bg, fontSize: 10.5, fontWeight: 600, color: c.color }}>
+      <Icon name={c.icon} size={10} style={{ color: c.color }} />{c.label}
+    </span>
+  );
+}
+
 // ─── REVIEW ROW ─────────────────────────────────────────
-function ReviewRow({ review, wide }: { review: ReviewData; wide: boolean }) {
+function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void }) {
   const hasScores = review.scoreBefore && review.scoreAfter;
   const imp = hasScores ? Number(review.scoreAfter) - Number(review.scoreBefore) : null;
+  const [hoverReport, setHoverReport] = useState(false);
+  const rs = review.reportStatus;
+
+  const statusMessage = rs === "pending"
+    ? "We emailed the reviewer. If no response in 7 days, this review is automatically removed."
+    : rs === "responded"
+    ? "The reviewer responded. Our team is reviewing both sides. We will notify you of the outcome."
+    : rs === "revoked"
+    ? "This review has been removed from your public card."
+    : rs === "denied"
+    ? "Our team reviewed the report and determined this review is legitimate."
+    : null;
+
+  const statusColor = rs === "pending" ? "#d97706" : rs === "responded" ? "#0284c7" : rs === "revoked" ? "#dc2626" : rs === "denied" ? "#6b7280" : "#9ca3af";
 
   return (
-    <div style={{ background: "#fafafa", borderRadius: 14, padding: wide ? "18px 22px" : "14px 16px", border: "1px solid #f0f0f0" }}>
+    <div style={{
+      background: "#fafafa", borderRadius: 14,
+      padding: wide ? "18px 22px" : "14px 16px",
+      border: "1px solid #f0f0f0",
+      opacity: rs === "revoked" ? 0.5 : 1,
+      transition: "opacity 0.2s",
+    }}>
       {wide ? (
         <div style={{ display: "flex", gap: 20 }}>
           <div style={{ flex: "0 0 auto", minWidth: 160, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            {review.exam && (
-              <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4, alignSelf: "flex-start", marginBottom: 8 }}>{review.exam}</span>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              {review.exam && (
+                <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
+              )}
+              {rs && <ReportStatusBadge status={rs} />}
+            </div>
             {hasScores && (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 20, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
@@ -903,15 +943,35 @@ function ReviewRow({ review, wide }: { review: ReviewData; wide: boolean }) {
           </div>
           <div style={{ flex: 1, borderLeft: "1px solid #ebebeb", paddingLeft: 20, display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
             <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: 0, fontStyle: "italic" }}>&ldquo;{review.quote}&rdquo;</p>
-            <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
+              {!rs && (
+                <button
+                  onClick={() => onReport(review)}
+                  onMouseEnter={() => setHoverReport(true)}
+                  onMouseLeave={() => setHoverReport(false)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+                    color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+                  }}
+                >
+                  <Icon name="flag" size={11} />Report
+                </button>
+              )}
+            </div>
+            {statusMessage && (
+              <p style={{ fontSize: 11.5, color: statusColor, margin: "4px 0 0", lineHeight: 1.4 }}>{statusMessage}</p>
+            )}
           </div>
         </div>
       ) : (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
             {review.exam && (
               <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
             )}
+            {rs && <ReportStatusBadge status={rs} />}
             {hasScores && (
               <>
                 <span style={{ fontSize: 16, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
@@ -927,11 +987,185 @@ function ReviewRow({ review, wide }: { review: ReviewData; wide: boolean }) {
           </div>
           <div style={{ borderTop: "1px solid #ebebeb", paddingTop: 10 }}>
             <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: "0 0 4px", fontStyle: "italic" }}>&ldquo;{review.quote}&rdquo;</p>
-            <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
+              {!rs && (
+                <button
+                  onClick={() => onReport(review)}
+                  onMouseEnter={() => setHoverReport(true)}
+                  onMouseLeave={() => setHoverReport(false)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+                    color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+                  }}
+                >
+                  <Icon name="flag" size={11} />Report
+                </button>
+              )}
+            </div>
+            {statusMessage && (
+              <p style={{ fontSize: 11.5, color: statusColor, margin: "4px 0 0", lineHeight: 1.4 }}>{statusMessage}</p>
+            )}
           </div>
         </>
       )}
     </div>
+  );
+}
+
+// ─── REPORT REVIEW POPUP ────────────────────────────────
+function ReportReviewPopup({ review, tutorId, onClose, onSubmitted }: { review: ReviewData; tutorId: string; onClose: () => void; onSubmitted: () => void }) {
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const canSubmit = reason.trim().length >= 20 && !submitting;
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/review-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: review.id, reason: reason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to submit report");
+        return;
+      }
+      onSubmitted();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  void tutorId; // used for future extensibility
+
+  return (
+    <Modal onClose={onClose}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="flag" size={18} style={{ color: "#dc2626" }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Report this review</h3>
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>by {review.reviewerName}</p>
+        </div>
+        <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+      </div>
+
+      {/* Review summary */}
+      <div style={{ background: "#fafafa", borderRadius: 12, padding: "14px 16px", border: "1px solid #f0f0f0", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          {review.exam && <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>}
+          {review.scoreBefore && review.scoreAfter && (
+            <>
+              <span style={{ fontSize: 16, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
+              <span style={{ fontSize: 12, color: "#d1d5db" }}>&rarr;</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
+            </>
+          )}
+          <div style={{ display: "flex", gap: 1, marginLeft: "auto" }}>
+            {[1,2,3,4,5].map(i => <Icon key={i} name="star" size={9} style={{ color: review.rating >= i ? "#f59e0b" : "#d1d5db" }} />)}
+          </div>
+        </div>
+        <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5, margin: "0 0 4px", fontStyle: "italic" }}>&ldquo;{review.quote}&rdquo;</p>
+        <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
+      </div>
+
+      {/* Reason */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Why are you reporting this review?</label>
+        <textarea
+          value={reason} onChange={e => setReason(e.target.value)}
+          placeholder="Describe why you believe this review is fraudulent, inaccurate, or inappropriate. For example: this person was never my student, the scores listed are incorrect, I don't recognize this reviewer..."
+          style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box", background: "white", fontFamily: "'DM Sans', sans-serif", minHeight: 120, resize: "vertical" }}
+          onFocus={e => { e.target.style.borderColor = "#111"; }}
+          onBlur={e => { e.target.style.borderColor = "#e5e7eb"; }}
+        />
+        <p style={{ fontSize: 12, color: reason.trim().length >= 20 ? "#059669" : "#d1d5db", margin: "6px 0 0" }}>
+          {reason.trim().length < 20 ? `${20 - reason.trim().length} more characters needed` : "Looks good"}
+        </p>
+      </div>
+
+      {/* Process explanation */}
+      <div style={{ background: "#fafafa", borderRadius: 12, padding: "16px", border: "1px solid #f0f0f0", marginBottom: 24 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 10px" }}>What happens next</p>
+        {[
+          "We email the reviewer with your report and ask them to respond within 7 days.",
+          "If they respond, our team reviews both sides and makes a decision.",
+          "If they don't respond within 7 days, the review is automatically removed.",
+        ].map((text, i) => (
+          <div key={i} style={{ display: "flex", gap: 10, marginBottom: i < 2 ? 8 : 0 }}>
+            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#6b7280" }}>{i + 1}</span>
+            </div>
+            <p style={{ fontSize: 13, color: "#6b7280", margin: 0, lineHeight: 1.45 }}>{text}</p>
+          </div>
+        ))}
+      </div>
+
+      {error && <p style={{ fontSize: 13, color: "#dc2626", margin: "0 0 16px" }}>{error}</p>}
+
+      <div style={{ display: "flex", gap: 10 }}>
+        <button onClick={handleSubmit} disabled={!canSubmit} style={{
+          padding: "13px 28px", borderRadius: 14, border: "none",
+          background: canSubmit ? "#dc2626" : "#e5e7eb", color: canSubmit ? "white" : "#9ca3af",
+          fontSize: 15, fontWeight: 600, cursor: canSubmit ? "pointer" : "default",
+          fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <Icon name="flag" size={15} />{submitting ? "Submitting..." : "Submit report"}
+        </button>
+        <button onClick={onClose} style={{ padding: "13px 20px", borderRadius: 14, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+          Cancel
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── REPORT CONFIRMATION POPUP ──────────────────────────
+function ReportConfirmationPopup({ review, onClose }: { review: ReviewData; onClose: () => void }) {
+  return (
+    <Modal onClose={onClose}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+          <Icon name="clock" size={28} style={{ color: "#d97706" }} />
+        </div>
+        <h3 style={{ fontSize: 20, fontWeight: 700, color: "#111", margin: "0 0 8px" }}>Report submitted</h3>
+        <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 24px", lineHeight: 1.5 }}>
+          We have sent an email to <span style={{ fontWeight: 600, color: "#374151" }}>{review.reviewerName}</span> asking them to respond within 7 days.
+        </p>
+        <div style={{ background: "#fafafa", borderRadius: 12, padding: "14px 16px", border: "1px solid #f0f0f0", textAlign: "left", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="clock" size={13} style={{ color: "#d97706" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#111", margin: 0 }}>Review marked as under review</p>
+              <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0 }}>It remains visible while the report is open.</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="mail" size={13} style={{ color: "#6b7280" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#111", margin: 0 }}>We will notify you of the outcome</p>
+              <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0 }}>You will receive an email when resolved.</p>
+            </div>
+          </div>
+        </div>
+        <button onClick={onClose} style={{ padding: "13px 28px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+          Got it
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -990,7 +1224,9 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
-  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite">(null);
+  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed">(null);
+  const [reportingReview, setReportingReview] = useState<ReviewData | null>(null);
+  const [localReportStatuses, setLocalReportStatuses] = useState<Record<string, string>>({});
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -1007,7 +1243,25 @@ export default function DashboardClient({
     router.refresh();
   }
 
-  const close = () => setPopup(null);
+  const close = () => { setPopup(null); setReportingReview(null); };
+
+  const handleReport = (review: ReviewData) => {
+    setReportingReview(review);
+    setPopup("report");
+  };
+
+  const handleReportSubmitted = () => {
+    if (reportingReview) {
+      setLocalReportStatuses(prev => ({ ...prev, [reportingReview.id]: "pending" }));
+    }
+    setPopup("reportConfirmed");
+  };
+
+  // Merge server report statuses with local (optimistic) ones
+  const reviewsWithReportStatus = reviews.map(r => ({
+    ...r,
+    reportStatus: (localReportStatuses[r.id] || r.reportStatus) as ReviewData["reportStatus"],
+  }));
 
   // No tutor — empty state
   if (!tutor) {
@@ -1112,9 +1366,10 @@ export default function DashboardClient({
               <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
-                <TabContent tab={tab} wide={false} reviews={reviews} vouchers={vouchers} badges={badges}
+                <TabContent tab={tab} wide={false} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
                   onReviewRequest={() => setPopup("review")}
                   onVouchRequest={() => setPopup("vouch")}
+                  onReport={handleReport}
                 />
               </div>
             </div>
@@ -1126,9 +1381,10 @@ export default function DashboardClient({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
                   <TabBar tab={tab} setTab={setTab} />
-                  <TabContent tab={tab} wide={true} reviews={reviews} vouchers={vouchers} badges={badges}
+                  <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
                     onReviewRequest={() => setPopup("review")}
                     onVouchRequest={() => setPopup("vouch")}
+                    onReport={handleReport}
                   />
                 </div>
               </div>
@@ -1146,6 +1402,8 @@ export default function DashboardClient({
       {popup === "review" && <ReviewRequestPopup onClose={close} slug={tutor.slug} tutor={tutor} />}
       {popup === "vouch" && <VouchRequestPopup onClose={close} slug={tutor.slug} />}
       {popup === "invite" && <InvitePopup onClose={close} codes={inviteCodes} />}
+      {popup === "report" && reportingReview && <ReportReviewPopup review={reportingReview} tutorId={tutor.id} onClose={close} onSubmitted={handleReportSubmitted} />}
+      {popup === "reportConfirmed" && reportingReview && <ReportConfirmationPopup review={reportingReview} onClose={close} />}
     </>
   );
 }

@@ -42,12 +42,33 @@ interface AdminTutor {
   slug: string;
 }
 
+interface ReviewReport {
+  id: string;
+  reviewId: string;
+  tutorName: string;
+  tutorSlug: string;
+  reviewerName: string;
+  reviewerEmail: string | null;
+  reviewExam: string | null;
+  reviewQuote: string;
+  reviewRating: number;
+  reason: string;
+  reviewerResponse: string | null;
+  status: string;
+  createdAt: string;
+  deadlineAt: string;
+  respondedAt: string | null;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+}
+
 interface SuperAdminDashboardProps {
   stats: AdminStats;
   funnel: AdminFunnel;
   tutors: AdminTutor[];
   locations: string[];
   exams: string[];
+  reviewReports: ReviewReport[];
 }
 
 const STATUSES = ["All", "Active", "Inactive", "Incomplete"];
@@ -65,6 +86,11 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
     ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>,
     activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
     shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+    flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></>,
+    clock: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+    check: <polyline points="20 6 9 17 4 12" />,
+    x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+    mail: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></>,
   };
   const fill = name === "star" ? "currentColor" : "none";
   return (
@@ -149,7 +175,25 @@ function Dropdown({ value, options, onChange }: { value: string; options: string
 }
 
 // ─── MAIN ───────────────────────────────────────────────
-export default function SuperAdminDashboard({ stats, funnel, tutors, locations, exams }: SuperAdminDashboardProps) {
+// ─── REPORT STATUS BADGE ────────────────────────────────
+function ReportStatusBadge({ status }: { status: string }) {
+  const config: Record<string, { color: string; bg: string; label: string }> = {
+    pending: { color: "#d97706", bg: "#fffbeb", label: "Pending" },
+    responded: { color: "#0284c7", bg: "#f0f9ff", label: "Responded" },
+    revoked: { color: "#dc2626", bg: "#fef2f2", label: "Revoked" },
+    denied: { color: "#6b7280", bg: "#f3f4f6", label: "Denied" },
+  };
+  const c = config[status] || config.pending;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, background: c.bg, fontSize: 11.5, fontWeight: 600, color: c.color }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.color }} />
+      {c.label}
+    </span>
+  );
+}
+
+export default function SuperAdminDashboard({ stats, funnel, tutors, locations, exams, reviewReports }: SuperAdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState<"dashboard" | "reports">("dashboard");
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("All locations");
   const [examFilter, setExamFilter] = useState("All exams");
@@ -157,6 +201,8 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
   const [sortKey, setSortKey] = useState<string>("inquiries");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [isMobile, setIsMobile] = useState(false);
+  const [reportActions, setReportActions] = useState<Record<string, string>>({});
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     const ck = () => setIsMobile(window.innerWidth < 900);
@@ -203,6 +249,26 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
 
   const endToEnd = funnel.signedUp > 0 ? Math.round((funnel.firstInquiry / funnel.signedUp) * 100) : 0;
 
+  const pendingReports = reviewReports.filter(r => (reportActions[r.id] || r.status) === "pending" || (reportActions[r.id] || r.status) === "responded").length;
+
+  const handleResolve = async (reportId: string, action: "revoke" | "deny") => {
+    setActionLoading(reportId);
+    try {
+      const res = await fetch("/api/admin/review-reports/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId, action }),
+      });
+      if (res.ok) {
+        setReportActions(prev => ({ ...prev, [reportId]: action === "revoke" ? "revoked" : "denied" }));
+      }
+    } catch {
+      // Silently handle
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -229,16 +295,39 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "20px 16px 40px" : "32px 32px 60px" }}>
           {/* Page title */}
           <div style={{ marginBottom: 28 }}>
-            <h1 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 4px" }}>Dashboard</h1>
+            <h1 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 4px" }}>Admin</h1>
             <p style={{ fontSize: 15, color: "#9ca3af", margin: 0 }}>Platform overview and tutor management.</p>
           </div>
 
+          {/* Tab bar */}
+          <div style={{ display: "flex", gap: 2, borderBottom: "1px solid #e5e7eb", marginBottom: 24 }}>
+            {([
+              { key: "dashboard" as const, label: "Dashboard", icon: "activity" },
+              { key: "reports" as const, label: "Review Reports", icon: "flag", badge: pendingReports },
+            ]).map(t => (
+              <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
+                padding: "10px 18px", border: "none", background: "none",
+                borderBottom: activeTab === t.key ? "2px solid #111" : "2px solid transparent",
+                color: activeTab === t.key ? "#111" : "#9ca3af",
+                fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "flex", alignItems: "center", gap: 6, marginBottom: -1,
+              }}>
+                <Icon name={t.icon} size={14} />{t.label}
+                {t.badge ? (
+                  <span style={{ background: "#dc2626", color: "white", fontSize: 10, fontWeight: 700, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{t.badge}</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "dashboard" && (<>
           {/* Stats row */}
           <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
             <StatCard label="Total tutors" value={stats.totalTutors} change={wkChange(stats.signupsThisWeek, stats.signupsLastWeek)} icon="users" color="#4f46e5" />
             <StatCard label="Total reviews" value={stats.totalReviews} change={wkChange(stats.reviewsThisWeek, stats.reviewsLastWeek)} icon="star" color="#f59e0b" />
             <StatCard label="Total vouches" value={stats.totalVouches} change={wkChange(stats.vouchesThisWeek, stats.vouchesLastWeek)} icon="shield" color="#0d9488" />
             <StatCard label="Inquiries" value={stats.totalInquiries} change={wkChange(stats.inquiriesThisWeek, stats.inquiriesLastWeek)} icon="inbox" color="#059669" />
+            {pendingReports > 0 && <StatCard label="Pending reports" value={pendingReports} icon="flag" color="#dc2626" />}
           </div>
 
           {/* Activation funnel */}
@@ -345,6 +434,125 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
               </div>
             )}
           </div>
+          </>)}
+
+          {activeTab === "reports" && (
+            <div style={{ background: "white", borderRadius: 16, border: "1px solid #f3f4f6", overflow: "hidden" }}>
+              <div style={{ padding: "18px 24px", borderBottom: "1px solid #f3f4f6" }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111", margin: 0 }}>
+                  Review Reports <span style={{ fontWeight: 500, color: "#9ca3af" }}>({reviewReports.length})</span>
+                </h3>
+                <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "4px 0 0" }}>Review flagged reviews and take action.</p>
+              </div>
+
+              {reviewReports.length === 0 ? (
+                <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                    <Icon name="flag" size={22} style={{ color: "#d1d5db" }} />
+                  </div>
+                  <p style={{ fontSize: 14, color: "#9ca3af" }}>No review reports yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {reviewReports.map((report) => {
+                    const currentStatus = reportActions[report.id] || report.status;
+                    const isActionable = currentStatus === "pending" || currentStatus === "responded";
+                    const isExpired = new Date(report.deadlineAt) < new Date();
+
+                    return (
+                      <div key={report.id} style={{ padding: "20px 24px", borderBottom: "1px solid #f9fafb" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                          {/* Left: report info */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {/* Header: tutor name, reviewer name, status */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#111" }}>{report.tutorName}</span>
+                              <span style={{ fontSize: 12, color: "#d1d5db" }}>reported</span>
+                              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#111" }}>{report.reviewerName}</span>
+                              <ReportStatusBadge status={currentStatus} />
+                              {report.reviewExam && (
+                                <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{report.reviewExam}</span>
+                              )}
+                            </div>
+
+                            {/* Review quote */}
+                            <div style={{ background: "#fafafa", borderRadius: 10, padding: "10px 14px", border: "1px solid #f0f0f0", marginBottom: 10 }}>
+                              <p style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.5, margin: 0, fontStyle: "italic" }}>&ldquo;{report.reviewQuote.slice(0, 200)}{report.reviewQuote.length > 200 ? "..." : ""}&rdquo;</p>
+                            </div>
+
+                            {/* Report reason */}
+                            <div style={{ marginBottom: 10 }}>
+                              <p style={{ fontSize: 11, fontWeight: 600, color: "#dc2626", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Report reason</p>
+                              <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: 0 }}>{report.reason}</p>
+                            </div>
+
+                            {/* Reviewer response */}
+                            {report.reviewerResponse && (
+                              <div style={{ marginBottom: 10 }}>
+                                <p style={{ fontSize: 11, fontWeight: 600, color: "#0284c7", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Reviewer response</p>
+                                <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: 0 }}>{report.reviewerResponse}</p>
+                              </div>
+                            )}
+
+                            {/* Meta info */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "#9ca3af", flexWrap: "wrap" }}>
+                              <span>Reported {new Date(report.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                              {currentStatus === "pending" && (
+                                <span style={{ color: isExpired ? "#dc2626" : "#d97706" }}>
+                                  <Icon name="clock" size={11} style={{ verticalAlign: "-1px", marginRight: 3 }} />
+                                  {isExpired ? "Expired" : `Deadline: ${new Date(report.deadlineAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                                </span>
+                              )}
+                              {report.respondedAt && (
+                                <span>Responded {new Date(report.respondedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                              )}
+                              {report.resolvedBy && (
+                                <span>Resolved by {report.resolvedBy}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: action buttons */}
+                          {isActionable && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                              <button
+                                onClick={() => handleResolve(report.id, "revoke")}
+                                disabled={actionLoading === report.id}
+                                style={{
+                                  padding: "8px 16px", borderRadius: 10, border: "none",
+                                  background: "#dc2626", color: "white",
+                                  fontSize: 12.5, fontWeight: 600, cursor: actionLoading === report.id ? "default" : "pointer",
+                                  fontFamily: "'DM Sans', sans-serif",
+                                  display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+                                  opacity: actionLoading === report.id ? 0.6 : 1,
+                                }}
+                              >
+                                <Icon name="x" size={12} />Revoke Review
+                              </button>
+                              <button
+                                onClick={() => handleResolve(report.id, "deny")}
+                                disabled={actionLoading === report.id}
+                                style={{
+                                  padding: "8px 16px", borderRadius: 10,
+                                  border: "1px solid #e5e7eb", background: "white", color: "#374151",
+                                  fontSize: 12.5, fontWeight: 600, cursor: actionLoading === report.id ? "default" : "pointer",
+                                  fontFamily: "'DM Sans', sans-serif",
+                                  display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+                                  opacity: actionLoading === report.id ? 0.6 : 1,
+                                }}
+                              >
+                                <Icon name="check" size={12} />Deny Report
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>

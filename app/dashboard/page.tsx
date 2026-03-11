@@ -64,6 +64,26 @@ export default async function DashboardPage() {
       .eq("tutor_id", tutor.id),
   ]);
 
+  // Fetch review report statuses
+  const reviewIds = (reviewsRaw || []).map((r: Record<string, unknown>) => r.id as string);
+  let reportStatusMap: Record<string, string> = {};
+  if (reviewIds.length > 0) {
+    const { data: reportsRaw } = await admin
+      .from("review_reports")
+      .select("review_id, status")
+      .in("review_id", reviewIds)
+      .in("status", ["pending", "responded", "revoked", "denied"]);
+    if (reportsRaw) {
+      for (const rp of reportsRaw) {
+        // Keep the most recent/active status per review
+        const existing = reportStatusMap[rp.review_id];
+        if (!existing || rp.status === "pending" || rp.status === "responded") {
+          reportStatusMap[rp.review_id] = rp.status;
+        }
+      }
+    }
+  }
+
   // Map reviews
   const reviews: ReviewData[] = (reviewsRaw || []).map((r: Record<string, unknown>) => ({
     id: r.id as string,
@@ -75,6 +95,7 @@ export default async function DashboardPage() {
     months: (r.months as number) || undefined,
     rating: r.rating as number,
     quote: r.quote as string,
+    reportStatus: (reportStatusMap[r.id as string] as ReviewData["reportStatus"]) || undefined,
   }));
 
   // Map badges
