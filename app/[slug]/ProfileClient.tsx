@@ -13,7 +13,7 @@ import TabBar from "./TabBar";
 import InquirySheet from "./InquirySheet";
 import ReviewSheet from "./ReviewSheet";
 import HomepageHeader from "@/components/HomepageHeader";
-import HomepageFooter from "@/components/HomepageFooter";
+import SimpleFooter from "@/components/SimpleFooter";
 
 interface ProfileClientProps {
   tutor: TutorData & { id: string };
@@ -329,7 +329,7 @@ export default function ProfileClient({
         </main>
 
         {/* Footer */}
-        <HomepageFooter isMobile={isMobile} />
+        <SimpleFooter />
       </div>
 
       {showInquiry && (
