@@ -33,7 +33,7 @@ export default function ReviewCard({ review, accent, accentText, wide }: ReviewC
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
               {imp != null && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: accent, color: accentText, padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
                   <Icon name="arrowUp" size={9} />+{imp}
                 </span>
               )}
@@ -70,7 +70,7 @@ export default function ReviewCard({ review, accent, accentText, wide }: ReviewC
           </>
         )}
         {imp != null && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: accent, color: accentText, padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
             <Icon name="arrowUp" size={9} />+{imp}
           </span>
         )}

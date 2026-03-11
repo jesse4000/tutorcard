@@ -329,7 +329,7 @@ function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe, acce
             {imp !== null && imp > 0 && (
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 2,
-                background: accent, color: t, padding: "2px 8px", borderRadius: 20,
+                background: "#059669", color: "white", padding: "2px 8px", borderRadius: 20,
                 fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
               }}>
                 <Icon name="arrowUp" size={9} />+{imp}
@@ -502,12 +502,12 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
           type="email" value={email} onChange={e => setEmail(e.target.value)}
           placeholder="parent@email.com"
           style={{ ...inputStyle, flex: 1 }}
-          onFocus={e => e.target.style.borderColor = accent}
+          onFocus={e => e.target.style.borderColor = "#111"}
           onBlur={e => e.target.style.borderColor = "#e5e7eb"}
         />
         <button onClick={handleSend} style={{
           padding: "11px 18px", borderRadius: 10, border: "none",
-          background: sent ? "#ecfdf5" : accent, color: sent ? "#059669" : toac(accent),
+          background: sent ? "#ecfdf5" : "#111", color: sent ? "#059669" : "white",
           fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", transition: "all 0.2s",
         }}>
@@ -651,7 +651,7 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
           {location && <span>{location}</span>}
           {location && isRemote && <span style={{ color: "#d1d5db" }}>&middot;</span>}
           {isRemote && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, color: accent, fontWeight: 500 }}><Icon name="wifi" size={12} style={{ color: accent }} />Remote</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#0284c7", fontWeight: 500 }}><Icon name="wifi" size={12} style={{ color: "#0284c7" }} />Remote</span>
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 12 }}>
@@ -688,7 +688,7 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
       <div style={{ padding: "4px 20px 12px", display: "flex", gap: 8 }}>
         <button onClick={onShare} style={{
           flex: 1, padding: "12px", borderRadius: 14, border: "none",
-          background: accent, color: t, fontSize: 14, fontWeight: 600,
+          background: "#111", color: "white", fontSize: 14, fontWeight: 600,
           cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
           transition: "opacity 0.15s",
