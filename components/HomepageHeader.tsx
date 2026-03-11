@@ -14,7 +14,7 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
   );
 };
 
-export default function HomepageHeader({ isMobile }: { isMobile: boolean }) {
+export default function HomepageHeader({ isMobile, isLoggedIn }: { isMobile: boolean; isLoggedIn?: boolean }) {
   const router = useRouter();
 
   return (
@@ -30,30 +30,46 @@ export default function HomepageHeader({ isMobile }: { isMobile: boolean }) {
         <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
       </Link>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {!isMobile && (
+        {isLoggedIn ? (
           <button
-            className="cta-ghost"
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/dashboard")}
+            className="cta-main"
             style={{
-              padding: "7px 14px", borderRadius: 10, border: "none", background: "transparent",
-              color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif",
+              padding: "7px 16px", borderRadius: 10, border: "none", background: "#111",
+              color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5,
             }}
           >
-            Log in
+            Go to Dashboard
           </button>
+        ) : (
+          <>
+            {!isMobile && (
+              <button
+                className="cta-ghost"
+                onClick={() => router.push("/login")}
+                style={{
+                  padding: "7px 14px", borderRadius: 10, border: "none", background: "transparent",
+                  color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Log in
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/create")}
+              className="cta-main"
+              style={{
+                padding: "7px 16px", borderRadius: 10, border: "none", background: "#111",
+                color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5,
+              }}
+            >
+              <Icon name="plus" size={14} />Create your card
+            </button>
+          </>
         )}
-        <button
-          onClick={() => router.push("/create")}
-          className="cta-main"
-          style={{
-            padding: "7px 16px", borderRadius: 10, border: "none", background: "#111",
-            color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
-            fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5,
-          }}
-        >
-          <Icon name="plus" size={14} />Create your card
-        </button>
       </div>
     </header>
   );
