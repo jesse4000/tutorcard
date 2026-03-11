@@ -45,6 +45,10 @@ DECLARE
   i integer;
   j integer;
 BEGIN
+  IF target_user_id IS NULL THEN
+    RETURN;
+  END IF;
+
   SELECT 5 - count(*) INTO codes_needed
     FROM invite_codes WHERE owner_id = target_user_id;
 
@@ -81,12 +85,12 @@ CREATE TRIGGER auto_generate_invite_codes
   FOR EACH ROW
   EXECUTE FUNCTION trigger_generate_invite_codes();
 
--- 8. Backfill: generate codes for every existing tutor who has < 5
+-- 8. Backfill: generate codes for every existing tutor who has a user_id
 DO $$
 DECLARE
   tutor_row record;
 BEGIN
-  FOR tutor_row IN SELECT user_id FROM tutors LOOP
+  FOR tutor_row IN SELECT user_id FROM tutors WHERE user_id IS NOT NULL LOOP
     PERFORM generate_invite_codes_for_user(tutor_row.user_id);
   END LOOP;
 END;

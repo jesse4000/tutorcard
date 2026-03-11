@@ -197,7 +197,7 @@ function CodeRow({ code, claimed, name, slug }: { code: string; claimed: boolean
         <div style={{ flex: 1, minWidth: 0 }}>
           <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#d1d5db", letterSpacing: "0.03em" }}>{code}</span>
         </div>
-        <a href={slug ? `/${slug}` : "#"} onClick={(e) => { if (!slug) e.preventDefault(); }} style={{
+        <a href={slug ? `/${slug}` : "#"} target={slug ? "_blank" : undefined} rel={slug ? "noopener noreferrer" : undefined} onClick={(e) => { if (!slug) e.preventDefault(); }} style={{
           fontSize: 13, fontWeight: 600, color: "#111",
           textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
           transition: "color 0.15s",
