@@ -27,6 +27,7 @@ interface VouchFlowProps {
   isAuthenticated: boolean;
   hasTutorCard: boolean;
   hasAlreadyVouched: boolean;
+  isOwnCard: boolean;
   autoComplete: boolean;
 }
 
@@ -467,7 +468,7 @@ function VouchConfirmation({ tutor, accent, newVouchCount }: {
 // ─── MAIN FLOW ──────────────────────────────────────────
 export default function VouchFlowClient({
   tutor, vouchCount, averageRating, reviewCount,
-  isAuthenticated, hasTutorCard, hasAlreadyVouched, autoComplete,
+  isAuthenticated, hasTutorCard, hasAlreadyVouched, isOwnCard, autoComplete,
 }: VouchFlowProps) {
   const initialScreen: Screen = hasAlreadyVouched ? "confirmation" : "landing";
   const [screen, setScreen] = useState<Screen>(initialScreen);
@@ -477,11 +478,11 @@ export default function VouchFlowClient({
 
   // Auto-complete vouch after OAuth redirect
   useEffect(() => {
-    if (autoComplete && isAuthenticated && !hasAlreadyVouched && !autoCompleteRef.current) {
+    if (autoComplete && isAuthenticated && !hasAlreadyVouched && !isOwnCard && !autoCompleteRef.current) {
       autoCompleteRef.current = true;
       submitVouch();
     }
-  }, [autoComplete, isAuthenticated, hasAlreadyVouched]);
+  }, [autoComplete, isAuthenticated, hasAlreadyVouched, isOwnCard]);
 
   async function submitVouch() {
     setVouchLoading(true);
@@ -531,30 +532,68 @@ export default function VouchFlowClient({
           flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
           padding: "40px 20px",
         }}>
-          {screen === "landing" && (
-            <VouchLanding
-              tutor={tutor}
-              accent={tutor.avatarColor}
-              vouchCount={vouchCount}
-              averageRating={averageRating}
-              reviewCount={reviewCount}
-              onVouch={handleLandingVouch}
-              loading={vouchLoading}
-            />
-          )}
-          {screen === "signup" && (
-            <QuickSignup
-              tutor={tutor}
-              accent={tutor.avatarColor}
-              onComplete={handleSignupComplete}
-            />
-          )}
-          {screen === "confirmation" && (
-            <VouchConfirmation
-              tutor={tutor}
-              accent={tutor.avatarColor}
-              newVouchCount={finalVouchCount}
-            />
+          {isOwnCard ? (
+            <div style={{ width: "100%", maxWidth: 440 }}>
+              <div style={{
+                background: "white", borderRadius: 20,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)",
+                padding: "40px 32px", textAlign: "center",
+              }}>
+                <div style={{
+                  width: 52, height: 52, borderRadius: 14,
+                  background: "#f3f4f6", display: "flex", alignItems: "center",
+                  justifyContent: "center", margin: "0 auto 16px",
+                }}>
+                  <Icon name="users" size={24} style={{ color: "#6b7280" }} />
+                </div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+                  This is your own card
+                </h2>
+                <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 24px", lineHeight: 1.5 }}>
+                  You can&apos;t vouch for yourself. Share this link with a fellow tutor to get a vouch.
+                </p>
+                <Link href={`/${tutor.slug}`} style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "12px 24px", borderRadius: 12, background: "#111",
+                  color: "white", fontSize: 14, fontWeight: 600,
+                  textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
+                  transition: "opacity 0.15s",
+                }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                >
+                  View your card <Icon name="arrowRight" size={14} />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              {screen === "landing" && (
+                <VouchLanding
+                  tutor={tutor}
+                  accent={tutor.avatarColor}
+                  vouchCount={vouchCount}
+                  averageRating={averageRating}
+                  reviewCount={reviewCount}
+                  onVouch={handleLandingVouch}
+                  loading={vouchLoading}
+                />
+              )}
+              {screen === "signup" && (
+                <QuickSignup
+                  tutor={tutor}
+                  accent={tutor.avatarColor}
+                  onComplete={handleSignupComplete}
+                />
+              )}
+              {screen === "confirmation" && (
+                <VouchConfirmation
+                  tutor={tutor}
+                  accent={tutor.avatarColor}
+                  newVouchCount={finalVouchCount}
+                />
+              )}
+            </>
           )}
         </main>
 
