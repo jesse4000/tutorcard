@@ -39,6 +39,23 @@ interface DashboardClientProps {
   inquiryCount: number;
 }
 
+// ─── INVITE CODES ───────────────────────────────────────
+interface InviteCode {
+  id: number;
+  code: string;
+  claimed: boolean;
+  name: string | null;
+  slug: string | null;
+}
+
+const INITIAL_CODES: InviteCode[] = [
+  { id: 1, code: "TC-4KF92X", claimed: true, name: "James Chen", slug: "jameschen" },
+  { id: 2, code: "TC-R8MN3A", claimed: true, name: "Priya Patel", slug: "priyapatel" },
+  { id: 3, code: "TC-7WPL5D", claimed: false, name: null, slug: null },
+  { id: 4, code: "TC-2YHJ8V", claimed: false, name: null, slug: null },
+  { id: 5, code: "TC-6QBT4E", claimed: false, name: null, slug: null },
+];
+
 // ─── UTILITIES ──────────────────────────────────────────
 function isLight(hex: string): boolean {
   const r = parseInt(hex.slice(1, 3), 16),
@@ -82,6 +99,8 @@ const iconPaths: Record<string, React.ReactNode> = {
   link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
   arrowRight: <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
   arrowLeft: <><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>,
+  gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
+  ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
 };
 
 function Icon({ name, size = 16, ...props }: { name: string; size?: number } & React.SVGProps<SVGSVGElement>) {
@@ -157,6 +176,116 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
         ))}
       </div>
     </Modal>
+  );
+}
+
+// ─── INVITE CODE ROW ────────────────────────────────────
+function CodeRow({ code, claimed, name, slug }: { code: string; claimed: boolean; name: string | null; slug: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (claimed) {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "12px 14px", borderRadius: 12,
+        background: "#fafafa", border: "1px solid #f0f0f0",
+      }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: "50%", background: "#ecfdf5",
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <Icon name="check" size={15} style={{ color: "#059669" }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: "#d1d5db", letterSpacing: "0.03em" }}>{code}</span>
+        </div>
+        <a href={slug ? `/${slug}` : "#"} onClick={(e) => { if (!slug) e.preventDefault(); }} style={{
+          fontSize: 13, fontWeight: 600, color: "#111",
+          textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
+          transition: "color 0.15s",
+        }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#4f46e5"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "#111"; }}
+        >
+          {name}
+          <Icon name="ext" size={11} />
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 12,
+      padding: "12px 14px", borderRadius: 12,
+      background: "white", border: "1.5px dashed #e5e7eb",
+    }}>
+      <div style={{
+        width: 34, height: 34, borderRadius: "50%", background: "#f3f4f6",
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      }}>
+        <Icon name="gift" size={14} style={{ color: "#d1d5db" }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: "#111", letterSpacing: "0.03em" }}>{code}</span>
+      </div>
+      <button onClick={handleCopy} className="action-btn" style={{
+        padding: "5px 12px", borderRadius: 8, border: "none",
+        background: copied ? "#ecfdf5" : "#f3f4f6",
+        color: copied ? "#059669" : "#374151",
+        fontSize: 12, fontWeight: 600, cursor: "pointer",
+        fontFamily: "'DM Sans', sans-serif",
+        display: "flex", alignItems: "center", gap: 4,
+        transition: "all 0.15s",
+      }}>
+        <Icon name={copied ? "check" : "copy"} size={12} />
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
+// ─── INVITE POPUP ───────────────────────────────────────
+function InvitePopup({ onClose, codes }: { onClose: () => void; codes: InviteCode[] }) {
+  const claimed = codes.filter((c) => c.claimed).length;
+  const remaining = codes.length - claimed;
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "fadeIn 0.15s ease" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 440, padding: "32px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="gift" size={20} style={{ color: "white" }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Your invites</h3>
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>
+                <span style={{ fontWeight: 600, color: remaining > 0 ? "#111" : "#9ca3af" }}>{remaining}</span> of {codes.length} left
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}>
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+
+        <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 20px", lineHeight: 1.5 }}>
+          Each code gives a fellow tutor a free year of TutorCard. Share them with people whose work you trust.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {codes.map((c) => (
+            <CodeRow key={c.id} code={c.code} claimed={c.claimed} name={c.name} slug={c.slug} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -843,7 +972,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
-  const [popup, setPopup] = useState<null | "share" | "review" | "vouch">(null);
+  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite">(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -930,12 +1059,23 @@ export default function DashboardClient({
             <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button onClick={() => setPopup("share")} className="action-btn" style={{
+            <button onClick={() => setPopup("invite")} className="action-btn" style={{
               padding: "7px 14px", borderRadius: 10, border: "1px solid #e5e7eb",
               background: "white", color: "#374151", fontSize: 13, fontWeight: 600,
               cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              display: "flex", alignItems: "center", gap: 5, transition: "background 0.15s",
-            }}><Icon name="share" size={14} />Share</button>
+              display: "flex", alignItems: "center", gap: 6, transition: "background 0.15s",
+            }}>
+              <Icon name="gift" size={14} />
+              Invites
+              {INITIAL_CODES.filter(c => !c.claimed).length > 0 && (
+                <span style={{
+                  background: "#111", color: "white", fontSize: 10, fontWeight: 700,
+                  width: 18, height: 18, borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginLeft: -2,
+                }}>{INITIAL_CODES.filter(c => !c.claimed).length}</span>
+              )}
+            </button>
             <button onClick={handleSignOut} style={{
               padding: "7px 14px", borderRadius: 10, border: "none",
               background: "transparent", color: "#9ca3af", fontSize: 13, fontWeight: 500,
@@ -987,6 +1127,7 @@ export default function DashboardClient({
       {popup === "share" && <SharePopup onClose={close} slug={tutor.slug} />}
       {popup === "review" && <ReviewRequestPopup onClose={close} slug={tutor.slug} tutor={tutor} />}
       {popup === "vouch" && <VouchRequestPopup onClose={close} slug={tutor.slug} />}
+      {popup === "invite" && <InvitePopup onClose={close} codes={INITIAL_CODES} />}
     </>
   );
 }
