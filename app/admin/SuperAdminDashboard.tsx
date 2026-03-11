@@ -1,53 +1,56 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
-// ─── MOCK DATA ──────────────────────────────────────────
-const STATS = {
-  totalTutors: 847,
-  activeLast30: 412,
-  totalReviews: 2341,
-  totalVouches: 1893,
-  totalInquiries: 5620,
-  totalCardViews: 48200,
-  signupsThisWeek: 34,
-  signupsLastWeek: 28,
-  reviewsThisWeek: 89,
-  reviewsLastWeek: 71,
-  vouchesThisWeek: 64,
-  vouchesLastWeek: 52,
-  inquiriesThisWeek: 218,
-  inquiriesLastWeek: 191,
-};
+// ─── TYPES ──────────────────────────────────────────────
+interface AdminStats {
+  totalTutors: number;
+  totalReviews: number;
+  totalVouches: number;
+  totalInquiries: number;
+  signupsThisWeek: number;
+  signupsLastWeek: number;
+  reviewsThisWeek: number;
+  reviewsLastWeek: number;
+  vouchesThisWeek: number;
+  vouchesLastWeek: number;
+  inquiriesThisWeek: number;
+  inquiriesLastWeek: number;
+}
 
-const FUNNEL = {
-  signedUp: 847,
-  cardComplete: 623,
-  firstReviewSent: 389,
-  firstReviewReceived: 284,
-  firstVouchSent: 341,
-  firstVouchReceived: 298,
-  firstInquiry: 196,
-};
+interface AdminFunnel {
+  signedUp: number;
+  cardComplete: number;
+  firstReviewReceived: number;
+  firstVouchReceived: number;
+  firstInquiry: number;
+}
 
-const LOCATIONS = ["All locations", "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Boston, MA", "San Francisco, CA", "Miami, FL", "Seattle, WA", "Austin, TX", "Denver, CO"];
-const EXAMS = ["All exams", "SAT Math", "SAT R&W", "ACT", "AP Calculus", "AP Chemistry", "ISEE", "SSAT", "SHSAT", "GRE", "GMAT", "MCAT", "PANCE"];
+interface AdminTutor {
+  id: string;
+  name: string;
+  headline: string;
+  location: string;
+  specialties: string[];
+  reviews: number;
+  vouches: number;
+  badges: number;
+  inquiries: number;
+  status: "active" | "inactive" | "incomplete";
+  joined: string;
+  slug: string;
+}
+
+interface SuperAdminDashboardProps {
+  stats: AdminStats;
+  funnel: AdminFunnel;
+  tutors: AdminTutor[];
+  locations: string[];
+  exams: string[];
+}
+
 const STATUSES = ["All", "Active", "Inactive", "Incomplete"];
-
-const TUTORS = [
-  { id: 1, name: "Sarah Mitchell", headline: "SAT & ACT Specialist", location: "New York, NY", specialties: ["SAT Math", "SAT R&W", "ACT", "AP Calculus"], reviews: 23, vouches: 14, badges: 3, inquiries: 87, cardViews: 1240, status: "active", joined: "2025-09-14", lastActive: "2026-03-10", cardComplete: true },
-  { id: 2, name: "James Chen", headline: "SAT & GRE Specialist", location: "Boston, MA", specialties: ["SAT Math", "GRE"], reviews: 18, vouches: 11, badges: 2, inquiries: 62, cardViews: 890, status: "active", joined: "2025-10-02", lastActive: "2026-03-09", cardComplete: true },
-  { id: 3, name: "Priya Patel", headline: "ISEE & SSAT Expert", location: "New York, NY", specialties: ["ISEE", "SSAT"], reviews: 31, vouches: 19, badges: 4, inquiries: 104, cardViews: 1560, status: "active", joined: "2025-08-21", lastActive: "2026-03-10", cardComplete: true },
-  { id: 4, name: "Michael Torres", headline: "AP Math & Physics", location: "Los Angeles, CA", specialties: ["AP Calculus", "AP Chemistry"], reviews: 12, vouches: 8, badges: 1, inquiries: 34, cardViews: 520, status: "active", joined: "2025-11-15", lastActive: "2026-03-08", cardComplete: true },
-  { id: 5, name: "Emily Nakamura", headline: "ACT Prep Coach", location: "San Francisco, CA", specialties: ["ACT"], reviews: 9, vouches: 6, badges: 1, inquiries: 28, cardViews: 410, status: "active", joined: "2025-12-01", lastActive: "2026-03-07", cardComplete: true },
-  { id: 6, name: "Daniel Okafor", headline: "SAT Reading & Writing", location: "Chicago, IL", specialties: ["SAT R&W"], reviews: 7, vouches: 4, badges: 0, inquiries: 19, cardViews: 280, status: "active", joined: "2026-01-10", lastActive: "2026-03-06", cardComplete: true },
-  { id: 7, name: "Rachel Kim", headline: "College Admissions", location: "New York, NY", specialties: ["SAT Math", "SAT R&W", "ACT"], reviews: 15, vouches: 9, badges: 2, inquiries: 53, cardViews: 760, status: "active", joined: "2025-10-18", lastActive: "2026-03-10", cardComplete: true },
-  { id: 8, name: "Marcus Williams", headline: "MCAT Prep", location: "Houston, TX", specialties: ["MCAT"], reviews: 5, vouches: 3, badges: 1, inquiries: 15, cardViews: 190, status: "inactive", joined: "2025-11-22", lastActive: "2026-02-14", cardComplete: true },
-  { id: 9, name: "Lisa Fernandez", headline: "Math Tutor", location: "Miami, FL", specialties: ["SAT Math", "AP Calculus"], reviews: 0, vouches: 0, badges: 0, inquiries: 0, cardViews: 12, status: "incomplete", joined: "2026-03-08", lastActive: "2026-03-08", cardComplete: false },
-  { id: 10, name: "Andrew Park", headline: "Test Prep Coach", location: "Seattle, WA", specialties: ["SAT Math", "ACT", "ISEE"], reviews: 2, vouches: 1, badges: 0, inquiries: 8, cardViews: 95, status: "active", joined: "2026-02-15", lastActive: "2026-03-05", cardComplete: true },
-  { id: 11, name: "Jasmine Howard", headline: "GMAT Specialist", location: "Austin, TX", specialties: ["GMAT", "GRE"], reviews: 11, vouches: 7, badges: 2, inquiries: 41, cardViews: 620, status: "active", joined: "2025-09-30", lastActive: "2026-03-09", cardComplete: true },
-  { id: 12, name: "Robert Singh", headline: "PANCE Review", location: "Denver, CO", specialties: ["PANCE"], reviews: 8, vouches: 5, badges: 1, inquiries: 22, cardViews: 340, status: "inactive", joined: "2025-10-25", lastActive: "2026-01-30", cardComplete: true },
-];
 
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: unknown }) => {
   const paths: Record<string, React.ReactNode> = {
@@ -55,18 +58,13 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
     star: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />,
     trendUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></>,
     inbox: <><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></>,
-    eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>,
     award: <><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></>,
     search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
-    chevDown: <polyline points="6 9 12 15 18 9" />,
     arrowUp: <><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>,
     arrowDown: <><line x1="12" y1="5" x2="12" y2="19" /><polyline points="19 12 12 19 5 12" /></>,
     ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>,
-    filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />,
-    check: <polyline points="20 6 9 17 4 12" />,
     activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
     shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-    zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
   };
   const fill = name === "star" ? "currentColor" : "none";
   return (
@@ -100,7 +98,7 @@ function StatCard({ label, value, change, icon, color }: { label: string; value:
 
 // ─── FUNNEL BAR ─────────────────────────────────────────
 function FunnelStep({ label, count, total, color }: { label: string; count: number; total: number; color?: string }) {
-  const pct = Math.round((count / total) * 100);
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div style={{ flex: 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -151,7 +149,7 @@ function Dropdown({ value, options, onChange }: { value: string; options: string
 }
 
 // ─── MAIN ───────────────────────────────────────────────
-export default function SuperAdminDashboard() {
+export default function SuperAdminDashboard({ stats, funnel, tutors, locations, exams }: SuperAdminDashboardProps) {
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("All locations");
   const [examFilter, setExamFilter] = useState("All exams");
@@ -172,7 +170,7 @@ export default function SuperAdminDashboard() {
     else { setSortKey(key); setSortDir("desc"); }
   };
 
-  const filtered = TUTORS
+  const filtered = tutors
     .filter((t) => {
       if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.headline.toLowerCase().includes(search.toLowerCase())) return false;
       if (locationFilter !== "All locations" && t.location !== locationFilter) return false;
@@ -182,7 +180,9 @@ export default function SuperAdminDashboard() {
     })
     .sort((a, b) => {
       const m = sortDir === "desc" ? -1 : 1;
-      return ((a as Record<string, unknown>)[sortKey] as number - ((b as Record<string, unknown>)[sortKey] as number)) * m;
+      const av = (a as unknown as Record<string, number>)[sortKey] ?? 0;
+      const bv = (b as unknown as Record<string, number>)[sortKey] ?? 0;
+      return (av - bv) * m;
     });
 
   const SortHeader = ({ label, sortField, width }: { label: string; sortField: string; width?: number | string }) => (
@@ -200,6 +200,8 @@ export default function SuperAdminDashboard() {
   );
 
   const wkChange = (curr: number, prev: number) => prev === 0 ? 0 : Math.round(((curr - prev) / prev) * 100);
+
+  const endToEnd = funnel.signedUp > 0 ? Math.round((funnel.firstInquiry / funnel.signedUp) * 100) : 0;
 
   return (
     <>
@@ -222,11 +224,6 @@ export default function SuperAdminDashboard() {
             <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
             <span style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", background: "#f3f4f6", padding: "2px 8px", borderRadius: 5, marginLeft: 4 }}>ADMIN</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 10, color: "white", fontWeight: 600 }}>JM</span>
-            </div>
-          </div>
         </header>
 
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "20px 16px 40px" : "32px 32px 60px" }}>
@@ -238,11 +235,10 @@ export default function SuperAdminDashboard() {
 
           {/* Stats row */}
           <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-            <StatCard label="Total tutors" value={STATS.totalTutors} change={wkChange(STATS.signupsThisWeek, STATS.signupsLastWeek)} icon="users" color="#4f46e5" />
-            <StatCard label="Total reviews" value={STATS.totalReviews} change={wkChange(STATS.reviewsThisWeek, STATS.reviewsLastWeek)} icon="star" color="#f59e0b" />
-            <StatCard label="Total vouches" value={STATS.totalVouches} change={wkChange(STATS.vouchesThisWeek, STATS.vouchesLastWeek)} icon="shield" color="#0d9488" />
-            <StatCard label="Inquiries" value={STATS.totalInquiries} change={wkChange(STATS.inquiriesThisWeek, STATS.inquiriesLastWeek)} icon="inbox" color="#059669" />
-            <StatCard label="Card views" value={STATS.totalCardViews} icon="eye" color="#6b7280" />
+            <StatCard label="Total tutors" value={stats.totalTutors} change={wkChange(stats.signupsThisWeek, stats.signupsLastWeek)} icon="users" color="#4f46e5" />
+            <StatCard label="Total reviews" value={stats.totalReviews} change={wkChange(stats.reviewsThisWeek, stats.reviewsLastWeek)} icon="star" color="#f59e0b" />
+            <StatCard label="Total vouches" value={stats.totalVouches} change={wkChange(stats.vouchesThisWeek, stats.vouchesLastWeek)} icon="shield" color="#0d9488" />
+            <StatCard label="Inquiries" value={stats.totalInquiries} change={wkChange(stats.inquiriesThisWeek, stats.inquiriesLastWeek)} icon="inbox" color="#059669" />
           </div>
 
           {/* Activation funnel */}
@@ -254,16 +250,15 @@ export default function SuperAdminDashboard() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 8, background: "#f3f4f6" }}>
                 <Icon name="activity" size={13} style={{ color: "#6b7280" }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{Math.round((FUNNEL.firstInquiry / FUNNEL.signedUp) * 100)}% end-to-end</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{endToEnd}% end-to-end</span>
               </div>
             </div>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <FunnelStep label="Signed up" count={FUNNEL.signedUp} total={FUNNEL.signedUp} color="#111" />
-              <FunnelStep label="Card complete" count={FUNNEL.cardComplete} total={FUNNEL.signedUp} color="#374151" />
-              <FunnelStep label="Sent review req" count={FUNNEL.firstReviewSent} total={FUNNEL.signedUp} color="#4f46e5" />
-              <FunnelStep label="Got first review" count={FUNNEL.firstReviewReceived} total={FUNNEL.signedUp} color="#0284c7" />
-              <FunnelStep label="Got first vouch" count={FUNNEL.firstVouchReceived} total={FUNNEL.signedUp} color="#0d9488" />
-              <FunnelStep label="Got first inquiry" count={FUNNEL.firstInquiry} total={FUNNEL.signedUp} color="#059669" />
+              <FunnelStep label="Signed up" count={funnel.signedUp} total={funnel.signedUp} color="#111" />
+              <FunnelStep label="Card complete" count={funnel.cardComplete} total={funnel.signedUp} color="#374151" />
+              <FunnelStep label="Got first review" count={funnel.firstReviewReceived} total={funnel.signedUp} color="#0284c7" />
+              <FunnelStep label="Got first vouch" count={funnel.firstVouchReceived} total={funnel.signedUp} color="#0d9488" />
+              <FunnelStep label="Got first inquiry" count={funnel.firstInquiry} total={funnel.signedUp} color="#059669" />
             </div>
           </div>
 
@@ -290,8 +285,8 @@ export default function SuperAdminDashboard() {
                     onFocus={(e) => { e.target.style.borderColor = "#111"; }}
                     onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; }} />
                 </div>
-                <Dropdown value={locationFilter} options={LOCATIONS} onChange={setLocationFilter} />
-                <Dropdown value={examFilter} options={EXAMS} onChange={setExamFilter} />
+                <Dropdown value={locationFilter} options={["All locations", ...locations]} onChange={setLocationFilter} />
+                <Dropdown value={examFilter} options={["All exams", ...exams]} onChange={setExamFilter} />
                 <Dropdown value={statusFilter} options={STATUSES} onChange={setStatusFilter} />
               </div>
             </div>
@@ -308,7 +303,6 @@ export default function SuperAdminDashboard() {
                     <SortHeader label="Vouches" sortField="vouches" />
                     <SortHeader label="Badges" sortField="badges" />
                     <SortHeader label="Inquiries" sortField="inquiries" />
-                    <SortHeader label="Card views" sortField="cardViews" />
                     <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 100 }}>Joined</th>
                     <th style={{ padding: "10px 24px 10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", width: 40 }}></th>
                   </tr>
@@ -333,14 +327,11 @@ export default function SuperAdminDashboard() {
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.vouches}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.badges}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.inquiries}</td>
-                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, color: "#6b7280" }}>{t.cardViews.toLocaleString()}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 12.5, color: "#9ca3af" }}>{new Date(t.joined).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
                       <td style={{ padding: "14px 24px 14px 12px", borderBottom: "1px solid #f9fafb" }}>
-                        <button style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", padding: 4, display: "flex" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = "#374151"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = "#d1d5db"; }}>
+                        <Link href={`/${t.slug}`} target="_blank" style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", padding: 4, display: "flex" }}>
                           <Icon name="ext" size={14} />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   ))}
