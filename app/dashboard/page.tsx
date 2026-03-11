@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { generateCodesForUser } from "@/lib/inviteCodes";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import DashboardClient from "./DashboardClient";
 import type { ReviewData, VoucherData, BadgeData } from "../[slug]/types";
 
@@ -65,6 +66,9 @@ export default async function DashboardPage() {
   ]);
 
   const admin = createAdminClient();
+
+  // Auto-revoke any expired pending reports (replaces cron job)
+  await autoRevokeExpiredReports(admin);
 
   // Fetch review report statuses
   const reviewIds = (reviewsRaw || []).map((r: Record<string, unknown>) => r.id as string);

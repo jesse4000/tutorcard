@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import ProfileClient from "./ProfileClient";
 import type { ReviewData, VoucherData, BadgeData } from "./types";
 
@@ -50,6 +52,9 @@ export default async function ProfilePage({ params }: PageProps) {
   if (user && user.id === tutor.user_id) {
     redirect("/dashboard");
   }
+
+  // Auto-revoke any expired pending reports (replaces cron job)
+  await autoRevokeExpiredReports(createAdminClient());
 
   // Parallel data fetching
   const [
