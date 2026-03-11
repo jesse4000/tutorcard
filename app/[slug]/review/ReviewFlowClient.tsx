@@ -124,14 +124,16 @@ function ReviewForm({
 }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("Parent");
-  const [exam, setExam] = useState(prefill.exam || "");
-  const [scoreBefore, setScoreBefore] = useState(prefill.before || "");
-  const [scoreAfter, setScoreAfter] = useState(prefill.after || "");
-  const [timeframe, setTimeframe] = useState(prefill.timeframe || "");
   const [rating, setRating] = useState(0);
   const [quote, setQuote] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Prefilled values from tutor (read-only for the reviewer)
+  const exam = prefill.exam || "";
+  const scoreBefore = prefill.before || "";
+  const scoreAfter = prefill.after || "";
+  const timeframe = prefill.timeframe || "";
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "12px 14px", borderRadius: 10,
@@ -184,7 +186,6 @@ function ReviewForm({
   }
 
   const roles = ["Parent", "Student", "Other"];
-  const specialties = tutor.exams || [];
 
   return (
     <div style={{ width: "100%", maxWidth: 440 }}>
@@ -270,55 +271,58 @@ function ReviewForm({
             </div>
           </div>
 
-          {/* Exam / subject */}
-          {specialties.length > 0 && (
+          {/* Exam / subject (read-only, only shown if tutor prefilled) */}
+          {exam && (
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
-                Exam or subject <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+                Exam or subject
               </label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {specialties.map(s => (
-                  <button key={s} type="button" onClick={() => setExam(exam === s ? "" : s)} style={{
-                    padding: "6px 14px", borderRadius: 8, cursor: "pointer",
-                    border: exam === s ? "1.5px solid #111" : "1.5px solid #e5e7eb",
-                    background: exam === s ? "#111" : "white",
-                    color: exam === s ? "white" : "#374151",
-                    fontSize: 12.5, fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
-                    transition: "all 0.15s",
-                  }}>{s}</button>
-                ))}
+              <span style={{
+                display: "inline-block", padding: "6px 14px", borderRadius: 8,
+                border: "1.5px solid #e5e7eb", background: "#f9fafb",
+                color: "#374151", fontSize: 12.5, fontWeight: 500,
+                fontFamily: "'DM Sans', sans-serif",
+              }}>{exam}</span>
+            </div>
+          )}
+
+          {/* Score improvement (read-only, only shown if tutor prefilled) */}
+          {(scoreBefore || scoreAfter) && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                Score improvement
+              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {scoreBefore && (
+                  <div style={{
+                    ...inputStyle, flex: 1, textAlign: "center", background: "#f9fafb",
+                    color: "#374151", display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>{scoreBefore}</div>
+                )}
+                {scoreBefore && scoreAfter && (
+                  <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>→</span>
+                )}
+                {scoreAfter && (
+                  <div style={{
+                    ...inputStyle, flex: 1, textAlign: "center", background: "#f9fafb",
+                    color: "#374151", display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>{scoreAfter}</div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Score improvement */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
-              Score improvement <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
-            </label>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input type="text" value={scoreBefore} onChange={e => setScoreBefore(e.target.value)}
-                placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
-                onFocus={e => e.target.style.borderColor = "#111"}
-                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-              <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>→</span>
-              <input type="text" value={scoreAfter} onChange={e => setScoreAfter(e.target.value)}
-                placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
-                onFocus={e => e.target.style.borderColor = "#111"}
-                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+          {/* Timeframe (read-only, only shown if tutor prefilled) */}
+          {timeframe && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+                Timeframe
+              </label>
+              <div style={{
+                ...inputStyle, background: "#f9fafb", color: "#374151",
+              }}>{timeframe}</div>
             </div>
-          </div>
-
-          {/* Timeframe */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
-              Timeframe <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
-            </label>
-            <input value={timeframe} onChange={e => setTimeframe(e.target.value)}
-              placeholder="e.g. 4 months" style={inputStyle}
-              onFocus={e => e.target.style.borderColor = "#111"}
-              onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-          </div>
+          )}
 
           {/* Rating */}
           <div style={{ marginBottom: 16 }}>
