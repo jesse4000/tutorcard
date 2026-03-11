@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { generateCodesForUser, claimInviteCode } from "@/lib/inviteCodes";
 
 function sanitizeSlug(slug: string) {
   return slug
@@ -105,6 +106,17 @@ export async function POST(request: Request) {
         { error: "Failed to create card" },
         { status: 500 }
       );
+    }
+
+    // Generate invite codes for the new user and claim the provided code
+    try {
+      await generateCodesForUser(user.id);
+      if (body.inviteCode) {
+        const fullName = `${firstName.trim()} ${(lastName || "").trim()}`.trim();
+        await claimInviteCode(body.inviteCode, user.id, fullName, cleanSlug);
+      }
+    } catch (e) {
+      console.error("Invite code processing error:", e);
     }
 
     return NextResponse.json({ success: true, tutor: data });
