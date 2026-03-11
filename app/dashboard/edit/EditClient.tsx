@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { TutorLink } from "@/components/TutorCard";
+import { containsProfanity } from "@/lib/profanityFilter";
 
 // ─── TYPES ──────────────────────────────────────────────
 interface TutorRow {
@@ -25,6 +26,7 @@ interface TutorRow {
 interface EditLink {
   id: number;
   type: string;
+  icon: string;
   label: string;
   value: string;
 }
@@ -52,41 +54,97 @@ const SPECIALTY_SUGGESTIONS = [
   "GRE", "GMAT", "PANCE", "MCAT",
 ];
 
-// ─── LINK TYPE MAPPING ──────────────────────────────────
-const DB_TYPE_TO_ICON: Record<string, string> = {
-  "🌐 Website": "globe",
-  "📅 Booking": "calendar",
+const CITIES = [
+  // ── US Cities ──
+  "New York, NY","Los Angeles, CA","Chicago, IL","Houston, TX","Phoenix, AZ","Philadelphia, PA","San Antonio, TX","San Diego, CA","Dallas, TX","San Jose, CA",
+  "Austin, TX","Jacksonville, FL","Fort Worth, TX","Columbus, OH","Indianapolis, IN","Charlotte, NC","San Francisco, CA","Seattle, WA","Denver, CO","Washington, DC",
+  "Nashville, TN","Oklahoma City, OK","El Paso, TX","Boston, MA","Portland, OR","Las Vegas, NV","Memphis, TN","Louisville, KY","Baltimore, MD","Milwaukee, WI",
+  "Albuquerque, NM","Tucson, AZ","Fresno, CA","Mesa, AZ","Sacramento, CA","Atlanta, GA","Kansas City, MO","Omaha, NE","Colorado Springs, CO","Raleigh, NC",
+  "Virginia Beach, VA","Long Beach, CA","Miami, FL","Oakland, CA","Minneapolis, MN","Tampa, FL","Tulsa, OK","Arlington, TX","New Orleans, LA","Cleveland, OH",
+  "Detroit, MI","St. Louis, MO","Pittsburgh, PA","Cincinnati, OH","Orlando, FL","St. Petersburg, FL","Newark, NJ","Jersey City, NJ","Honolulu, HI","Anchorage, AK",
+  "Madison, WI","Salt Lake City, UT","Boise, ID","Richmond, VA","Charleston, SC","Savannah, GA","Scottsdale, AZ","Santa Fe, NM","Lexington, KY","Knoxville, TN",
+  "Providence, RI","Hartford, CT","Des Moines, IA","Little Rock, AR","Baton Rouge, LA","Springfield, IL","Wichita, KS","Norfolk, VA","Spokane, WA","Tacoma, WA",
+  "Bakersfield, CA","Riverside, CA","Stockton, CA","Irvine, CA","Santa Ana, CA","Anaheim, CA","Santa Clarita, CA","Pasadena, CA","Fremont, CA","Modesto, CA",
+  "Huntsville, AL","Montgomery, AL","Mobile, AL","Birmingham, AL","Chattanooga, TN","Akron, OH","Toledo, OH","Dayton, OH","Durham, NC","Greensboro, NC",
+  "Winston-Salem, NC","Wilmington, NC","Columbia, SC","Greenville, SC","Tallahassee, FL","Fort Lauderdale, FL","West Palm Beach, FL","Gainesville, FL",
+  "Naperville, IL","Aurora, IL","Rockford, IL","Peoria, IL","Ann Arbor, MI","Grand Rapids, MI","Lansing, MI","Rochester, NY","Buffalo, NY","Syracuse, NY",
+  "Albany, NY","Yonkers, NY","White Plains, NY","Stamford, CT","New Haven, CT","Bridgeport, CT","Trenton, NJ","Princeton, NJ","Hoboken, NJ",
+  "Tempe, AZ","Gilbert, AZ","Chandler, AZ","Glendale, AZ","Laredo, TX","Lubbock, TX","Amarillo, TX","Plano, TX","Irving, TX","Frisco, TX","McKinney, TX",
+  "Corpus Christi, TX","Brownsville, TX","McAllen, TX","Midland, TX","Reno, NV","Henderson, NV","Provo, UT","Ogden, UT","Eugene, OR","Salem, OR","Bend, OR",
+  "Bellevue, WA","Olympia, WA","Vancouver, WA","Fargo, ND","Sioux Falls, SD","Billings, MT","Missoula, MT","Cheyenne, WY","Burlington, VT","Portland, ME",
+  "Concord, NH","Santa Barbara, CA","San Luis Obispo, CA","Monterey, CA","Santa Cruz, CA","Napa, CA","Berkeley, CA","Palo Alto, CA","Mountain View, CA",
+  "Coral Gables, FL","Boca Raton, FL","Naples, FL","Sarasota, FL","Clearwater, FL","Pensacola, FL","Key West, FL",
+  "Charlottesville, VA","Alexandria, VA","Arlington, VA","Bethesda, MD","Silver Spring, MD","Annapolis, MD","Columbia, MD",
+  "Ithaca, NY","Saratoga Springs, NY","New Rochelle, NY","Garden City, NY","Manhasset, NY","Great Neck, NY","Scarsdale, NY",
+  // ── UK Cities ──
+  "London, UK","Manchester, UK","Birmingham, UK","Edinburgh, UK","Glasgow, UK","Liverpool, UK","Bristol, UK","Leeds, UK","Oxford, UK","Cambridge, UK",
+  "Brighton, UK","Cardiff, UK","Belfast, UK","Nottingham, UK","Sheffield, UK","Southampton, UK","Newcastle, UK","Reading, UK","Aberdeen, UK","Bath, UK",
+  "Exeter, UK","Leicester, UK","Coventry, UK","Plymouth, UK","Dundee, UK","Swansea, UK","York, UK","Norwich, UK","Derby, UK","Bournemouth, UK",
+  "Cheltenham, UK","Durham, UK","St Andrews, UK","Canterbury, UK","Warwick, UK","Winchester, UK","Stirling, UK","Inverness, UK","Peterborough, UK","Sunderland, UK",
+  "Wolverhampton, UK","Milton Keynes, UK","Northampton, UK","Stoke-on-Trent, UK","Ipswich, UK","Colchester, UK","Guildford, UK","Harrogate, UK","Chester, UK","Lincoln, UK",
+  "Worcester, UK","Hereford, UK","Salisbury, UK","Truro, UK","St Albans, UK","Kingston upon Thames, UK","Richmond, UK","Epsom, UK","Tunbridge Wells, UK","Margate, UK",
+  // ── Online ──
+  "Online",
+];
+
+// ─── LINK TYPE OPTIONS & MAPPING ─────────────────────────
+const LINK_TYPE_OPTIONS = [
+  { key: "website", label: "Website", icon: "globe" },
+  { key: "booking", label: "Booking", icon: "calendar" },
+  { key: "phone", label: "Phone", icon: "phone" },
+  { key: "zoom", label: "Zoom", icon: "video" },
+  { key: "instagram", label: "Instagram", icon: "instagram" },
+  { key: "linkedin", label: "LinkedIn", icon: "linkedin" },
+  { key: "other", label: "Other", icon: "link2" },
+];
+
+const DB_TYPE_TO_KEY: Record<string, string> = {
+  "🌐 Website": "website",
+  "📅 Booking": "booking",
   "📞 Phone": "phone",
-  "📧 Email": "mail",
-  "💼 LinkedIn": "ext",
-  "📘 Facebook": "ext",
-  "📸 Instagram": "ext",
-  "💬 WhatsApp": "ext",
-  "📋 Resource": "ext",
+  "📧 Email": "website",
+  "💼 LinkedIn": "linkedin",
+  "📘 Facebook": "other",
+  "📸 Instagram": "instagram",
+  "💬 WhatsApp": "other",
+  "📋 Resource": "other",
+  Website: "website",
+  Booking: "booking",
+  Phone: "phone",
+  Zoom: "zoom",
+  Instagram: "instagram",
+  LinkedIn: "linkedin",
 };
 
-const ICON_TO_DB_TYPE: Record<string, string> = {
-  globe: "🌐 Website",
-  calendar: "📅 Booking",
-  phone: "📞 Phone",
-  mail: "📧 Email",
-  ext: "💼 LinkedIn",
+const KEY_TO_DB_TYPE: Record<string, string> = {
+  website: "Website",
+  booking: "Booking",
+  phone: "Phone",
+  zoom: "Zoom",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  other: "Website",
 };
 
 function dbLinksToEdit(links: TutorLink[]): EditLink[] {
-  return links.map((l, i) => ({
-    id: Date.now() + i,
-    type: DB_TYPE_TO_ICON[l.type] || "globe",
-    label: l.label || l.type.replace(/^\S+\s/, ""),
-    value: l.url,
-  }));
+  return links.map((l, i) => {
+    const key = DB_TYPE_TO_KEY[l.type] || "website";
+    const opt = LINK_TYPE_OPTIONS.find((o) => o.key === key) || LINK_TYPE_OPTIONS[0];
+    return {
+      id: Date.now() + i,
+      type: key,
+      icon: opt.icon,
+      label: l.label || opt.label,
+      value: l.url,
+    };
+  });
 }
 
 function editLinksToDb(links: EditLink[]): TutorLink[] {
   return links
-    .filter((l) => l.label || l.value)
+    .filter((l) => l.value)
     .map((l) => ({
-      type: ICON_TO_DB_TYPE[l.type] || "🌐 Website",
+      type: KEY_TO_DB_TYPE[l.type] || "Website",
       url: l.value,
       label: l.label,
     }));
@@ -125,7 +183,7 @@ function buildInitialData(tutor: TutorRow): CardData {
     links:
       tutor.links?.length > 0
         ? dbLinksToEdit(tutor.links)
-        : [{ id: 1, type: "globe", label: "Website", value: "" }],
+        : [{ id: 1, type: "website", icon: "globe", label: "Website", value: "" }],
   };
 }
 
@@ -215,6 +273,33 @@ function Icon({
         <line x1="10" y1="14" x2="21" y2="3" />
       </>
     ),
+    video: (
+      <>
+        <polygon points="23 7 16 12 23 17 23 7" />
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+      </>
+    ),
+    instagram: (
+      <>
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+      </>
+    ),
+    linkedin: (
+      <>
+        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+        <rect x="2" y="9" width="4" height="12" />
+        <circle cx="4" cy="4" r="2" />
+      </>
+    ),
+    link2: (
+      <>
+        <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </>
+    ),
+    chevDown: <polyline points="6 9 12 15 18 9" />,
   };
 
   const fill = name === "star" ? "currentColor" : "none";
@@ -509,6 +594,128 @@ function Section({
   );
 }
 
+// ─── LOCATION AUTOCOMPLETE ──────────────────────────────
+function LocationInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const [filtered, setFiltered] = useState<string[]>([]);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const handleChange = (v: string) => {
+    setQuery(v);
+    onChange(v);
+    if (v.length >= 2) {
+      const lv = v.toLowerCase();
+      setFiltered(CITIES.filter((c) => c.toLowerCase().includes(lv)).slice(0, 8));
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative", marginBottom: 12 }}>
+      <label
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#374151",
+          display: "block",
+          marginBottom: 5,
+        }}
+      >
+        Location
+      </label>
+      <input
+        value={query}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder="Start typing your city..."
+        style={{
+          width: "100%",
+          padding: "11px 14px",
+          borderRadius: 10,
+          border: "1.5px solid #e5e7eb",
+          fontSize: 14,
+          color: "#111",
+          outline: "none",
+          boxSizing: "border-box",
+          fontFamily: "'DM Sans', sans-serif",
+          transition: "border-color 0.15s",
+          background: "white",
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = "#111";
+          if (query.length >= 2) setOpen(true);
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = "#e5e7eb";
+        }}
+      />
+      {open && filtered.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "white",
+            border: "1px solid #e5e7eb",
+            borderRadius: 10,
+            marginTop: 4,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+            zIndex: 50,
+            overflow: "hidden",
+          }}
+        >
+          {filtered.map((c) => (
+            <div
+              key={c}
+              onClick={() => {
+                onChange(c);
+                setQuery(c);
+                setOpen(false);
+              }}
+              style={{
+                padding: "10px 14px",
+                fontSize: 14,
+                color: "#111",
+                cursor: "pointer",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f9fafb";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "white";
+              }}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── LINK ROW ───────────────────────────────────────────
 function LinkRow({
   link,
@@ -519,6 +726,27 @@ function LinkRow({
   onChange: (updated: EditLink) => void;
   onRemove: () => void;
 }) {
+  const [typeOpen, setTypeOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setTypeOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const currentType =
+    LINK_TYPE_OPTIONS.find((o) => o.key === link.type) || LINK_TYPE_OPTIONS[0];
+  const placeholder =
+    link.type === "phone"
+      ? "(555) 123-4567"
+      : link.type === "instagram"
+        ? "@username"
+        : "https://...";
+
   return (
     <div
       style={{
@@ -532,26 +760,117 @@ function LinkRow({
         gap: 12,
       }}
     >
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          border: "1px solid #e5e7eb",
-          background: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon name={link.type} size={16} style={{ color: "#374151" }} />
+      <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+        <button
+          onClick={() => setTypeOpen(!typeOpen)}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            border: "1px solid #e5e7eb",
+            background: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            position: "relative",
+          }}
+        >
+          <Icon
+            name={currentType.icon}
+            size={16}
+            style={{ color: "#374151" }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: -2,
+              right: -2,
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              background: "white",
+              border: "1px solid #e5e7eb",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon name="chevDown" size={8} style={{ color: "#9ca3af" }} />
+          </div>
+        </button>
+        {typeOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 6px)",
+              left: 0,
+              background: "white",
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+              zIndex: 50,
+              overflow: "hidden",
+              minWidth: 150,
+            }}
+          >
+            {LINK_TYPE_OPTIONS.map((o) => (
+              <div
+                key={o.key}
+                onClick={() => {
+                  onChange({
+                    ...link,
+                    type: o.key,
+                    icon: o.icon,
+                    label:
+                      link.label ===
+                      (LINK_TYPE_OPTIONS.find((x) => x.key === link.type)
+                        ?.label || "")
+                        ? o.label
+                        : link.label,
+                  });
+                  setTypeOpen(false);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "10px 14px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: o.key === link.type ? "#111" : "#6b7280",
+                  cursor: "pointer",
+                  transition: "background 0.1s",
+                  background: o.key === link.type ? "#f9fafb" : "white",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f9fafb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background =
+                    o.key === link.type ? "#f9fafb" : "white";
+                }}
+              >
+                <Icon name={o.icon} size={14} style={{ color: "#6b7280" }} />
+                {o.label}
+                {o.key === link.type && (
+                  <Icon
+                    name="check"
+                    size={12}
+                    style={{ color: "#059669", marginLeft: "auto" }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
       <div style={{ flex: 1, minWidth: 0 }}>
         <input
-          value={link.label}
-          onChange={(e) => onChange({ ...link, label: e.target.value })}
-          placeholder="Button label"
+          value={link.value}
+          onChange={(e) => onChange({ ...link, value: e.target.value })}
+          placeholder={placeholder}
           style={{
             width: "100%",
             padding: 0,
@@ -566,9 +885,9 @@ function LinkRow({
           }}
         />
         <input
-          value={link.value}
-          onChange={(e) => onChange({ ...link, value: e.target.value })}
-          placeholder={link.type === "phone" ? "(555) 123-4567" : "https://..."}
+          value={link.label}
+          onChange={(e) => onChange({ ...link, label: e.target.value })}
+          placeholder="Button label..."
           style={{
             width: "100%",
             padding: "2px 0 0",
@@ -591,6 +910,7 @@ function LinkRow({
           cursor: "pointer",
           padding: 4,
           flexShrink: 0,
+          transition: "color 0.15s",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.color = "#9ca3af";
@@ -674,10 +994,30 @@ export default function EditClient({
   const addLink = () =>
     setData((d) => ({
       ...d,
-      links: [...d.links, { id: Date.now(), type: "globe", label: "", value: "" }],
+      links: [
+        ...d.links,
+        { id: Date.now(), type: "website", icon: "globe", label: "Website", value: "" },
+      ],
     }));
 
+  const [profanityError, setProfanityError] = useState("");
+
   const handleSave = async () => {
+    // Profanity check
+    const fieldsToCheck = [
+      data.name,
+      data.headline,
+      ...data.specialties,
+      ...data.links.map((l) => l.label),
+    ];
+    for (const field of fieldsToCheck) {
+      if (containsProfanity(field)) {
+        setProfanityError("Please remove inappropriate language from your card before saving.");
+        return;
+      }
+    }
+    setProfanityError("");
+
     setSaving(true);
     try {
       const nameParts = data.name.trim().split(/\s+/);
@@ -882,7 +1222,6 @@ export default function EditClient({
               label: "Professional headline",
               ph: "e.g. SAT & ACT Specialist",
             },
-            { key: "location" as const, label: "Location", ph: "City, State" },
           ].map((f) => (
             <div key={f.key} style={{ marginBottom: 12 }}>
               <label
@@ -910,6 +1249,10 @@ export default function EditClient({
               />
             </div>
           ))}
+          <LocationInput
+            value={data.location}
+            onChange={set("location")}
+          />
           <div style={{ marginBottom: 12 }}>
             <label
               style={{
@@ -1137,6 +1480,11 @@ export default function EditClient({
           </div>
         </Section>
 
+        {profanityError && (
+          <p style={{ color: "#dc2626", fontSize: 13, fontWeight: 500, margin: "0 0 12px" }}>
+            {profanityError}
+          </p>
+        )}
         <div style={{ display: "flex", gap: 10, paddingTop: 4 }}>
           <button
             onClick={handleSave}

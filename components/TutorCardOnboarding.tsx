@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { saveCardDraft, loadCardDraft, clearCardDraft } from "@/lib/cardDraft";
 import type { OnboardingData, OnboardingLink } from "@/lib/cardDraft";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { containsProfanity } from "@/lib/profanityFilter";
 
 // ─── UTILS ──────────────────────────────────────────────
 function isLight(hex: string) {
@@ -454,6 +455,9 @@ export default function TutorCardOnboarding() {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugChecking, setSlugChecking] = useState(false);
 
+  // Profanity error state
+  const [profanityError, setProfanityError] = useState("");
+
   // Auth state for inline signup
   const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
   const [authEmail, setAuthEmail] = useState("");
@@ -631,7 +635,25 @@ export default function TutorCardOnboarding() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const checkProfanity = (): boolean => {
+    const fieldsToCheck = [
+      data.name,
+      data.headline,
+      ...data.specialties,
+      ...data.links.map((l) => l.label),
+    ];
+    for (const field of fieldsToCheck) {
+      if (containsProfanity(field)) {
+        setProfanityError("Please remove inappropriate language before continuing.");
+        return true;
+      }
+    }
+    setProfanityError("");
+    return false;
+  };
+
   const handlePublish = async () => {
+    if (checkProfanity()) return;
     setSubmitting(true);
     try {
       const { firstName, lastName } = splitName(data.name);
@@ -706,9 +728,15 @@ export default function TutorCardOnboarding() {
       <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", minHeight: "100vh" }}>
         <Header onLogoClick={() => { window.location.href = "/"; }} />
 
+        {profanityError && (
+          <div style={{ maxWidth: 480, margin: "12px auto 0", padding: "0 24px" }}>
+            <p style={{ color: "#dc2626", fontSize: 13, fontWeight: 500, margin: 0 }}>{profanityError}</p>
+          </div>
+        )}
+
         {/* STEP 1: ABOUT YOU */}
         {screen === "step1" && (
-          <StepShell step={1} totalSteps={4} goTo={goTo} title="About you" subtitle="The basics for your card." onNext={() => setScreen("step2")} nextDisabled={!data.name.trim() || slugAvailable === false} isMobile={isMobile}>
+          <StepShell step={1} totalSteps={4} goTo={goTo} title="About you" subtitle="The basics for your card." onNext={() => { if (checkProfanity()) return; setScreen("step2"); }} nextDisabled={!data.name.trim() || slugAvailable === false} isMobile={isMobile}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
               <div onClick={() => fileRef.current?.click()} style={{
                 width: 64, height: 64, borderRadius: "50%", background: data.imageUrl ? "transparent" : "#f3f4f6",
