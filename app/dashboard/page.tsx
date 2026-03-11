@@ -108,14 +108,18 @@ export default async function DashboardPage() {
 
   // Fetch invite codes using admin client to bypass RLS issues in server components
   const admin = createAdminClient();
-  let { data: inviteCodesRaw } = await admin
+  let { data: inviteCodesRaw, error: inviteError } = await admin
     .from("invite_codes")
     .select("id, code, claimed, claimed_name, claimed_slug")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true });
 
-  // Auto-generate codes for existing users who have none
-  if (!inviteCodesRaw || inviteCodesRaw.length === 0) {
+  if (inviteError) {
+    console.error("Invite codes fetch error:", inviteError.code, inviteError.message);
+  }
+
+  // Auto-generate codes for existing users who have none (skip if table-level error)
+  if ((!inviteCodesRaw || inviteCodesRaw.length === 0) && !inviteError) {
     try {
       await generateCodesForUser(user.id);
       const result = await admin
