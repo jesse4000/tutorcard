@@ -74,7 +74,7 @@ export default function InquirySheet({ onClose, accent, tutorId, tutorExams }: I
         background: "rgba(0,0,0,0.35)",
         backdropFilter: "blur(6px)",
         display: "flex",
-        alignItems: "flex-end",
+        alignItems: "center",
         justifyContent: "center",
         zIndex: 200,
         animation: "pfFadeIn 0.15s ease",
@@ -84,13 +84,15 @@ export default function InquirySheet({ onClose, accent, tutorId, tutorExams }: I
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "white",
-          borderRadius: "20px 20px 0 0",
+          borderRadius: "20px",
           width: "100%",
           maxWidth: 420,
           maxHeight: "85vh",
           overflow: "auto",
           padding: "20px 22px 28px",
-          animation: "pfSlideUp 0.3s cubic-bezier(0.16,1,0.3,1)",
+          margin: "0 16px",
+          boxShadow: "0 4px 40px rgba(0,0,0,0.15)",
+          animation: "pfFadeIn 0.2s ease",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
