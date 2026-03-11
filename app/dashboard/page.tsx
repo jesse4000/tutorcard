@@ -64,6 +64,8 @@ export default async function DashboardPage() {
       .eq("tutor_id", tutor.id),
   ]);
 
+  const admin = createAdminClient();
+
   // Fetch review report statuses
   const reviewIds = (reviewsRaw || []).map((r: Record<string, unknown>) => r.id as string);
   let reportStatusMap: Record<string, string> = {};
@@ -128,7 +130,6 @@ export default async function DashboardPage() {
     : null;
 
   // Fetch invite codes using admin client to bypass RLS issues in server components
-  const admin = createAdminClient();
   let { data: inviteCodesRaw, error: inviteError } = await admin
     .from("invite_codes")
     .select("id, code, claimed, claimed_name, claimed_slug")
