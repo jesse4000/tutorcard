@@ -4,6 +4,8 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import SimpleHeader from "@/components/SimpleHeader";
+import SimpleFooter from "@/components/SimpleFooter";
 
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: any }) => {
   const d: Record<string, React.ReactNode> = {
@@ -17,32 +19,6 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{d[name]}</svg>;
 };
 
-function Header() {
-  return (
-    <header style={{
-      background: "white", borderBottom: "1px solid #f3f4f6",
-      padding: "0 24px", height: 56, display: "flex", alignItems: "center",
-      justifyContent: "center",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>tc</span>
-        </div>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
-      </div>
-    </header>
-  );
-}
-
-function Footer() {
-  return (
-    <footer style={{ padding: "20px 24px", textAlign: "center", width: "100%", display: "flex", justifyContent: "center" }}>
-      <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>
-        &copy; 2026 TutorCard &middot; A <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span> product
-      </p>
-    </footer>
-  );
-}
 
 function AuthForm({ mode, onToggle, redirectTo }: { mode: string; onToggle: () => void; redirectTo: string }) {
   const router = useRouter();
@@ -232,7 +208,7 @@ function TutorCardAuthInner({ defaultMode = "login" }: { defaultMode?: string })
         minHeight: "100vh", display: "flex", flexDirection: "column",
         fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4",
       }}>
-        <Header />
+        <SimpleHeader />
 
         <main style={{
           flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
@@ -252,7 +228,7 @@ function TutorCardAuthInner({ defaultMode = "login" }: { defaultMode?: string })
           </div>
         </main>
 
-        <Footer />
+        <SimpleFooter />
       </div>
     </>
   );

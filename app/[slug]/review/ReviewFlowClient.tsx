@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Icon, { textOnAccent } from "@/app/[slug]/Icon";
+import SimpleHeader from "@/components/SimpleHeader";
+import SimpleFooter from "@/components/SimpleFooter";
 
 interface TutorData {
   id: string;
@@ -25,32 +27,6 @@ interface ReviewFlowProps {
 
 type Screen = "form" | "confirmation";
 
-function Header() {
-  return (
-    <header style={{
-      background: "white", borderBottom: "1px solid #f3f4f6",
-      padding: "0 24px", height: 56, display: "flex", alignItems: "center",
-      justifyContent: "center", flexShrink: 0,
-    }}>
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
-        <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>tc</span>
-        </div>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
-      </Link>
-    </header>
-  );
-}
-
-function Footer() {
-  return (
-    <footer style={{ padding: "20px 24px", textAlign: "center" }}>
-      <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>
-        &copy; 2026 TutorCard &middot; A <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span> product
-      </p>
-    </footer>
-  );
-}
 
 function TutorPreview({ tutor, accent }: { tutor: TutorData; accent: string }) {
   const t = textOnAccent(accent);
@@ -473,7 +449,7 @@ export default function ReviewFlowClient({
         minHeight: "100vh", display: "flex", flexDirection: "column",
         fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4",
       }}>
-        <Header />
+        <SimpleHeader />
 
         <main style={{
           flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
@@ -497,7 +473,7 @@ export default function ReviewFlowClient({
           )}
         </main>
 
-        <Footer />
+        <SimpleFooter />
       </div>
     </>
   );

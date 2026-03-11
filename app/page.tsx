@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import HomepageHeader from "@/components/HomepageHeader";
+import HomepageFooter from "@/components/HomepageFooter";
 
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: unknown }) => {
   const d: Record<string, React.ReactNode> = {
@@ -161,24 +163,7 @@ export default function TutorCardLanding() {
       <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111" }}>
 
         {/* ═══ HEADER ═══ */}
-        <header style={{
-          position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(12px)", borderBottom: "1px solid #f3f4f6",
-          padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>tc</span>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {!isMobile && <button className="cta-ghost" onClick={() => router.push("/login")} style={{ padding: "7px 14px", borderRadius: 10, border: "none", background: "transparent", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Log in</button>}
-            <button onClick={() => router.push("/create")} className="cta-main" style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#111", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
-              <Icon name="plus" size={14} />Create your card
-            </button>
-          </div>
-        </header>
+        <HomepageHeader isMobile={isMobile} />
 
         {/* ═══ HERO ═══ */}
         <section style={{
@@ -416,32 +401,7 @@ export default function TutorCardLanding() {
         </section>
 
         {/* ═══ FOOTER ═══ */}
-        <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 24px", width: "100%" }}>
-          <div style={{ width: "100%" }}>
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: "space-between", gap: isMobile ? 24 : 0, textAlign: isMobile ? "center" : "left" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: isMobile ? "center" : "flex-start", marginBottom: 6 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 5, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 9, fontWeight: 700, color: "white" }}>tc</span></div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>tutorcard</span>
-                </div>
-                <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0, maxWidth: 280, lineHeight: 1.5 }}>The professional identity platform for tutors. Free to create, easy to share.</p>
-              </div>
-              <div style={{ display: "flex", gap: isMobile ? 32 : 48, marginLeft: isMobile ? 0 : "auto", textAlign: "right" }}>
-                <div>
-                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Platform</p>
-                  {["Create a card", "Log in", "For associations", "For parents"].map(l => <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>)}
-                </div>
-                <div>
-                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Company</p>
-                  {["About", "Blog", "Privacy", "Terms"].map(l => <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>)}
-                </div>
-              </div>
-            </div>
-            <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", justifyContent: "center" }}>
-              <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>© 2026 TutorCard · A StudySpaces product</p>
-            </div>
-          </div>
-        </footer>
+        <HomepageFooter isMobile={isMobile} />
       </div>
     </>
   );
