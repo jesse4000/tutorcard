@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      console.error("Review insert error:", error.message, error.code, error.details);
       return NextResponse.json({ error: "Failed to submit review" }, { status: 500 });
     }
 
