@@ -380,22 +380,6 @@ function ParentReview({
             onBlur={e => { e.target.style.borderColor = "#e5e7eb"; }} />
         </div>
 
-        {/* Live preview */}
-        <div style={{ marginBottom: 20 }}>
-          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Preview</p>
-          <ReviewPreview
-            exam={tutorExam}
-            beforeScore={tutorBefore}
-            afterScore={tutorAfter}
-            timeframe={tutorTimeframe}
-            reviewText={reviewText}
-            stars={stars}
-            sigName={sigName}
-            accent={accent}
-            wide={!isMobile}
-          />
-        </div>
-
         {/* Submit */}
         <button type="submit" disabled={!canSubmit || loading} style={{
           width: "100%", padding: "14px", borderRadius: 14, border: "none",
@@ -425,8 +409,9 @@ interface SubmittedReview {
 }
 
 // ─── SCREEN 2: CONFIRMATION ─────────────────────────────
-function ReviewConfirmation({ tutor, accent }: {
-  tutor: TutorData; accent: string;
+function ReviewConfirmation({ tutor, accent, submittedReview, prefill, isMobile }: {
+  tutor: TutorData; accent: string; submittedReview: SubmittedReview;
+  prefill: ReviewFlowProps["prefill"]; isMobile: boolean;
 }) {
   const t = textOnAccent(accent);
   const initials = `${tutor.firstName[0] || ""}${tutor.lastName[0] || ""}`.toUpperCase();
@@ -452,6 +437,21 @@ function ReviewConfirmation({ tutor, accent }: {
         <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 24px", lineHeight: 1.5 }}>
           Your review has been submitted and will appear on {tutor.firstName}&apos;s TutorCard.
         </p>
+
+        {/* Review preview */}
+        <div style={{ marginBottom: 24, textAlign: "left" }}>
+          <ReviewPreview
+            exam={prefill.exam || ""}
+            beforeScore={prefill.before || ""}
+            afterScore={prefill.after || ""}
+            timeframe={prefill.timeframe || ""}
+            reviewText={submittedReview.quote}
+            stars={submittedReview.rating}
+            sigName={submittedReview.reviewerName}
+            accent={accent}
+            wide={!isMobile}
+          />
+        </div>
 
         <div style={{
           display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
@@ -536,10 +536,13 @@ export default function ReviewFlowClient({
               isMobile={isMobile}
             />
           )}
-          {screen === "confirmation" && (
+          {screen === "confirmation" && submittedReview && (
             <ReviewConfirmation
               tutor={tutor}
               accent={accent}
+              submittedReview={submittedReview}
+              prefill={prefill}
+              isMobile={isMobile}
             />
           )}
         </main>
