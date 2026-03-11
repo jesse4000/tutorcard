@@ -36,6 +36,7 @@ interface DashboardClientProps {
   reviews: ReviewData[];
   vouchers: VoucherData[];
   badges: BadgeData[];
+  inquiryCount: number;
 }
 
 // ─── UTILITIES ──────────────────────────────────────────
@@ -466,8 +467,8 @@ function EmptyState({ icon, title, desc, actionLabel, actionIcon, onAction }: {
 }
 
 // ─── OWNER CARD ─────────────────────────────────────────
-function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, onShare }: {
-  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; onShare: () => void;
+function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, onShare }: {
+  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; onShare: () => void;
 }) {
   const t = toac(accent);
   const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
@@ -501,6 +502,9 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, onSh
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 12.5 }}>
             <Icon name="star" size={11} style={{ color: "#f59e0b" }} /><span style={{ fontWeight: 600, color: "#111" }}>{averageRating != null ? averageRating.toFixed(1) : "-"}</span><span style={{ color: "#9ca3af" }}>({reviewCount})</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 12.5 }}>
+            <Icon name="mail" size={12} style={{ color: "#6b7280" }} /><span style={{ fontWeight: 600, color: "#111" }}>{inquiryCount}</span><span style={{ color: "#9ca3af" }}>{inquiryCount === 1 ? "inquiry" : "inquiries"}</span>
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 5, marginTop: 12 }}>
@@ -806,6 +810,7 @@ export default function DashboardClient({
   reviews,
   vouchers,
   badges,
+  inquiryCount,
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
@@ -917,7 +922,7 @@ export default function DashboardClient({
         <main style={{ flex: 1 }}>
           {isMobile ? (
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
-              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} onShare={() => setPopup("share")} />
+              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
                 <TabContent tab={tab} wide={false} reviews={reviews} vouchers={vouchers} badges={badges}
@@ -929,7 +934,7 @@ export default function DashboardClient({
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
               <div style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
-                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} onShare={() => setPopup("share")} />
+                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>

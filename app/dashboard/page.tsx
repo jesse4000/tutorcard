@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const tutor = tutors?.[0] || null;
 
   if (!tutor) {
-    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} />;
+    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} />;
   }
 
   // Parallel data fetching (same pattern as [slug]/page.tsx)
@@ -35,6 +35,7 @@ export default async function DashboardPage() {
     { data: reviewsRaw },
     { data: badgesRaw },
     { data: vouchesRaw },
+    { count: inquiryCount },
   ] = await Promise.all([
     supabase
       .from("vouches")
@@ -55,6 +56,10 @@ export default async function DashboardPage() {
       .select("id, voucher:tutors!voucher_tutor_id(id, first_name, last_name, slug, title, avatar_color, profile_image_url)")
       .eq("vouched_tutor_id", tutor.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("inquiries")
+      .select("id", { count: "exact", head: true })
+      .eq("tutor_id", tutor.id),
   ]);
 
   // Map reviews
@@ -109,6 +114,7 @@ export default async function DashboardPage() {
       reviews={reviews}
       vouchers={vouchers}
       badges={badges}
+      inquiryCount={inquiryCount ?? 0}
     />
   );
 }
