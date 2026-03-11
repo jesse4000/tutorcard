@@ -244,8 +244,33 @@ async function seedVouches() {
   console.log(`  Inserted ${vouches.length} vouches`);
 }
 
+async function seedInviteCodes() {
+  console.log("Seeding invite codes...");
+  const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const genCode = () => {
+    let r = "";
+    for (let i = 0; i < 6; i++) r += CHARS[Math.floor(Math.random() * CHARS.length)];
+    return "TC-" + r;
+  };
+
+  for (const userId of MOCK_USER_IDS) {
+    const codes = Array.from({ length: 5 }, () => ({
+      code: genCode(),
+      owner_id: userId,
+    }));
+    const { error } = await supabase.from("invite_codes").insert(codes);
+    if (error && error.code !== "23505") {
+      console.error(`  Failed to seed codes for ${userId}:`, error.message);
+    }
+  }
+  console.log(`  Generated codes for ${MOCK_USER_IDS.length} users`);
+}
+
 async function clean() {
   console.log("Cleaning mock data...");
+
+  console.log("  Removing invite codes...");
+  await supabase.from("invite_codes").delete().in("owner_id", MOCK_USER_IDS);
 
   console.log("  Removing vouches...");
   await supabase.from("vouches").delete().in("voucher_tutor_id", MOCK_TUTOR_IDS);
@@ -272,6 +297,7 @@ async function seed() {
     process.exit(1);
   }
   await seedVouches();
+  await seedInviteCodes();
   console.log("\nSeed complete!");
 }
 

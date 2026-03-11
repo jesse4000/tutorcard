@@ -109,8 +109,10 @@ export async function POST(request: Request) {
     }
 
     // Generate invite codes for the new user and claim the provided code
+    let codesGenerated = false;
     try {
       await generateCodesForUser(user.id);
+      codesGenerated = true;
       if (body.inviteCode) {
         const fullName = `${firstName.trim()} ${(lastName || "").trim()}`.trim();
         await claimInviteCode(body.inviteCode, user.id, fullName, cleanSlug);
@@ -119,7 +121,7 @@ export async function POST(request: Request) {
       console.error("Invite code processing error:", e);
     }
 
-    return NextResponse.json({ success: true, tutor: data });
+    return NextResponse.json({ success: true, tutor: data, codesGenerated });
   } catch {
     return NextResponse.json(
       { error: "Invalid request" },

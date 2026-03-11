@@ -115,7 +115,9 @@ export default async function DashboardPage() {
   if (!inviteCodesRaw || inviteCodesRaw.length === 0) {
     try {
       await generateCodesForUser(user.id);
-      const result = await supabase
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+      const result = await admin
         .from("invite_codes")
         .select("id, code, claimed, claimed_name, claimed_slug")
         .eq("owner_id", user.id)
