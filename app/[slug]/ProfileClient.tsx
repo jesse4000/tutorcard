@@ -255,7 +255,15 @@ export default function ProfileClient({
             <p style={labelStyle}>Badges ({badges.length})</p>
           </div>
           {badges.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "20px 0" }}>No badges yet.</p>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 24px", textAlign: "center" }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <Icon name="clock" size={24} style={{ color: "#d1d5db" }} />
+              </div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111", margin: "0 0 6px" }}>Coming soon</h3>
+              <p style={{ fontSize: 13.5, color: "#9ca3af", margin: 0, maxWidth: 320, lineHeight: 1.5 }}>
+                Verified badges for memberships and certifications are on the way.
+              </p>
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {badges.map((b) => (
