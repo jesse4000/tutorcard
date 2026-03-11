@@ -164,6 +164,7 @@ export default async function ProfilePage({ params }: PageProps) {
       hasVouched={hasVouched}
       currentTutorId={currentTutorId}
       viewedTutorId={tutor.id}
+      isLoggedIn={!!user}
       averageRating={averageRating}
       reviewCount={reviews.length}
       reviews={reviews}

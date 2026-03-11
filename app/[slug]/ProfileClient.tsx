@@ -21,6 +21,7 @@ interface ProfileClientProps {
   hasVouched: boolean;
   currentTutorId: string | null;
   viewedTutorId: string;
+  isLoggedIn?: boolean;
   averageRating: number | null;
   reviewCount: number;
   reviews: ReviewData[];
@@ -34,6 +35,7 @@ export default function ProfileClient({
   hasVouched,
   currentTutorId,
   viewedTutorId,
+  isLoggedIn,
   averageRating,
   reviewCount,
   reviews,
@@ -261,7 +263,7 @@ export default function ProfileClient({
 
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
         {/* Header */}
-        <HomepageHeader isMobile={isMobile} />
+        <HomepageHeader isMobile={isMobile} isLoggedIn={isLoggedIn} />
 
         {/* Content */}
         <main style={{ flex: 1 }}>
