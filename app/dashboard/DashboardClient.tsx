@@ -375,8 +375,8 @@ function VouchRequestPopup({ onClose, slug }: { onClose: () => void; slug: strin
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
-  const vouchUrl = typeof window !== "undefined" ? `${window.location.origin}/${slug}/vouch` : `/${slug}/vouch`;
-  const displayUrl = `tutorcard.co/${slug}/vouch`;
+  const vouchUrl = typeof window !== "undefined" ? `${window.location.origin}/vouch/${slug}` : `/vouch/${slug}`;
+  const displayUrl = `tutorcard.co/vouch/${slug}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(vouchUrl);
@@ -436,7 +436,7 @@ function VouchRequestPopup({ onClose, slug }: { onClose: () => void; slug: strin
         }}><Icon name={copied ? "check" : "copy"} size={14} />{copied ? "Copied!" : "Copy"}</button>
       </div>
       <p style={{ fontSize: 12, color: "#9ca3af", margin: "10px 0 0", lineHeight: 1.45 }}>
-        Share this link via text, LinkedIn DM, or in a tutoring group. They don&apos;t need a TutorCard account to vouch.
+        Share this link via text, LinkedIn DM, or in a tutoring group. They&apos;ll be guided through creating a card if they don&apos;t have one yet.
       </p>
     </Modal>
   );
