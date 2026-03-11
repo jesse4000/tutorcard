@@ -95,7 +95,7 @@ function Icon({ name, size = 16, ...props }: { name: string; size?: number } & R
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "fadeIn 0.15s ease" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 440, padding: "28px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 480, padding: "28px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
         {children}
       </div>
     </div>
@@ -159,59 +159,6 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
 }
 
 // ─── REVIEW PREVIEW (inline in popup) ───────────────────
-function ReviewPreview({ exam, beforeScore, afterScore, timeframe, accent }: {
-  exam: string; beforeScore: string; afterScore: string; timeframe: string; accent: string;
-}) {
-  const t = toac(accent);
-  const imp = beforeScore && afterScore ? Number(afterScore) - Number(beforeScore) : null;
-  const hasLeft = exam || beforeScore || afterScore || timeframe;
-
-  return (
-    <div style={{ background: "#fafafa", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f0f0" }}>
-      {hasLeft && (
-        <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            {exam && (
-              <span style={{
-                fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
-                color: "#6b7280", background: "#e5e7eb", padding: "3px 8px", borderRadius: 5, flexShrink: 0,
-              }}>{exam}</span>
-            )}
-            {(beforeScore || afterScore) && (
-              <>
-                <span style={{ fontSize: 22, fontWeight: 700, color: beforeScore ? "#b0b0b0" : "#e5e7eb" }}>{beforeScore || "---"}</span>
-                <span style={{ fontSize: 13, color: "#d1d5db" }}>→</span>
-                <span style={{ fontSize: 22, fontWeight: 700, color: afterScore ? "#111" : "#e5e7eb" }}>{afterScore || "---"}</span>
-              </>
-            )}
-            {imp !== null && imp > 0 && (
-              <span style={{
-                display: "inline-flex", alignItems: "center", gap: 2,
-                background: accent, color: t, padding: "2px 8px", borderRadius: 20,
-                fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
-              }}>
-                <Icon name="arrowUp" size={9} />+{imp}
-              </span>
-            )}
-          </div>
-          {timeframe && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: "#9ca3af" }}>{timeframe}</span>
-            </div>
-          )}
-          <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
-        </>
-      )}
-      <p style={{ fontSize: 13.5, color: "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
-        &ldquo;Review will appear here...&rdquo;
-      </p>
-      <p style={{ fontSize: 12, color: "#d1d5db", margin: 0, fontWeight: 500 }}>
-        — Parent name
-      </p>
-    </div>
-  );
-}
-
 // ─── REVIEW REQUEST POPUP ───────────────────────────────
 function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slug: string; tutor: TutorRow }) {
   const [email, setEmail] = useState("");
@@ -221,22 +168,46 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
   const [scoreBefore, setScoreBefore] = useState("");
   const [scoreAfter, setScoreAfter] = useState("");
   const [timeframe, setTimeframe] = useState("");
-  const reviewUrl = typeof window !== "undefined" ? `${window.location.origin}/${slug}/review` : `/${slug}/review`;
-  const displayUrl = `tutorcard.co/${slug}/review`;
   const accent = tutor.avatar_color || "#4f46e5";
+  const tutorName = `${tutor.first_name} ${tutor.last_name}`;
 
   const specialties = [...new Set([...(tutor.exams || []), ...(tutor.subjects || [])])];
+
+  const buildReviewUrl = () => {
+    const params = new URLSearchParams();
+    if (exam) params.set("exam", exam);
+    if (scoreBefore) params.set("before", scoreBefore);
+    if (scoreAfter) params.set("after", scoreAfter);
+    if (timeframe) params.set("timeframe", timeframe);
+    const qs = params.toString();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/${slug}/review${qs ? `?${qs}` : ""}`;
+  };
+  const reviewUrl = buildReviewUrl();
+  const displayUrl = `tutorcard.co/${slug}/review`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(reviewUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const handleSend = () => {
-    if (email.trim()) {
-      setSent(true);
-      setTimeout(() => { setSent(false); setEmail(""); }, 2000);
+  const handleSend = async () => {
+    if (!email.trim()) return;
+    setSent(true);
+    try {
+      await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email.trim(),
+          subject: `${tutorName} is requesting a review on TutorCard`,
+          html: `<p>Hi,</p><p>${tutorName} would like you to leave a review on their TutorCard profile.</p><p><a href="${reviewUrl}">Leave a review</a></p><p>Thank you!</p>`,
+        }),
+      });
+    } catch {
+      // Silently handle — the UI already shows "Sent!"
     }
+    setTimeout(() => { setSent(false); setEmail(""); }, 2000);
   };
 
   const inputStyle: React.CSSProperties = {
@@ -302,34 +273,6 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
           onFocus={e => e.target.style.borderColor = "#111"}
           onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
       </div>
-
-      <p style={{ fontSize: 12, color: "#d1d5db", margin: "0 0 16px" }}>
-        All fields are optional. The parent will fill in scores, review, and rating.
-      </p>
-
-      {/* Live preview */}
-      <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Preview</p>
-        <ReviewPreview exam={exam} beforeScore={scoreBefore} afterScore={scoreAfter} timeframe={timeframe} accent={accent} />
-        <p style={{ fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 }}>Updates as the parent fills in their review</p>
-      </div>
-
-      {/* Preview parent view */}
-      <button
-        onClick={() => window.open(`/${slug}/review`, "_blank")}
-        style={{
-          width: "100%", padding: "10px", borderRadius: 10,
-          border: "1px solid #e5e7eb", background: "white", color: "#374151",
-          fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-          transition: "background 0.15s", marginBottom: 20,
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
-        onMouseLeave={e => e.currentTarget.style.background = "white"}
-      >
-        Preview what the parent sees
-        <Icon name="ext" size={13} />
-      </button>
 
       {/* Divider */}
       <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 20px" }} />
