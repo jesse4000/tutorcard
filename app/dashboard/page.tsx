@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { generateCodesForUser } from "@/lib/inviteCodes";
+import { createAdminClient } from "@/lib/supabase/admin";
 import DashboardClient from "./DashboardClient";
 import type { ReviewData, VoucherData, BadgeData } from "../[slug]/types";
 
@@ -105,18 +106,18 @@ export default async function DashboardPage() {
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null;
 
-  // Fetch invite codes (auto-generate for existing users who have none)
-  let { data: inviteCodesRaw } = await supabase
+  // Fetch invite codes using admin client to bypass RLS issues in server components
+  const admin = createAdminClient();
+  let { data: inviteCodesRaw } = await admin
     .from("invite_codes")
     .select("id, code, claimed, claimed_name, claimed_slug")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true });
 
+  // Auto-generate codes for existing users who have none
   if (!inviteCodesRaw || inviteCodesRaw.length === 0) {
     try {
       await generateCodesForUser(user.id);
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const admin = createAdminClient();
       const result = await admin
         .from("invite_codes")
         .select("id, code, claimed, claimed_name, claimed_slug")
