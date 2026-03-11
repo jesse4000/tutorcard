@@ -97,14 +97,6 @@ export default function ProfileClient({
   }
 
   // Compute tab stats
-  const reviewsWithScores = reviews.filter((r) => r.scoreBefore && r.scoreAfter);
-  const avgImp =
-    reviewsWithScores.length > 0
-      ? Math.round(
-          reviewsWithScores.reduce((s, r) => s + (Number(r.scoreAfter) - Number(r.scoreBefore)), 0) /
-            reviewsWithScores.length
-        )
-      : 0;
   const avgRat = averageRating != null ? averageRating.toFixed(1) : null;
   const wide = !isMobile;
 
@@ -123,68 +115,46 @@ export default function ProfileClient({
         <>
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: wide ? 0 : 8 }}>
-              <p style={labelStyle}>Reviews ({reviews.length})</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {!isOwnCard && (
-                <button
-                  onClick={() => setShowReview(true)}
-                  style={{
-                    padding: "4px 12px",
-                    borderRadius: 20,
-                    border: "none",
-                    background: accent,
-                    color: accentText,
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    transition: "opacity 0.15s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon name="star" size={11} />
-                  Leave a review
-                </button>
-              )}
-              {wide && reviews.length > 0 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  {avgImp > 0 && (
-                    <>
-                      <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg improvement</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>+{avgImp} pts</span>
-                      <span style={{ color: "#e5e7eb" }}>·</span>
-                    </>
-                  )}
-                  {avgRat && (
-                    <>
-                      <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg rating</span>
-                      <Icon name="star" size={10} style={{ color: "#f59e0b" }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{avgRat}</span>
-                    </>
-                  )}
+              <p style={{ ...labelStyle, flex: 1 }}>Reviews ({reviews.length})</p>
+              {wide && reviews.length > 0 && avgRat && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg rating</span>
+                  <Icon name="star" size={10} style={{ color: "#f59e0b" }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{avgRat}</span>
                 </div>
               )}
+              <div style={{ flex: wide ? 1 : 0, display: "flex", justifyContent: "flex-end" }}>
+                {!isOwnCard && (
+                  <button
+                    onClick={() => setShowReview(true)}
+                    style={{
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      border: "none",
+                      background: accent,
+                      color: accentText,
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      transition: "opacity 0.15s",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon name="star" size={11} />
+                    Leave a review
+                  </button>
+                )}
               </div>
             </div>
-            {!wide && reviews.length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {avgImp > 0 && (
-                  <>
-                    <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg improvement</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: accent }}>+{avgImp} pts</span>
-                    <span style={{ color: "#e5e7eb" }}>·</span>
-                  </>
-                )}
-                {avgRat && (
-                  <>
-                    <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg rating</span>
-                    <Icon name="star" size={10} style={{ color: "#f59e0b" }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{avgRat}</span>
-                  </>
-                )}
+            {!wide && reviews.length > 0 && avgRat && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>Avg rating</span>
+                <Icon name="star" size={10} style={{ color: "#f59e0b" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#111" }}>{avgRat}</span>
               </div>
             )}
           </div>
