@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tutor not found" }, { status: 404 });
     }
 
-    const { error } = await supabase.from("reviews").insert({
+    const row: Record<string, unknown> = {
       tutor_id: tutorId,
       reviewer_name: reviewerName.trim(),
       reviewer_role: reviewerRole || null,
@@ -50,9 +50,20 @@ export async function POST(request: Request) {
       months: months || null,
       rating,
       quote: trimmedQuote,
-      reviewer_email: reviewerEmail || null,
-      recommends: typeof recommends === "boolean" ? recommends : null,
-    });
+    };
+
+    // Optional columns (added via migration — may not exist on older schemas)
+    if (reviewerEmail) row.reviewer_email = reviewerEmail.trim();
+    if (typeof recommends === "boolean") row.recommends = recommends;
+
+    let { error } = await supabase.from("reviews").insert(row);
+
+    // Retry without optional columns if they don't exist yet
+    if (error && error.message?.includes("column")) {
+      delete row.reviewer_email;
+      delete row.recommends;
+      ({ error } = await supabase.from("reviews").insert(row));
+    }
 
     if (error) {
       console.error("Review insert error:", error.message, error.code, error.details);
