@@ -648,6 +648,7 @@ h2 {
 
 /* ── FOOTER ── */
 footer {
+  width: 100%;
   border-top: 1px solid var(--border);
   padding: 22px 36px;
   display: flex;
