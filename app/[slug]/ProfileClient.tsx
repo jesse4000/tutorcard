@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { TutorData } from "@/components/TutorCard";
 import type { ReviewData, VoucherData, BadgeData } from "./types";
@@ -50,6 +50,16 @@ export default function ProfileClient({
   const [localVouched, setLocalVouched] = useState(hasVouched);
   const [localVouchCount, setLocalVouchCount] = useState(vouchCount);
   const [isVouching, setIsVouching] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setCardHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 800);
@@ -286,7 +296,7 @@ export default function ProfileClient({
             </div>
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
-              <div style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
+              <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
                 <ProfileCard
                   tutor={tutor}
                   accent={accent}
@@ -299,9 +309,11 @@ export default function ProfileClient({
                 />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
+                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", height: cardHeight, display: "flex", flexDirection: "column" as const, overflow: "hidden" }}>
                   <TabBar tab={tab} setTab={setTab} accent={accent} reviewCount={reviews.length} vouchCount={localVouchCount} badgeCount={badges.length} />
-                  {renderTabContent()}
+                  <div style={{ flex: 1, overflowY: "auto" as const, minHeight: 0 }}>
+                    {renderTabContent()}
+                  </div>
                 </div>
               </div>
             </div>
