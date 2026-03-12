@@ -285,7 +285,7 @@ export default function ProfileClient({
                 vouchCount={localVouchCount}
                 averageRating={averageRating}
                 reviewCount={reviewCount}
-                featuredReview={reviews[0] || null}
+                featuredReview={reviews.find(r => r.isPinned) || null}
                 firstBadge={badges[0] || null}
                 onMessage={() => setShowInquiry(true)}
               />
@@ -303,7 +303,7 @@ export default function ProfileClient({
                   vouchCount={localVouchCount}
                   averageRating={averageRating}
                   reviewCount={reviewCount}
-                  featuredReview={reviews[0] || null}
+                  featuredReview={reviews.find(r => r.isPinned) || null}
                   firstBadge={badges[0] || null}
                   onMessage={() => setShowInquiry(true)}
                 />

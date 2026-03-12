@@ -95,6 +95,7 @@ const iconPaths: Record<string, React.ReactNode> = {
   gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
   ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
   flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></>,
+  pin: <><path d="M12 17v5"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></>,
   download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
 };
 
@@ -318,7 +319,7 @@ function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe }: {
     <div style={{ background: "#fafafa", borderRadius: 14, padding: "16px 18px", border: "1px solid #f0f0f0" }}>
       {hasLeft && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: timeframe ? 4 : 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             {exam && (
               <span style={{
                 fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
@@ -336,17 +337,17 @@ function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe }: {
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 2,
                 background: "#059669", color: "white", padding: "2px 8px", borderRadius: 20,
-                fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
+                fontSize: 10.5, fontWeight: 700, flexShrink: 0,
               }}>
                 <Icon name="arrowUp" size={9} />+{imp}
               </span>
             )}
+            {timeframe && (
+              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                {timeframe}
+              </span>
+            )}
           </div>
-          {timeframe && (
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
-              {timeframe}
-            </div>
-          )}
           <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
         </>
       )}
@@ -806,10 +807,10 @@ function TabBar({ tab, setTab }: { tab: string; setTab: (t: string) => void }) {
 }
 
 // ─── TAB CONTENT ────────────────────────────────────────
-function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport }: {
+function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport, onPin }: {
   tab: string; wide: boolean;
   reviews: ReviewData[]; vouchers: VoucherData[]; badges: BadgeData[];
-  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void;
+  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void;
 }) {
   const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: 0 };
 
@@ -846,7 +847,7 @@ function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onV
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {reviews.map(r => (
-                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} />
+                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} onPin={onPin} />
               ))}
             </div>
           )}
@@ -936,10 +937,11 @@ function ReportStatusBadge({ status }: { status: string }) {
 }
 
 // ─── REVIEW ROW ─────────────────────────────────────────
-function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void }) {
+function ReviewRow({ review, wide, onReport, onPin }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void }) {
   const hasScores = review.scoreBefore && review.scoreAfter;
   const imp = hasScores ? Number(review.scoreAfter) - Number(review.scoreBefore) : null;
   const [hoverReport, setHoverReport] = useState(false);
+  const [hoverPin, setHoverPin] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [clamped, setClamped] = useState(false);
   const quoteRef = useRef<HTMLParagraphElement>(null);
@@ -980,7 +982,7 @@ function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boole
       {/* Top section: exam tag, scores, improvement badge */}
       {(review.exam || hasScores) && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: review.months ? 4 : 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
             {review.exam && (
               <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
             )}
@@ -993,16 +995,16 @@ function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boole
               </>
             )}
             {imp != null && imp > 0 && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
                 <Icon name="arrowUp" size={9} />+{imp}
               </span>
             )}
+            {review.months && (
+              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                {review.months} months
+              </span>
+            )}
           </div>
-          {review.months && (
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
-              {review.months} months
-            </div>
-          )}
           <div style={{ height: 1, background: "#ebebeb", marginBottom: 10 }} />
         </>
       )}
@@ -1036,19 +1038,34 @@ function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boole
             ))}
           </div>
           {!rs && (
-            <button
-              onClick={() => onReport(review)}
-              onMouseEnter={() => setHoverReport(true)}
-              onMouseLeave={() => setHoverReport(false)}
-              style={{
-                display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
-                color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
-                marginLeft: 8,
-              }}
-            >
-              <Icon name="flag" size={11} />Report
-            </button>
+            <>
+              <button
+                onClick={() => onPin(review)}
+                onMouseEnter={() => setHoverPin(true)}
+                onMouseLeave={() => setHoverPin(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+                  color: review.isPinned ? "#111" : hoverPin ? "#111" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+                  marginLeft: 8,
+                }}
+              >
+                <Icon name="pin" size={11} />{review.isPinned ? "Pinned" : "Pin"}
+              </button>
+              <button
+                onClick={() => onReport(review)}
+                onMouseEnter={() => setHoverReport(true)}
+                onMouseLeave={() => setHoverReport(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+                  color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+                  marginLeft: 8,
+                }}
+              >
+                <Icon name="flag" size={11} />Report
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -1318,10 +1335,32 @@ export default function DashboardClient({
     setPopup("reportConfirmed");
   };
 
+  const [localPinId, setLocalPinId] = useState<string | null>(() => {
+    const pinned = reviews.find(r => r.isPinned);
+    return pinned ? pinned.id : null;
+  });
+
+  const handlePin = async (review: ReviewData) => {
+    const prevPinId = localPinId;
+    const newPinId = localPinId === review.id ? null : review.id;
+    setLocalPinId(newPinId);
+    try {
+      const res = await fetch("/api/reviews/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: review.id }),
+      });
+      if (!res.ok) setLocalPinId(prevPinId);
+    } catch {
+      setLocalPinId(prevPinId);
+    }
+  };
+
   // Merge server report statuses with local (optimistic) ones
   const reviewsWithReportStatus = reviews.map(r => ({
     ...r,
     reportStatus: (localReportStatuses[r.id] || r.reportStatus) as ReviewData["reportStatus"],
+    isPinned: localPinId === r.id,
   }));
 
   // No tutor — empty state
@@ -1431,6 +1470,7 @@ export default function DashboardClient({
                   onReviewRequest={() => setPopup("review")}
                   onVouchRequest={() => setPopup("vouch")}
                   onReport={handleReport}
+                  onPin={handlePin}
                 />
               </div>
             </div>
@@ -1447,6 +1487,7 @@ export default function DashboardClient({
                       onReviewRequest={() => setPopup("review")}
                       onVouchRequest={() => setPopup("vouch")}
                       onReport={handleReport}
+                      onPin={handlePin}
                     />
                   </div>
                 </div>

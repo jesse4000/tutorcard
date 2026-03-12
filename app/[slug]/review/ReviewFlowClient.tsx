@@ -68,7 +68,7 @@ function ReviewPreview({
       {/* Top section: exam, scores, improvement, timeframe */}
       {hasTop && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: timeframe ? 4 : 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             {exam && (
               <span style={{
                 fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
@@ -86,17 +86,17 @@ function ReviewPreview({
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 2,
                 background: accent, color: t, padding: "2px 8px", borderRadius: 20,
-                fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
+                fontSize: 10.5, fontWeight: 700, flexShrink: 0,
               }}>
                 <Icon name="arrowUp" size={9} />+{imp}
               </span>
             )}
+            {timeframe && (
+              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                {timeframe}
+              </span>
+            )}
           </div>
-          {timeframe && (
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
-              {timeframe}
-            </div>
-          )}
           <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
         </>
       )}
@@ -104,10 +104,7 @@ function ReviewPreview({
       <p style={{ fontSize: 13.5, color: reviewText ? "#374151" : "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
         {reviewText ? `\u201C${reviewText}\u201D` : '\u201CReview will appear here...\u201D'}
       </p>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <p style={{ fontSize: 12, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
-          {"– "}{sigName || "Parent name"}
-        </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         {stars > 0 && (
           <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
             {[1, 2, 3, 4, 5].map(i => (
@@ -115,6 +112,9 @@ function ReviewPreview({
             ))}
           </div>
         )}
+        <p style={{ fontSize: 12, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
+          {"– "}{sigName || "Parent name"}
+        </p>
       </div>
     </div>
   );
@@ -147,10 +147,10 @@ function ParentReview({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const tutorExam = prefill.exam || "";
-  const tutorBefore = prefill.before || "";
-  const tutorAfter = prefill.after || "";
-  const tutorTimeframe = prefill.timeframe || "";
+  const [exam, setExam] = useState(prefill.exam || "");
+  const [beforeScore, setBeforeScore] = useState(prefill.before || "");
+  const [afterScore, setAfterScore] = useState(prefill.after || "");
+  const [timeframe, setTimeframe] = useState(prefill.timeframe || "");
 
   const canSubmit = stars > 0 && sigName.trim() && sigEmail.trim();
 
@@ -179,17 +179,17 @@ function ParentReview({
           reviewerRole: null,
           reviewerEmail: sigEmail.trim(),
           recommends: recommend,
-          exam: tutorExam || null,
-          scoreBefore: tutorBefore || null,
-          scoreAfter: tutorAfter || null,
-          months: tutorTimeframe ? parseMonths(tutorTimeframe) : null,
+          exam: exam || null,
+          scoreBefore: beforeScore || null,
+          scoreAfter: afterScore || null,
+          months: timeframe ? parseMonths(timeframe) : null,
           rating: stars,
           quote: reviewText.trim(),
         }),
       });
 
       if (res.ok) {
-        onSubmit({ reviewerName: sigName.trim(), rating: stars, quote: reviewText.trim(), recommends: recommend });
+        onSubmit({ reviewerName: sigName.trim(), rating: stars, quote: reviewText.trim(), recommends: recommend, exam, beforeScore, afterScore, timeframe });
       } else {
         const data = await res.json();
         setError(data.error || "Something went wrong. Please try again.");
@@ -251,6 +251,48 @@ function ParentReview({
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* Exam / subject */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+            Exam or subject <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+          </label>
+          <input value={exam} onChange={e => setExam(e.target.value)}
+            placeholder="e.g. SAT, AP Biology, Algebra" style={inputStyle}
+            onFocus={e => { e.target.style.borderColor = "#111"; }}
+            onBlur={e => { e.target.style.borderColor = "#e5e7eb"; }} />
+        </div>
+
+        {/* Score improvement */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+            Score / grade improvement <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <input value={beforeScore} onChange={e => setBeforeScore(e.target.value)}
+              placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+              onFocus={e => { e.target.style.borderColor = "#111"; }}
+              onBlur={e => { e.target.style.borderColor = "#e5e7eb"; }} />
+            <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>{"\u2192"}</span>
+            <input value={afterScore} onChange={e => setAfterScore(e.target.value)}
+              placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+              onFocus={e => { e.target.style.borderColor = "#111"; }}
+              onBlur={e => { e.target.style.borderColor = "#e5e7eb"; }} />
+          </div>
+        </div>
+
+        {/* Timeframe */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+            Timeframe <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+          </label>
+          <input value={timeframe} onChange={e => setTimeframe(e.target.value)}
+            placeholder="e.g. 4 months" style={inputStyle}
+            onFocus={e => { e.target.style.borderColor = "#111"; }}
+            onBlur={e => { e.target.style.borderColor = "#e5e7eb"; }} />
+        </div>
+
+        <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 16px" }} />
+
         {/* Review text */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Your experience</label>
@@ -338,12 +380,16 @@ interface SubmittedReview {
   rating: number;
   quote: string;
   recommends?: boolean;
+  exam?: string;
+  beforeScore?: string;
+  afterScore?: string;
+  timeframe?: string;
 }
 
 // ─── SCREEN 2: CONFIRMATION ─────────────────────────────
-function ReviewConfirmation({ tutor, accent, submittedReview, prefill, isMobile }: {
+function ReviewConfirmation({ tutor, accent, submittedReview, isMobile }: {
   tutor: TutorData; accent: string; submittedReview: SubmittedReview;
-  prefill: ReviewFlowProps["prefill"]; isMobile: boolean;
+  isMobile: boolean;
 }) {
   const t = textOnAccent(accent);
   const initials = `${tutor.firstName[0] || ""}${tutor.lastName[0] || ""}`.toUpperCase();
@@ -373,10 +419,10 @@ function ReviewConfirmation({ tutor, accent, submittedReview, prefill, isMobile 
         {/* Review preview */}
         <div style={{ marginBottom: 24, textAlign: "left" }}>
           <ReviewPreview
-            exam={prefill.exam || ""}
-            beforeScore={prefill.before || ""}
-            afterScore={prefill.after || ""}
-            timeframe={prefill.timeframe || ""}
+            exam={submittedReview.exam || ""}
+            beforeScore={submittedReview.beforeScore || ""}
+            afterScore={submittedReview.afterScore || ""}
+            timeframe={submittedReview.timeframe || ""}
             reviewText={submittedReview.quote}
             stars={submittedReview.rating}
             sigName={submittedReview.reviewerName}
@@ -460,7 +506,6 @@ export default function ReviewFlowClient({
               tutor={tutor}
               accent={accent}
               submittedReview={submittedReview}
-              prefill={prefill}
               isMobile={isMobile}
             />
           )}

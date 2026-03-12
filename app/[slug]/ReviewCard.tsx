@@ -38,7 +38,7 @@ export default function ReviewCard({ review, wide }: ReviewCardProps) {
       {/* Top section: exam tag, scores, improvement badge */}
       {(review.exam || hasScores) && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: review.months ? 4 : 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             {review.exam && (
               <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
             )}
@@ -50,16 +50,16 @@ export default function ReviewCard({ review, wide }: ReviewCardProps) {
               </>
             )}
             {imp != null && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: hasScores && !review.months ? "auto" : undefined }}>
                 <Icon name="arrowUp" size={9} />+{imp}
               </span>
             )}
+            {review.months && (
+              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                {review.months} months
+              </span>
+            )}
           </div>
-          {review.months && (
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
-              {review.months} months
-            </div>
-          )}
           <div style={{ height: 1, background: "#ebebeb", marginBottom: 10 }} />
         </>
       )}
@@ -80,15 +80,15 @@ export default function ReviewCard({ review, wide }: ReviewCardProps) {
           {expanded ? "show less" : "show more"}
         </button>
       )}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <p style={{ fontSize: wide ? 12 : 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>
-          — {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}
-        </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
           {Array.from({ length: 5 }).map((_, i) => (
             <Icon key={i} name="star" size={10} style={{ color: i < review.rating ? "#f59e0b" : "#e5e7eb" }} />
           ))}
         </div>
+        <p style={{ fontSize: wide ? 12 : 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>
+          — {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}
+        </p>
       </div>
     </div>
   );

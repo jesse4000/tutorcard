@@ -102,6 +102,7 @@ export default async function DashboardPage() {
     rating: r.rating as number,
     quote: r.quote as string,
     reportStatus: (reportStatusMap[r.id as string] as ReviewData["reportStatus"]) || undefined,
+    isPinned: (r.is_pinned as boolean) || false,
   }));
 
   // Map badges

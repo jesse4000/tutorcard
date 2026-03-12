@@ -11,6 +11,7 @@ export interface ReviewData {
   recommends?: boolean;
   reviewerEmail?: string;
   reportStatus?: "pending" | "responded" | "revoked" | "denied";
+  isPinned?: boolean;
 }
 
 export interface VoucherData {
