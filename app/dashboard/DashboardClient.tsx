@@ -1326,7 +1326,7 @@ export default function DashboardClient({
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
           * { box-sizing: border-box; }
         `}</style>
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
           <header style={{ background: "white", borderBottom: "1px solid #f3f4f6", padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
               <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1373,7 +1373,7 @@ export default function DashboardClient({
         .action-btn:hover { background: #f9fafb !important; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
         <header style={{
           background: "white", borderBottom: "1px solid #f3f4f6",
           padding: "0 24px", height: 56, display: "flex", alignItems: "center",

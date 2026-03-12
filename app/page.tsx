@@ -167,7 +167,7 @@ export default function TutorCardLanding() {
         .cta-ghost:hover { background: #f3f4f6 !important; }
       `}</style>
 
-      <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111" }}>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100%" }}>
 
         {/* ═══ HEADER ═══ */}
         <HomepageHeader isMobile={isMobile} isLoggedIn={isLoggedIn} />
