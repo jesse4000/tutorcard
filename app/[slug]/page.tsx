@@ -122,6 +122,7 @@ export default async function ProfilePage({ params }: PageProps) {
     months: (r.months as number) || undefined,
     rating: r.rating as number,
     quote: r.quote as string,
+    isPinned: (r.is_pinned as boolean) || false,
   }));
 
   // Map badges

@@ -67,10 +67,7 @@ function ReviewPreview({
       <p style={{ fontSize: 13, color: reviewText ? "#374151" : "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
         {reviewText ? `\u201C${reviewText}\u201D` : '\u201CReview will appear here...\u201D'}
       </p>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <p style={{ fontSize: 11.5, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
-          {"– "}{sigName || "Parent name"}
-        </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         {stars > 0 && (
           <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
             {[1, 2, 3, 4, 5].map(i => (
@@ -78,6 +75,9 @@ function ReviewPreview({
             ))}
           </div>
         )}
+        <p style={{ fontSize: 11.5, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
+          {"– "}{sigName || "Parent name"}
+        </p>
       </div>
     </div>
   );
