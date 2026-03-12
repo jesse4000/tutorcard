@@ -59,7 +59,7 @@ export default async function ProfilePage({ params }: PageProps) {
   // Parallel data fetching
   const [
     { count: vouchCount },
-    { data: reviewsRaw },
+    { data: reviewsRaw, error: reviewsError },
     { data: badgesRaw },
     { data: vouchesRaw },
   ] = await Promise.all([
@@ -71,7 +71,6 @@ export default async function ProfilePage({ params }: PageProps) {
       .from("reviews")
       .select("*")
       .eq("tutor_id", tutor.id)
-      .eq("is_revoked", false)
       .order("created_at", { ascending: false }),
     supabase
       .from("badges")
@@ -106,8 +105,14 @@ export default async function ProfilePage({ params }: PageProps) {
     }
   }
 
-  // Map reviews
-  const reviews: ReviewData[] = (reviewsRaw || []).map((r: Record<string, unknown>) => ({
+  if (reviewsError) {
+    console.error("Failed to fetch reviews:", reviewsError.message);
+  }
+
+  // Map reviews (filter out revoked reviews defensively in JS)
+  const reviews: ReviewData[] = (reviewsRaw || [])
+    .filter((r: Record<string, unknown>) => !r.is_revoked)
+    .map((r: Record<string, unknown>) => ({
     id: r.id as string,
     reviewerName: r.reviewer_name as string,
     reviewerRole: (r.reviewer_role as string) || undefined,
