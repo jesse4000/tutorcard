@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HomepageFooter({ isMobile }: { isMobile: boolean }) {
   return (
-    <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 36px", width: "100%" }}>
+    <footer style={{ background: "white", borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 36px", width: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}>
       <div style={{
         display: "flex", flexDirection: isMobile ? "column" : "row",
         alignItems: isMobile ? "center" : "flex-start",
