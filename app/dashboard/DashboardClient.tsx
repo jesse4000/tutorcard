@@ -1273,12 +1273,22 @@ export default function DashboardClient({
   const [reportingReview, setReportingReview] = useState<ReviewData | null>(null);
   const [localReportStatuses, setLocalReportStatuses] = useState<Record<string, string>>({});
   const [isMobile, setIsMobile] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 800);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setCardHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   async function handleSignOut() {
@@ -1420,17 +1430,19 @@ export default function DashboardClient({
             </div>
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
-              <div style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
+              <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
                 <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
+              <div style={{ flex: 1, minWidth: 0, height: cardHeight, display: "flex", flexDirection: "column" as const }}>
+                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden", minHeight: 0 }}>
                   <TabBar tab={tab} setTab={setTab} />
-                  <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
-                    onReviewRequest={() => setPopup("review")}
-                    onVouchRequest={() => setPopup("vouch")}
-                    onReport={handleReport}
-                  />
+                  <div style={{ flex: 1, overflowY: "auto" as const, minHeight: 0 }}>
+                    <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
+                      onReviewRequest={() => setPopup("review")}
+                      onVouchRequest={() => setPopup("vouch")}
+                      onReport={handleReport}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
