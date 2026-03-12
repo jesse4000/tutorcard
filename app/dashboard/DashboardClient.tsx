@@ -1419,18 +1419,20 @@ export default function DashboardClient({
               </div>
             </div>
           ) : (
-            <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
-              <div style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
+            <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28 }}>
+              <div style={{ flex: "0 0 360px", position: "sticky", top: 88, alignSelf: "flex-start" }}>
                 <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
+              <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", display: "flex", flexDirection: "column" as const, overflow: "hidden" }}>
                   <TabBar tab={tab} setTab={setTab} />
-                  <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
-                    onReviewRequest={() => setPopup("review")}
-                    onVouchRequest={() => setPopup("vouch")}
-                    onReport={handleReport}
-                  />
+                  <div style={{ flex: 1, overflowY: "auto" as const, minHeight: 0 }}>
+                    <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
+                      onReviewRequest={() => setPopup("review")}
+                      onVouchRequest={() => setPopup("vouch")}
+                      onReport={handleReport}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
