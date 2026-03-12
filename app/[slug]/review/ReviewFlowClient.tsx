@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import Icon, { textOnAccent } from "@/app/[slug]/Icon";
 import SimpleHeader from "@/components/SimpleHeader";
 import SimpleFooter from "@/components/SimpleFooter";
@@ -55,84 +54,21 @@ function StarRating({ value, onChange, size = 28 }: { value: number; onChange: (
 
 // ─── LIVE PREVIEW CARD ──────────────────────────────────
 function ReviewPreview({
-  exam, beforeScore, afterScore, timeframe, reviewText, stars, sigName, accent, wide,
+  exam, beforeScore, afterScore, timeframe, reviewText, stars, sigName, accent,
 }: {
   exam: string; beforeScore: string; afterScore: string; timeframe: string;
   reviewText: string; stars: number; sigName: string; accent: string; wide: boolean;
 }) {
   const t = textOnAccent(accent);
   const imp = beforeScore && afterScore ? Number(afterScore) - Number(beforeScore) : null;
-  const hasLeft = exam || beforeScore || afterScore || timeframe;
-
-  const rightContent = (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      <p style={{ fontSize: wide ? 14 : 13, color: reviewText ? "#374151" : "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
-        {reviewText ? `\u201C${reviewText}\u201D` : '\u201CReview will appear here...\u201D'}
-      </p>
-      <p style={{ fontSize: wide ? 12 : 11.5, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
-        {"- "}{sigName || "Parent name"}
-      </p>
-      {stars > 0 && (
-        <div style={{ display: "flex", gap: 1, marginTop: 6 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <Icon key={i} name="star" size={12} style={{ color: stars >= i ? "#f59e0b" : "#d1d5db" }} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const leftContent = hasLeft ? (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      {exam && (
-        <span style={{
-          fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
-          color: "#6b7280", background: "#e5e7eb",
-          padding: "2px 7px", borderRadius: 4, alignSelf: "flex-start",
-          marginBottom: (beforeScore || afterScore) ? 8 : 0,
-        }}>{exam}</span>
-      )}
-      {(beforeScore || afterScore) && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 24, fontWeight: 700, color: beforeScore ? "#b0b0b0" : "#e5e7eb" }}>{beforeScore || "---"}</span>
-          <span style={{ fontSize: 14, color: "#d1d5db" }}>{"\u2192"}</span>
-          <span style={{ fontSize: 24, fontWeight: 700, color: afterScore ? "#111" : "#e5e7eb" }}>{afterScore || "---"}</span>
-        </div>
-      )}
-      {(imp !== null && imp > 0 || timeframe) && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
-          {imp !== null && imp > 0 && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: accent, color: t, padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
-              <Icon name="arrowUp" size={9} />+{imp}
-            </span>
-          )}
-          {timeframe && <span style={{ fontSize: 12, color: "#9ca3af" }}>{timeframe}</span>}
-        </div>
-      )}
-    </div>
-  ) : null;
-
-  if (wide) {
-    return (
-      <div style={{ background: "#fafafa", borderRadius: 14, padding: "18px 22px", border: "1px solid #f0f0f0" }}>
-        <div style={{ display: "flex", gap: 20 }}>
-          {leftContent && (
-            <>
-              <div style={{ flex: "0 0 auto", minWidth: 160 }}>{leftContent}</div>
-              <div style={{ width: 1, background: "#ebebeb", alignSelf: "stretch" }} />
-            </>
-          )}
-          <div style={{ flex: 1 }}>{rightContent}</div>
-        </div>
-      </div>
-    );
-  }
+  const hasTop = exam || beforeScore || afterScore || timeframe;
 
   return (
     <div style={{ background: "#fafafa", borderRadius: 14, padding: "16px 18px", border: "1px solid #f0f0f0" }}>
-      {hasLeft && (
+      {/* Top section: exam, scores, improvement, timeframe */}
+      {hasTop && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: timeframe ? 4 : 10 }}>
             {exam && (
               <span style={{
                 fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
@@ -156,34 +92,30 @@ function ReviewPreview({
               </span>
             )}
           </div>
-          {(timeframe || stars > 0) && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              {timeframe && <span style={{ fontSize: 12, color: "#9ca3af" }}>{timeframe}</span>}
-              {stars > 0 && (
-                <div style={{ display: "flex", gap: 1 }}>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Icon key={i} name="star" size={11} style={{ color: stars >= i ? "#f59e0b" : "#d1d5db" }} />
-                  ))}
-                </div>
-              )}
+          {timeframe && (
+            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
+              {timeframe}
             </div>
           )}
           <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
         </>
       )}
+      {/* Bottom section: quote + reviewer name with stars */}
       <p style={{ fontSize: 13.5, color: reviewText ? "#374151" : "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
         {reviewText ? `\u201C${reviewText}\u201D` : '\u201CReview will appear here...\u201D'}
       </p>
-      <p style={{ fontSize: 12, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
-        {"- "}{sigName || "Parent name"}
-      </p>
-      {!hasLeft && stars > 0 && (
-        <div style={{ display: "flex", gap: 1, marginTop: 6 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <Icon key={i} name="star" size={11} style={{ color: stars >= i ? "#f59e0b" : "#d1d5db" }} />
-          ))}
-        </div>
-      )}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <p style={{ fontSize: 12, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
+          {"– "}{sigName || "Parent name"}
+        </p>
+        {stars > 0 && (
+          <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <Icon key={i} name="star" size={11} style={{ color: stars >= i ? "#f59e0b" : "#d1d5db" }} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -472,19 +404,6 @@ function ReviewConfirmation({ tutor, accent, submittedReview, prefill, isMobile 
           <p style={{ fontSize: 13, fontWeight: 600, color: "#111", margin: 0 }}>{tutor.firstName} {tutor.lastName}</p>
         </div>
 
-        <div>
-          <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 12 }}>Are you a tutor yourself?</p>
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <button style={{
-              padding: "12px 24px", borderRadius: 12, border: "none",
-              background: "#111", color: "white", fontSize: 14, fontWeight: 600,
-              cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              display: "inline-flex", alignItems: "center", gap: 6,
-            }}>
-              Create your own TutorCard <Icon name="arrowRight" size={14} />
-            </button>
-          </Link>
-        </div>
       </div>
     </div>
   );
