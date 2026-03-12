@@ -1234,6 +1234,12 @@ function VouchRow({ vouch, wide }: { vouch: VoucherData; wide: boolean }) {
         <p style={{ fontSize: 14, fontWeight: 600, color: "#111", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</p>
         {vouch.title && <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{vouch.title}</p>}
       </div>
+      <Link
+        href={`/${vouch.slug}`}
+        style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, padding: wide ? "5px 12px" : "4px 10px", borderRadius: 20, background: "white", border: "1px solid #e5e7eb", fontSize: wide ? 12 : 11, fontWeight: 500, color: "#6b7280", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textDecoration: "none", transition: "border-color 0.15s, color 0.15s" }}
+      >
+        View card<Icon name="ext" size={wide ? 11 : 10} />
+      </Link>
     </div>
   );
 }
