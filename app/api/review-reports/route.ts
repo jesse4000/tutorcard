@@ -140,7 +140,8 @@ export async function POST(request: Request) {
       `;
 
       try {
-        const emailUrl = `${request.url.split("/api/")[0]}/api/email`;
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.url.split("/api/")[0];
+      const emailUrl = `${siteUrl}/api/email`;
         await fetch(emailUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -157,7 +158,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, reportId: report.id });
-  } catch {
+  } catch (err) {
+    console.error("Review report submission error:", err);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }

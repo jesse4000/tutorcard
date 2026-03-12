@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import SuperAdminDashboard from "./SuperAdminDashboard";
 
 export const metadata: Metadata = {
@@ -44,6 +45,9 @@ export default async function AdminPage() {
   // Use service role client to bypass RLS (needed for inquiries)
   const admin = createAdminClient();
 
+  // Auto-revoke expired pending reports
+  await autoRevokeExpiredReports(admin);
+
   const [
     { data: tutorsRaw },
     { data: reviewsRaw },
@@ -53,10 +57,10 @@ export default async function AdminPage() {
     { data: reportsRaw },
   ] = await Promise.all([
     admin.from("tutors").select("*"),
-    admin.from("reviews").select("id, tutor_id, created_at"),
-    admin.from("vouches").select("id, vouched_tutor_id, created_at"),
+    admin.from("reviews").select("id, tutor_id, reviewer_name, exam, rating, quote, created_at, is_revoked"),
+    admin.from("vouches").select("id, voucher_tutor_id, vouched_tutor_id, created_at"),
     admin.from("badges").select("id, tutor_id, created_at"),
-    admin.from("inquiries").select("id, tutor_id, created_at"),
+    admin.from("inquiries").select("id, tutor_id, student_name, created_at"),
     admin.from("review_reports").select("id, review_id, tutor_id, reason, reviewer_response, status, created_at, deadline_at, responded_at, resolved_at, resolved_by").order("created_at", { ascending: false }),
   ]);
 
@@ -66,6 +70,11 @@ export default async function AdminPage() {
   const badges = badgesRaw || [];
   const inquiries = inquiriesRaw || [];
   const reports = reportsRaw || [];
+
+  // Log if review_reports query returned null (table may not exist)
+  if (!reportsRaw && tutors.length > 0) {
+    console.warn("Admin: review_reports query returned null — migration may not be applied");
+  }
 
   // --- Stats ---
   const stats = {
@@ -162,8 +171,10 @@ export default async function AdminPage() {
 
     return {
       id: t.id,
+      userId: t.user_id as string,
       name: [t.first_name, t.last_name].filter(Boolean).join(" "),
       headline: t.title || "",
+      email: (t.email as string) || "",
       location,
       specialties: (t.exams as string[]) || [],
       reviews: reviewsByTutor.get(t.id) || 0,
@@ -173,8 +184,81 @@ export default async function AdminPage() {
       status,
       joined: t.created_at,
       slug: t.slug as string,
+      avatarColor: (t.avatar_color as string) || "#111",
+      allLocations: (t.locations as string[]) || [],
+      subjects: (t.subjects as string[]) || [],
+      businessName: (t.business_name as string) || null,
+      yearsExperience: (t.years_experience as number) || null,
+      profileImageUrl: (t.profile_image_url as string) || null,
+      links: (t.links as { label: string; url: string; icon?: string }[]) || [],
+      isSuspended: false, // updated below from auth data
     };
   });
+
+  // --- Fetch auth users to check banned status ---
+  try {
+    const { data: authUsersData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    if (authUsersData?.users) {
+      const bannedSet = new Set(
+        authUsersData.users
+          .filter((u) => u.banned_until && new Date(u.banned_until).getTime() > Date.now())
+          .map((u) => u.id)
+      );
+      for (const row of tutorRows) {
+        if (bannedSet.has(row.userId)) {
+          row.isSuspended = true;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to fetch auth users for ban status:", err);
+  }
+
+  // --- Build recent activity per tutor ---
+  const tutorNameMapById = new Map(tutors.map((t) => [t.id, [t.first_name, t.last_name].filter(Boolean).join(" ")]));
+  const recentActivity: Record<string, {
+    reviews: { reviewerName: string; exam: string | null; rating: number; quote: string; date: string }[];
+    vouches: { voucherName: string; date: string }[];
+    inquiries: { studentName: string | null; date: string }[];
+  }> = {};
+
+  for (const t of tutors) {
+    const tid = t.id as string;
+    // Recent reviews (last 5)
+    const tutorReviews = reviews
+      .filter((r) => r.tutor_id === tid)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5)
+      .map((r) => ({
+        reviewerName: (r.reviewer_name as string) || "Anonymous",
+        exam: (r.exam as string) || null,
+        rating: (r.rating as number) || 0,
+        quote: (r.quote as string) || "",
+        date: r.created_at,
+      }));
+
+    // Recent vouches (last 5)
+    const tutorVouches = vouches
+      .filter((v) => v.vouched_tutor_id === tid)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5)
+      .map((v) => ({
+        voucherName: tutorNameMapById.get(v.voucher_tutor_id as string) || "Unknown",
+        date: v.created_at,
+      }));
+
+    // Recent inquiries (last 5)
+    const tutorInquiries = inquiries
+      .filter((i) => i.tutor_id === tid)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5)
+      .map((i) => ({
+        studentName: (i.student_name as string) || null,
+        date: i.created_at,
+      }));
+
+    recentActivity[tid] = { reviews: tutorReviews, vouches: tutorVouches, inquiries: tutorInquiries };
+  }
 
   // --- Dynamic filter lists ---
   const allLocations = new Set<string>();
@@ -235,6 +319,7 @@ export default async function AdminPage() {
       locations={Array.from(allLocations).sort()}
       exams={Array.from(allExams).sort()}
       reviewReports={reviewReports}
+      recentActivity={recentActivity}
     />
   );
 }
