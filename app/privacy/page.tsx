@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import HomepageFooter from "@/components/HomepageFooter";
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: any }) => {
   const d: Record<string, React.ReactNode> = {
     plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
@@ -90,28 +91,7 @@ export default function PrivacyPolicy() {
             </div>
           </div>
         </main>
-        {/* Footer */}
-        <footer style={{ borderTop: "1px solid #f3f4f6", padding: isMobile ? "32px 20px" : "40px 32px" }}>
-          <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "center" : "flex-start", justifyContent: "space-between", gap: isMobile ? 24 : 0, textAlign: isMobile ? "center" : "left" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: isMobile ? "center" : "flex-start", marginBottom: 6 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 5, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 9, fontWeight: 700, color: "white" }}>tc</span></div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>tutorcard</span>
-                </div>
-                <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0, maxWidth: 280, lineHeight: 1.5 }}>The professional identity platform for tutors.</p>
-              </div>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>TutorCard</p>
-                {["Create a card", "For associations", "Privacy", "Terms"].map(l => <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>)}
-              </div>
-            </div>
-            <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0 }}>
-              <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>© 2026 TutorCard · A StudySpaces product</p>
-              <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>Powered by <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span></p>
-            </div>
-          </div>
-        </footer>
+        <HomepageFooter isMobile={isMobile} />
       </div>
     </>
   );
