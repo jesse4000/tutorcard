@@ -63,7 +63,7 @@ export default function TermsConditions() {
 
           <div style={{ background: "white", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", border: "1px solid #f0f0f0" }}>
             <Section title="Agreement">
-              <P>By creating a TutorCard account, you agree to these terms. TutorCard is operated by Better Search Corporation (doing business as StudySpaces). If something in here doesn&apos;t sit right, email us at hello@studyspaces.com before using the platform.</P>
+              <P>By creating a TutorCard account, you agree to these terms. TutorCard is operated by Better Search Corporation (doing business as StudySpaces). If something in here doesn&apos;t sit right, email us at hello@tutorcard.co before using the platform.</P>
             </Section>
 
             <Section title="Your account">
@@ -118,7 +118,7 @@ export default function TermsConditions() {
             </Section>
 
             <div style={{ paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
-              <P>Questions about these terms? Email us at <a href="mailto:hello@studyspaces.com" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>hello@studyspaces.com</a></P>
+              <P>Questions about these terms? Email us at <a href="mailto:hello@tutorcard.co" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>hello@tutorcard.co</a></P>
             </div>
           </div>
         </main>

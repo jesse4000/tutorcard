@@ -58,6 +58,9 @@ export default function ForAssociations() {
           <a href="https://calendly.com/jesse-studyspaces/30min" target="_blank" rel="noopener noreferrer" className="cta-main" style={{ padding: "13px 28px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
             Get in touch <Icon name="arrowRight" size={16} />
           </a>
+          <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 14 }}>
+            or reach out at <a href="mailto:hello@tutorcard.co" style={{ color: "#6b7280", fontWeight: 600, textDecoration: "none" }}>hello@tutorcard.co</a>
+          </p>
         </section>
 
         {/* What your members get */}
@@ -132,6 +135,9 @@ export default function ForAssociations() {
             <a href="https://calendly.com/jesse-studyspaces/30min" target="_blank" rel="noopener noreferrer" className="cta-main" style={{ padding: "15px 36px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
               <Icon name="calendar" size={18} />Get in touch
             </a>
+            <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 14 }}>
+              or reach out at <a href="mailto:hello@tutorcard.co" style={{ color: "#6b7280", fontWeight: 600, textDecoration: "none" }}>hello@tutorcard.co</a>
+            </p>
           </div>
         </section>
 

@@ -55,7 +55,7 @@ export default function PrivacyPolicy() {
           </p>
           <div style={{ background: "white", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", border: "1px solid #f0f0f0" }}>
             <Section title="Who we are">
-              <P>TutorCard is a product of Better Search Corporation, operating as StudySpaces. If you have questions about this policy, email us at hello@studyspaces.com.</P>
+              <P>TutorCard is a product of Better Search Corporation, operating as StudySpaces. If you have questions about this policy, email us at hello@tutorcard.co.</P>
             </Section>
             <Section title="What we collect">
               <P>When you create a TutorCard account, we collect your name, email address, location, professional headline, specialties, and any links or content you add to your card.</P>
@@ -80,13 +80,13 @@ export default function PrivacyPolicy() {
               <P>Your account data is retained as long as your account is active. If you delete your account, we remove your profile and personal data within 30 days. Some anonymized usage data may be retained for analytics purposes.</P>
             </Section>
             <Section title="Your rights">
-              <P>You can export your data, update your information, or delete your account at any time from your dashboard. If you need help with any of this, email us at hello@studyspaces.com and we will take care of it.</P>
+              <P>You can export your data, update your information, or delete your account at any time from your dashboard. If you need help with any of this, email us at hello@tutorcard.co and we will take care of it.</P>
             </Section>
             <Section title="Changes to this policy">
               <P>If we make meaningful changes to this policy, we will notify you by email before they take effect. We won&apos;t quietly change the rules on you.</P>
             </Section>
             <div style={{ paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
-              <P>Questions? Reach out at <a href="mailto:hello@studyspaces.com" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>hello@studyspaces.com</a></P>
+              <P>Questions? Reach out at <a href="mailto:hello@tutorcard.co" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>hello@tutorcard.co</a></P>
             </div>
           </div>
         </main>
