@@ -211,53 +211,9 @@ export default function TutorCardLanding() {
           0% { transform: translateX(-100%) skewX(-15deg); }
           100% { transform: translateX(250%) skewX(-15deg); }
         }
-        @keyframes textShimmerLTR {
-          0% { background-position: 200% center; }
-          100% { background-position: -200% center; }
-        }
         @keyframes softPulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
           50% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.08); }
-        }
-        /* ── Hero text shimmer (hover only) ── */
-        .hero-title { cursor: default; }
-        .hero-dark {
-          color: #111;
-          -webkit-text-fill-color: #111;
-        }
-        .hero-accent {
-          color: #4f46e5;
-          -webkit-text-fill-color: #4f46e5;
-        }
-        .hero-title:hover .hero-dark {
-          background: linear-gradient(
-            90deg,
-            #111 0%, #111 35%,
-            rgba(79, 70, 229, 0.5) 45%,
-            rgba(79, 70, 229, 0.8) 50%,
-            rgba(79, 70, 229, 0.5) 55%,
-            #111 65%, #111 100%
-          );
-          background-size: 250% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: textShimmerLTR 2.8s ease-in-out 0.15s both;
-        }
-        .hero-title:hover .hero-accent {
-          background: linear-gradient(
-            90deg,
-            #4f46e5 0%, #4f46e5 30%,
-            rgba(255, 255, 255, 0.6) 45%,
-            rgba(255, 255, 255, 0.85) 50%,
-            rgba(255, 255, 255, 0.6) 55%,
-            #4f46e5 70%, #4f46e5 100%
-          );
-          background-size: 250% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: textShimmerLTR 2.8s ease-in-out 0.15s both;
         }
         /* ── Card button shimmer (hover only) ── */
         .cta-shimmer {
@@ -305,12 +261,14 @@ export default function TutorCardLanding() {
             }}>
               Free for the first 100 tutors &middot; Set up in 5 minutes
             </div>
-            <h1 className="hero-title" style={{
+            <h1 style={{
               fontSize: isMobile ? 34 : 48, fontWeight: 800,
+              fontFamily: "'Lora', serif",
               lineHeight: 1.1, letterSpacing: "-0.03em", margin: "0 0 16px",
+              color: "#111",
             }}>
-              <span className="hero-dark">Your professional identity, </span>
-              <span className="hero-accent">one link.</span>
+              Your professional identity,{" "}
+              <span style={{ color: accent }}>one link.</span>
             </h1>
             <p style={{
               fontSize: isMobile ? 16 : 18, color: "#6b7280", lineHeight: 1.55,
