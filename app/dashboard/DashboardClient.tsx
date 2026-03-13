@@ -198,6 +198,202 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
   );
 }
 
+// ─── SIGNATURE HTML GENERATORS ──────────────────────────
+function sigMinimal(tutor: TutorRow, accent: string) {
+  const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111111;">
+  <tr>
+    <td style="padding-bottom:4px;">
+      <strong style="font-size:15px;">${fullName}</strong>
+    </td>
+  </tr>
+  <tr>
+    <td style="font-size:13px;color:#6b7280;padding-bottom:10px;">
+      ${tutor.title || "Tutor"}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-top:8px;border-top:1px solid #e5e7eb;">
+      <a href="https://tutorcard.co/${tutor.slug}" style="color:${accent};text-decoration:none;font-size:13px;font-weight:600;">tutorcard.co/${tutor.slug}</a>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sigStandard(tutor: TutorRow, accent: string) {
+  const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
+  const initials = [tutor.first_name?.[0], tutor.last_name?.[0]].filter(Boolean).join("");
+  const physicalLocations = tutor.locations.filter((l: string) => !/remote|online/i.test(l));
+  const location = physicalLocations[0] || "";
+  const subtitle = [tutor.title || "Tutor", location].filter(Boolean).join(" \u00B7 ");
+  const t = toac(accent);
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111111;">
+  <tr>
+    <td style="padding-right:16px;vertical-align:top;border-right:2px solid ${accent};">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="width:52px;height:52px;background:${accent};border-radius:50%;text-align:center;vertical-align:middle;color:${t};font-size:18px;font-weight:600;">${initials}</td></tr>
+      </table>
+    </td>
+    <td style="padding-left:16px;vertical-align:top;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:16px;font-weight:700;padding-bottom:2px;">${fullName}</td></tr>
+        <tr><td style="font-size:13px;color:#6b7280;padding-bottom:6px;">${subtitle}</td></tr>
+        <tr><td style="padding-bottom:2px;"><a href="https://tutorcard.co/${tutor.slug}" style="color:${accent};text-decoration:none;font-size:13px;font-weight:600;">View my TutorCard &rarr;</a></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sigWithStats(tutor: TutorRow, accent: string, vouchCount: number, averageRating: number | null, reviewCount: number) {
+  const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
+  const initials = [tutor.first_name?.[0], tutor.last_name?.[0]].filter(Boolean).join("");
+  const physicalLocations = tutor.locations.filter((l: string) => !/remote|online/i.test(l));
+  const location = physicalLocations[0] || "";
+  const subtitle = [tutor.title || "Tutor", location].filter(Boolean).join(" \u00B7 ");
+  const t = toac(accent);
+  const ratingDisplay = averageRating != null ? averageRating.toFixed(1) : "-";
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111111;">
+  <tr>
+    <td style="padding-right:16px;vertical-align:top;border-right:2px solid ${accent};">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="width:52px;height:52px;background:${accent};border-radius:50%;text-align:center;vertical-align:middle;color:${t};font-size:18px;font-weight:600;">${initials}</td></tr>
+      </table>
+    </td>
+    <td style="padding-left:16px;vertical-align:top;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:16px;font-weight:700;padding-bottom:2px;">${fullName}</td></tr>
+        <tr><td style="font-size:13px;color:#6b7280;padding-bottom:8px;">${subtitle}</td></tr>
+        <tr>
+          <td style="padding-bottom:8px;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="font-size:12px;color:#6b7280;padding-right:12px;">&#9733; <strong style="color:#111;">${ratingDisplay}</strong> <span style="color:#9ca3af;">(${reviewCount})</span></td>
+                <td style="font-size:12px;color:#6b7280;"><strong style="color:#111;">${vouchCount}</strong> peer vouches</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr><td><a href="https://tutorcard.co/${tutor.slug}" style="color:${accent};text-decoration:none;font-size:13px;font-weight:600;">View my TutorCard &rarr;</a></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+// ─── SIGNATURE POPUP ────────────────────────────────────
+function SignaturePopup({ onClose, tutor, accent, vouchCount, averageRating, reviewCount }: {
+  onClose: () => void; tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number;
+}) {
+  const [style, setStyle] = useState("standard");
+  const [copied, setCopied] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const STYLES = [
+    { key: "minimal", label: "Minimal", gen: () => sigMinimal(tutor, accent) },
+    { key: "standard", label: "Standard", gen: () => sigStandard(tutor, accent) },
+    { key: "stats", label: "With stats", gen: () => sigWithStats(tutor, accent, vouchCount, averageRating, reviewCount) },
+  ];
+
+  const currentSig = STYLES.find((s) => s.key === style)!;
+  const html = currentSig.gen();
+
+  const handleCopy = () => {
+    const el = previewRef.current;
+    if (!el) return;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    if (!sel) return;
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand("copy");
+    sel.removeAllRanges();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "fadeIn 0.15s ease" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 520, padding: "32px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="mail" size={18} style={{ color: "#374151" }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Email signature</h3>
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Copy and paste into your email settings.</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}>
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+        {/* Style tabs */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+          {STYLES.map((s) => (
+            <button key={s.key} onClick={() => setStyle(s.key)} style={{
+              padding: "7px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: style === s.key ? "#111" : "#f3f4f6",
+              color: style === s.key ? "white" : "#6b7280",
+              fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+              transition: "all 0.15s",
+            }}>{s.label}</button>
+          ))}
+        </div>
+        {/* Preview */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Preview</p>
+          <div style={{
+            background: "white", borderRadius: 14, padding: "24px 20px",
+            border: "1px solid #f0f0f0",
+          }}>
+            {/* Fake email context */}
+            <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #f3f4f6" }}>
+              <p style={{ fontSize: 13, color: "#d1d5db", margin: "0 0 8px" }}>...</p>
+              <p style={{ fontSize: 14, color: "#6b7280", margin: 0, lineHeight: 1.5 }}>
+                Looking forward to our session on Thursday. Let me know if you have any questions before then!
+              </p>
+            </div>
+            <div ref={previewRef} dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        </div>
+        {/* Copy button */}
+        <button onClick={handleCopy} style={{
+          width: "100%", padding: "13px", borderRadius: 14, border: "none",
+          background: copied ? "#ecfdf5" : "#111",
+          color: copied ? "#059669" : "white",
+          fontSize: 15, fontWeight: 600, cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          transition: "all 0.2s",
+        }}>
+          <Icon name={copied ? "check" : "copy"} size={16} />
+          {copied ? "Copied to clipboard!" : "Copy signature"}
+        </button>
+        {/* Instructions */}
+        <div style={{ marginTop: 16, padding: "14px 16px", background: "#fafafa", borderRadius: 12, border: "1px solid #f0f0f0" }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 8px" }}>How to add it</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              { app: "Gmail", step: "Settings > See all settings > Signature > Paste" },
+              { app: "Outlook", step: "Settings > Mail > Compose and reply > Signature > Paste" },
+              { app: "Apple Mail", step: "Preferences > Signatures > Paste" },
+            ].map((item) => (
+              <div key={item.app} style={{ display: "flex", gap: 8, fontSize: 12.5, lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 600, color: "#111", flexShrink: 0, width: 72 }}>{item.app}</span>
+                <span style={{ color: "#9ca3af" }}>{item.step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── INVITE CODE ROW ────────────────────────────────────
 function CodeRow({ code, claimed, name, slug }: { code: string; claimed: boolean; name: string | null; slug: string | null }) {
   const [copied, setCopied] = useState(false);
@@ -684,8 +880,8 @@ function EmptyState({ icon, title, desc, actionLabel, actionIcon, onAction }: {
 }
 
 // ─── OWNER CARD ─────────────────────────────────────────
-function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, onShare }: {
-  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; onShare: () => void;
+function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, onShare, onSignature }: {
+  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; onShare: () => void; onSignature: () => void;
 }) {
   const t = toac(accent);
   const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
@@ -771,10 +967,25 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
           transition: "background 0.15s", textDecoration: "none",
         }}><Icon name="edit" size={15} /></Link>
       </div>
-      <div style={{ textAlign: "center", paddingBottom: 16 }}>
+      <div style={{ textAlign: "center", paddingBottom: 10 }}>
         <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}>
           <span style={{ fontWeight: 600 }}>tutorcard</span>.co/{tutor.slug}
         </p>
+      </div>
+      {/* Email signature link */}
+      <div style={{ borderTop: "1px solid #f3f4f6", padding: "10px 20px", textAlign: "center" }}>
+        <button onClick={onSignature} style={{
+          background: "none", border: "none", cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif",
+          display: "inline-flex", alignItems: "center", gap: 5,
+          color: "#9ca3af", fontSize: 12.5, fontWeight: 500, padding: 0,
+          transition: "color 0.15s",
+        }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = accent; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "#9ca3af"; }}
+        >
+          <Icon name="mail" size={13} />Add to email signature
+        </button>
       </div>
     </div>
   );
@@ -1292,7 +1503,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
-  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed">(null);
+  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed" | "signature">(null);
   const [reportingReview, setReportingReview] = useState<ReviewData | null>(null);
   const [localReportStatuses, setLocalReportStatuses] = useState<Record<string, string>>({});
   const [isMobile, setIsMobile] = useState(false);
@@ -1463,7 +1674,7 @@ export default function DashboardClient({
         <main style={{ flex: 1 }}>
           {isMobile ? (
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
-              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
+              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
                 <TabContent tab={tab} wide={false} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
@@ -1477,7 +1688,7 @@ export default function DashboardClient({
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
               <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
-                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
+                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} />
               </div>
               <div style={{ flex: 1, minWidth: 0, height: cardHeight, display: "flex", flexDirection: "column" as const }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden", minHeight: 0 }}>
@@ -1508,6 +1719,7 @@ export default function DashboardClient({
       {popup === "invite" && <InvitePopup onClose={close} codes={inviteCodes} />}
       {popup === "report" && reportingReview && <ReportReviewPopup review={reportingReview} tutorId={tutor.id} onClose={close} onSubmitted={handleReportSubmitted} />}
       {popup === "reportConfirmed" && reportingReview && <ReportConfirmationPopup review={reportingReview} onClose={close} />}
+      {popup === "signature" && <SignaturePopup onClose={close} tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} />}
     </>
   );
 }
