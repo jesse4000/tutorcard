@@ -442,16 +442,16 @@ export default function TutorCardLanding() {
             </h2>
             <div style={{ textAlign: "left", maxWidth: 620, margin: "0 auto" }}>
               <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, margin: "0 0 16px" }}>
-                Doctors have Doximity. Lawyers have Avvo. Therapists have Psychology Today. These platforms give professionals a verified public presence that clients can trust.
+                Lawyers have Avvo. Designers have Dribbble. Writers have Substack. Every profession has a professional profile. Tutoring never got one.
               </p>
               <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, margin: "0 0 16px" }}>
-                Tutors? They have been stuck on pay-per-lead platforms that treat them as inventory, generic directories that offer no way to prove results, and marketplaces that put a price tag on every parent inquiry.
+                As for LinkedIn, that&apos;s for your uncle to congratulate himself on 15 years at Deloitte.
               </p>
               <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, margin: "0 0 16px" }}>
-                TutorCard is different. There are no commissions on your leads. No middlemen between you and parents. Your profile, your reputation, your clients.
+                We thought tutors deserved something actually built for them. Not a marketplace. Not a directory. Just a simple, sharp way to show the world you&apos;re great at what you do, without needing a marketing degree to pull it off.
               </p>
               <p style={{ fontSize: 15, color: "#374151", lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
-                Built with love by the team at <span style={{ fontWeight: 700 }}>StudySpaces</span>.
+                Built by the team at <span style={{ fontWeight: 700 }}>StudySpaces</span>. Mostly fueled by spite and caffeine.
               </p>
             </div>
           </div>
