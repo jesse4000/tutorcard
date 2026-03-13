@@ -1708,7 +1708,7 @@ export default function DashboardClient({
         </main>
         <footer style={{ padding: "20px 24px", display: "flex", justifyContent: "center", width: "100%" }}>
           <p style={{ fontSize: 12, color: "#d1d5db", margin: 0, textAlign: "center" }}>
-            &copy; 2026 TutorCard &middot; A <span style={{ fontWeight: 600, color: "#9ca3af" }}>StudySpaces</span> product
+            &copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#9ca3af", textDecoration: "none" }}>StudySpaces</a> product
           </p>
         </footer>
       </div>

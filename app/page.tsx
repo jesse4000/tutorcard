@@ -451,7 +451,7 @@ export default function TutorCardLanding() {
                 We thought tutors deserved something actually built for them. Not a marketplace. Not a directory. Just a simple, sharp way to show the world you&apos;re great at what you do, without needing a marketing degree to pull it off.
               </p>
               <p style={{ fontSize: 15, color: "#374151", lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
-                Built by the team at <span style={{ fontWeight: 700 }}>StudySpaces</span>. Mostly fueled by spite and caffeine.
+                Built by the team at <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#374151", textDecoration: "none" }}>StudySpaces</a>. Mostly fueled by spite and caffeine.
               </p>
             </div>
           </div>
