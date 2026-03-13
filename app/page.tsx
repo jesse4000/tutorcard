@@ -27,16 +27,50 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
     plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
     heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>,
     trendUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+    sparkle: <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>,
+    gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
   };
-  const fill = name === "star" ? "currentColor" : "none";
+  const fill = (name === "star" || name === "sparkle") ? "currentColor" : "none";
   return <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={fill === "none" ? "currentColor" : "none"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{d[name]}</svg>;
 };
 
-// ─── MINI CARD ──────────────────────────────────────────
+// ─── MINI CARD WITH TILT + SHIMMER ──────────────────────
 function MiniCard() {
   const accent = "#4f46e5";
+  const [tilt, setTilt] = useState({ x: 0, y: 0, active: false });
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setTilt({ x: (0.5 - y) * 8, y: (x - 0.5) * 8, active: true });
+  };
+  const handleMouseLeave = () => setTilt({ x: 0, y: 0, active: false });
   return (
-    <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", overflow: "hidden", width: 320, flexShrink: 0 }}>
+    <div style={{ perspective: 800, flexShrink: 0 }}>
+      <div
+        className="card-tilt"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          background: "white", borderRadius: 20,
+          boxShadow: tilt.active
+            ? `${tilt.y * -1.5}px ${4 + Math.abs(tilt.x) * 2}px ${24 + Math.abs(tilt.x + tilt.y) * 3}px rgba(0,0,0,0.1)`
+            : "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)",
+          overflow: "hidden", width: 320, position: "relative",
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          transition: tilt.active
+            ? "transform 0.1s ease-out, box-shadow 0.15s ease-out"
+            : "transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1)",
+          willChange: "transform",
+        }}
+      >
+        {/* Glare */}
+        {tilt.active && (
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 10, pointerEvents: "none", borderRadius: 20,
+            background: `radial-gradient(circle at ${(tilt.y + 4) / 8 * 100}% ${(4 - tilt.x) / 8 * 100}%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 60%)`,
+          }} />
+        )}
       <div style={{ padding: "24px 20px 16px", textAlign: "center" }}>
         <div style={{ width: 56, height: 56, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
           <span style={{ fontSize: 18, color: "white", fontWeight: 600 }}>SM</span>
@@ -65,7 +99,7 @@ function MiniCard() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
             <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "1px 5px", borderRadius: 3 }}>SAT</span>
             <span style={{ fontSize: 16, fontWeight: 700, color: "#b0b0b0" }}>1180</span>
-            <span style={{ fontSize: 11, color: "#d1d5db" }}>→</span>
+            <span style={{ fontSize: 11, color: "#d1d5db" }}>&rarr;</span>
             <span style={{ fontSize: 16, fontWeight: 700, color: "#111" }}>1460</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 1, background: accent, color: "white", padding: "1px 5px", borderRadius: 20, fontSize: 9.5, fontWeight: 700, marginLeft: "auto" }}><Icon name="arrowUp" size={8} />+280</span>
           </div>
@@ -83,7 +117,16 @@ function MiniCard() {
         ))}
       </div>
       <div style={{ padding: "4px 16px 16px" }}>
-        <div style={{ width: "100%", padding: "10px", borderRadius: 12, background: accent, color: "white", fontSize: 13, fontWeight: 600, textAlign: "center" }}>Send a message</div>
+        <button className="cta-shimmer" style={{
+          width: "100%", padding: "10px", borderRadius: 12,
+          background: accent, color: "white", fontSize: 13, fontWeight: 600,
+          border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          position: "relative", overflow: "hidden",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        }}>
+          <Icon name="msg" size={14} />Send a message
+        </button>
+      </div>
       </div>
     </div>
   );
@@ -91,7 +134,7 @@ function MiniCard() {
 
 function Feature({ icon, title, desc }: { icon: string; title: string; desc: string }) {
   return (
-    <div style={{ flex: "1 1 0", minWidth: 220 }}>
+    <div>
       <div style={{ width: 44, height: 44, borderRadius: 12, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
         <Icon name={icon} size={20} style={{ color: "#374151" }} />
       </div>
@@ -124,7 +167,6 @@ function DeepDive({ icon, badge, title, subtitle, desc, children, flipped, isMob
     </div>
   );
   const visual = <div style={{ flex: "0 0 auto", width: isMobile ? "100%" : 340 }}>{children}</div>;
-
   return (
     <div style={{
       display: "flex", flexDirection: isMobile ? "column" : (flipped ? "row-reverse" : "row"),
@@ -165,9 +207,41 @@ export default function TutorCardLanding() {
         .cta-main:hover { opacity: 0.88; }
         .cta-ghost { transition: all 0.15s; }
         .cta-ghost:hover { background: #f3f4f6 !important; }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          100% { transform: translateX(250%) skewX(-15deg); }
+        }
+        @keyframes softPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+          50% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.08); }
+        }
+        /* ── Card button shimmer (hover only) ── */
+        .cta-shimmer {
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cta-shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0;
+          width: 50%; height: 100%;
+          background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.15) 60%, rgba(255,255,255,0) 100%);
+          transform: translateX(-100%) skewX(-15deg);
+        }
+        /* Card wrapper hover triggers button shimmer */
+        .card-tilt:hover .cta-shimmer::after {
+          animation: shimmer 1.2s ease-in-out 0.2s forwards;
+        }
+        /* Direct button hover */
+        .cta-shimmer:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25) !important;
+        }
+        .cta-shimmer:hover::after {
+          animation: shimmer 0.8s ease-in-out forwards;
+        }
       `}</style>
 
-      <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111" }}>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100%" }}>
 
         {/* ═══ HEADER ═══ */}
         <HomepageHeader isMobile={isMobile} isLoggedIn={isLoggedIn} />
@@ -185,14 +259,14 @@ export default function TutorCardLanding() {
               padding: "5px 14px", borderRadius: 20, background: "white",
               border: "1px solid #e5e7eb", fontSize: 12.5, fontWeight: 500, color: "#6b7280", marginBottom: 20,
             }}>
-              Free forever · Set up in 5 minutes
+              Free for the first 100 tutors &middot; Set up in 5 minutes
             </div>
             <h1 style={{
-              fontSize: isMobile ? 34 : 48, fontWeight: 800, color: "#111",
+              fontSize: isMobile ? 34 : 48, fontWeight: 800,
               lineHeight: 1.1, letterSpacing: "-0.03em", margin: "0 0 16px",
+              fontFamily: "'DM Sans', sans-serif", color: "#111",
             }}>
-              Your professional identity,{" "}
-              <span style={{ color: accent }}>one link.</span>
+              Your professional identity, <span style={{ color: accent }}>one link.</span>
             </h1>
             <p style={{
               fontSize: isMobile ? 16 : 18, color: "#6b7280", lineHeight: 1.55,
@@ -207,11 +281,10 @@ export default function TutorCardLanding() {
                 background: "#111", color: "white", fontSize: 15, fontWeight: 600,
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 display: "flex", alignItems: "center", gap: 6,
-              }}>Create your free card <Icon name="arrowRight" size={16} /></button>
-
+              }}>Create your card <Icon name="arrowRight" size={16} /></button>
             </div>
             <p style={{ fontSize: 12.5, color: "#9ca3af", marginTop: 20 }}>
-              No commissions. No lead fees. No catch. Ever.
+              $20/year. First 100 tutors get in free.
             </p>
           </div>
           {!isMobile && <MiniCard />}
@@ -228,7 +301,7 @@ export default function TutorCardLanding() {
               Replace your scattered links, PDFs, and text bios with one card that makes you look like the professional you are.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 28 : 32 }}>
             <Feature icon="trendUp" title="Verified Results" desc="Structured score improvements with parent quotes. Not just sentiment. 1180 to 1460 in 4 months speaks for itself." />
             <Feature icon="users" title="Peer Vouches" desc="One-click endorsements from fellow tutors. A vouch says 'I would send my own students to this person.' That is trust no review can match." />
             <Feature icon="award" title="Achievement Badges" desc="Display your memberships, certifications, and credentials. Verified through the organization itself. A trust signal parents recognize instantly." />
@@ -259,14 +332,14 @@ export default function TutorCardLanding() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{r.exam}</span>
                       <span style={{ fontSize: 18, fontWeight: 700, color: "#b0b0b0" }}>{r.from}</span>
-                      <span style={{ fontSize: 12, color: "#d1d5db" }}>→</span>
+                      <span style={{ fontSize: 12, color: "#d1d5db" }}>&rarr;</span>
                       <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{r.to}</span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: accent, color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
                         <Icon name="arrowUp" size={9} />+{r.to - r.from}
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-                      <span>{r.mo} months</span><span style={{ color: "#e5e7eb" }}>·</span>
+                      <span>{r.mo} months</span><span style={{ color: "#e5e7eb" }}>&middot;</span>
                       <div style={{ display: "flex", gap: 1 }}>{Array.from({ length: 5 }).map((_, j) => <Icon key={j} name="star" size={10} style={{ color: "#f59e0b" }} />)}</div>
                     </div>
                     <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.45, margin: "0 0 4px", fontStyle: "italic" }}>{r.q}</p>
@@ -375,11 +448,83 @@ export default function TutorCardLanding() {
                 Tutors? They have been stuck on pay-per-lead platforms that treat them as inventory, generic directories that offer no way to prove results, and marketplaces that put a price tag on every parent inquiry.
               </p>
               <p style={{ fontSize: 15, color: "#6b7280", lineHeight: 1.7, margin: "0 0 16px" }}>
-                We built TutorCard because tutors should not have to pay for their own professional presence. Your profile is yours. Your leads are yours. Your reputation is yours.
+                TutorCard is different. There are no commissions on your leads. No middlemen between you and parents. Your profile, your reputation, your clients.
               </p>
               <p style={{ fontSize: 15, color: "#374151", lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
                 Built with love by the team at <span style={{ fontWeight: 700 }}>StudySpaces</span>.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ PRICING ═══ */}
+        <section style={{ borderTop: "1px solid #f3f4f6" }}>
+          <div style={{ maxWidth: 800, margin: "0 auto", padding: isMobile ? "56px 20px" : "80px 32px" }}>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: accent, margin: "0 0 8px" }}>Pricing</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 10px" }}>
+                Not free. On purpose.
+              </h2>
+              <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto", maxWidth: 520, lineHeight: 1.55 }}>
+                We charge $20/year. Because free tools die, and bots ruin nice things.
+              </p>
+            </div>
+            {/* Price card */}
+            <div style={{
+              maxWidth: 400, margin: "0 auto",
+              background: "white", borderRadius: 20, padding: "32px 28px",
+              border: "1px solid #f0f0f0", textAlign: "center",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)",
+            }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4, marginBottom: 6 }}>
+                <span style={{ fontSize: 48, fontWeight: 800, color: "#111", letterSpacing: "-0.03em", lineHeight: 1 }}>$20</span>
+                <span style={{ fontSize: 16, color: "#9ca3af", fontWeight: 500 }}>/year</span>
+              </div>
+              <p style={{ fontSize: 14, color: "#6b7280", margin: "0 0 24px" }}>The whole thing. No tiers. No gotchas.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, textAlign: "left", marginBottom: 24 }}>
+                {[
+                  "Verified reviews with score data",
+                  "Peer vouches from fellow tutors",
+                  "Custom card URL and QR code",
+                  "Links hub with direct inquiries",
+                  "SEO discovery for parents",
+                  "Shareable achievement graphics",
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Icon name="check" size={14} style={{ color: "#059669", flexShrink: 0 }} />
+                    <span style={{ fontSize: 14, color: "#374151" }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => router.push("/create")} className="cta-main" style={{
+                width: "100%", padding: "13px", borderRadius: 14, border: "none",
+                background: "#111", color: "white", fontSize: 15, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}>Create your card <Icon name="arrowRight" size={16} /></button>
+              {/* First 100 free */}
+              <div style={{
+                marginTop: 16, padding: "10px 14px", borderRadius: 10,
+                background: "#ecfdf5", border: "1px solid #d1fae5",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}>
+                <Icon name="sparkle" size={13} style={{ color: "#059669" }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#059669" }}>First 100 tutors get it free</span>
+              </div>
+            </div>
+            {/* Free access paths */}
+            <div style={{ marginTop: 32, textAlign: "center" }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", margin: "0 0 12px" }}>Other ways to join free</p>
+              <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 12 : 20, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: "white", border: "1px solid #e5e7eb" }}>
+                  <Icon name="gift" size={14} style={{ color: "#6b7280" }} />
+                  <span style={{ fontSize: 13, color: "#6b7280" }}>Invite code from a peer</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: "white", border: "1px solid #e5e7eb" }}>
+                  <Icon name="shield" size={14} style={{ color: "#6b7280" }} />
+                  <span style={{ fontSize: 13, color: "#6b7280" }}>Tutoring association membership</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -397,7 +542,7 @@ export default function TutorCardLanding() {
             Be first in your community with a card.
           </h2>
           <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto 28px", maxWidth: 400, lineHeight: 1.5 }}>
-            Free forever. Set up in 5 minutes.
+            $20/year. First 100 tutors join free.
           </p>
           <button onClick={() => router.push("/create")} className="cta-main" style={{
             padding: "15px 36px", borderRadius: 14, border: "none",

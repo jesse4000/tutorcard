@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 // ─── TYPES ──────────────────────────────────────────────
@@ -29,8 +29,10 @@ interface AdminFunnel {
 
 interface AdminTutor {
   id: string;
+  userId: string;
   name: string;
   headline: string;
+  email: string;
   location: string;
   specialties: string[];
   reviews: number;
@@ -40,6 +42,14 @@ interface AdminTutor {
   status: "active" | "inactive" | "incomplete";
   joined: string;
   slug: string;
+  avatarColor: string;
+  allLocations: string[];
+  subjects: string[];
+  businessName: string | null;
+  yearsExperience: number | null;
+  profileImageUrl: string | null;
+  links: { label: string; url: string; icon?: string }[];
+  isSuspended: boolean;
 }
 
 interface ReviewReport {
@@ -62,6 +72,12 @@ interface ReviewReport {
   resolvedBy: string | null;
 }
 
+interface RecentActivityData {
+  reviews: { reviewerName: string; exam: string | null; rating: number; quote: string; date: string }[];
+  vouches: { voucherName: string; date: string }[];
+  inquiries: { studentName: string | null; date: string }[];
+}
+
 interface SuperAdminDashboardProps {
   stats: AdminStats;
   funnel: AdminFunnel;
@@ -69,9 +85,26 @@ interface SuperAdminDashboardProps {
   locations: string[];
   exams: string[];
   reviewReports: ReviewReport[];
+  recentActivity: Record<string, RecentActivityData>;
 }
 
-const STATUSES = ["All", "Active", "Inactive", "Incomplete"];
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error";
+}
+
+type ModalState =
+  | null
+  | { type: "userDetail"; tutor: AdminTutor }
+  | { type: "changeEmail"; tutor: AdminTutor }
+  | { type: "resetPassword"; tutor: AdminTutor }
+  | { type: "suspend"; tutor: AdminTutor }
+  | { type: "delete"; tutor: AdminTutor }
+  | { type: "bulkDelete"; tutors: AdminTutor[] }
+  | { type: "bulkSuspend"; tutors: AdminTutor[] };
+
+const STATUSES = ["All", "Active", "Inactive", "Incomplete", "Suspended"];
 
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: unknown }) => {
   const paths: Record<string, React.ReactNode> = {
@@ -91,6 +124,15 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
     check: <polyline points="20 6 9 17 4 12" />,
     x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
     mail: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></>,
+    trash: <><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>,
+    key: <><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></>,
+    moreVertical: <><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></>,
+    ban: <><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></>,
+    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+    eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>,
+    link2: <><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3" /><line x1="8" y1="12" x2="16" y2="12" /></>,
+    mapPin: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>,
+    briefcase: <><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
   };
   const fill = name === "star" ? "currentColor" : "none";
   return (
@@ -99,6 +141,11 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
     </svg>
   );
 };
+
+function isLight(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
 
 // ─── STAT CARD ──────────────────────────────────────────
 function StatCard({ label, value, change, icon, color }: { label: string; value: number | string; change?: number; icon: string; color?: string }) {
@@ -139,8 +186,15 @@ function FunnelStep({ label, count, total, color }: { label: string; count: numb
   );
 }
 
-// ─── STATUS DOT ─────────────────────────────────────────
-function StatusBadge({ status }: { status: string }) {
+// ─── STATUS BADGE ───────────────────────────────────────
+function StatusBadge({ status, suspended }: { status: string; suspended?: boolean }) {
+  if (suspended) {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, background: "#fef2f2", fontSize: 11.5, fontWeight: 600, color: "#dc2626" }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#dc2626" }} />Suspended
+      </span>
+    );
+  }
   const config: Record<string, { color: string; bg: string; label: string }> = {
     active: { color: "#059669", bg: "#ecfdf5", label: "Active" },
     inactive: { color: "#d97706", bg: "#fffbeb", label: "Inactive" },
@@ -149,8 +203,7 @@ function StatusBadge({ status }: { status: string }) {
   const c = config[status] || config.incomplete;
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, background: c.bg, fontSize: 11.5, fontWeight: 600, color: c.color }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.color }} />
-      {c.label}
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.color }} />{c.label}
     </span>
   );
 }
@@ -174,7 +227,6 @@ function Dropdown({ value, options, onChange }: { value: string; options: string
   );
 }
 
-// ─── MAIN ───────────────────────────────────────────────
 // ─── REPORT STATUS BADGE ────────────────────────────────
 function ReportStatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; bg: string; label: string }> = {
@@ -186,13 +238,42 @@ function ReportStatusBadge({ status }: { status: string }) {
   const c = config[status] || config.pending;
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, background: c.bg, fontSize: 11.5, fontWeight: 600, color: c.color }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.color }} />
-      {c.label}
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.color }} />{c.label}
     </span>
   );
 }
 
-export default function SuperAdminDashboard({ stats, funnel, tutors, locations, exams, reviewReports }: SuperAdminDashboardProps) {
+// ─── MODAL OVERLAY ──────────────────────────────────────
+function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 18, maxWidth: 560, width: "100%", maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── TOAST CONTAINER ────────────────────────────────────
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
+  return (
+    <div style={{ position: "fixed", top: 72, right: 16, zIndex: 2000, display: "flex", flexDirection: "column", gap: 8 }}>
+      {toasts.map((t) => (
+        <div key={t.id} onClick={() => onDismiss(t.id)} style={{
+          padding: "12px 20px", borderRadius: 12, background: t.type === "success" ? "#059669" : "#dc2626",
+          color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)", maxWidth: 320, fontFamily: "'DM Sans', sans-serif",
+          animation: "slideIn 0.2s ease",
+        }}>
+          {t.message}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ────────────────────────────────────
+export default function SuperAdminDashboard({ stats, funnel, tutors: initialTutors, locations, exams, reviewReports, recentActivity }: SuperAdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "reports">("dashboard");
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("All locations");
@@ -203,12 +284,40 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
   const [isMobile, setIsMobile] = useState(false);
   const [reportActions, setReportActions] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [tutors, setTutors] = useState(initialTutors);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [modal, setModal] = useState<ModalState>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ck = () => setIsMobile(window.innerWidth < 900);
     ck();
     window.addEventListener("resize", ck);
     return () => window.removeEventListener("resize", ck);
+  }, []);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [openMenuId]);
+
+  const addToast = useCallback((message: string, type: "success" | "error" = "success") => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   const toggleSort = (key: string) => {
@@ -218,10 +327,11 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
 
   const filtered = tutors
     .filter((t) => {
-      if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.headline.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.headline.toLowerCase().includes(search.toLowerCase()) && !t.email.toLowerCase().includes(search.toLowerCase())) return false;
       if (locationFilter !== "All locations" && t.location !== locationFilter) return false;
       if (examFilter !== "All exams" && !t.specialties.includes(examFilter)) return false;
-      if (statusFilter !== "All" && t.status !== statusFilter.toLowerCase()) return false;
+      if (statusFilter === "Suspended" && !t.isSuspended) return false;
+      else if (statusFilter !== "All" && statusFilter !== "Suspended" && t.status !== statusFilter.toLowerCase()) return false;
       return true;
     })
     .sort((a, b) => {
@@ -230,6 +340,25 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
       const bv = (b as unknown as Record<string, number>)[sortKey] ?? 0;
       return (av - bv) * m;
     });
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((t) => selectedIds.has(t.id));
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((t) => t.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const SortHeader = ({ label, sortField, width }: { label: string; sortField: string; width?: number | string }) => (
     <th onClick={() => toggleSort(sortField)} style={{
@@ -246,9 +375,7 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
   );
 
   const wkChange = (curr: number, prev: number) => prev === 0 ? 0 : Math.round(((curr - prev) / prev) * 100);
-
   const endToEnd = funnel.signedUp > 0 ? Math.round((funnel.firstInquiry / funnel.signedUp) * 100) : 0;
-
   const pendingReports = reviewReports.filter(r => (reportActions[r.id] || r.status) === "pending" || (reportActions[r.id] || r.status) === "responded").length;
 
   const handleResolve = async (reportId: string, action: "revoke" | "deny") => {
@@ -261,13 +388,149 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
       });
       if (res.ok) {
         setReportActions(prev => ({ ...prev, [reportId]: action === "revoke" ? "revoked" : "denied" }));
+        addToast(action === "revoke" ? "Review revoked" : "Report denied");
       }
     } catch {
-      // Silently handle
+      addToast("Failed to resolve report", "error");
     } finally {
       setActionLoading(null);
     }
   };
+
+  // ─── API action handlers ───────────────────────────────
+  const handleDeleteUser = async (tutor: AdminTutor) => {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: tutor.userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setTutors((prev) => prev.filter((t) => t.id !== tutor.id));
+      setSelectedIds((prev) => { const next = new Set(prev); next.delete(tutor.id); return next; });
+      setModal(null);
+      addToast(`${tutor.name}'s account deleted`);
+    } catch (err) {
+      addToast(`Failed to delete: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
+    }
+  };
+
+  const handleUpdateEmail = async (tutor: AdminTutor, newEmail: string) => {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: tutor.userId, email: newEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setTutors((prev) => prev.map((t) => t.id === tutor.id ? { ...t, email: newEmail } : t));
+      setModal(null);
+      addToast(`Email updated for ${tutor.name}`);
+    } catch (err) {
+      addToast(`Failed to update email: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
+    }
+  };
+
+  const handleResetPassword = async (tutor: AdminTutor, newPassword: string) => {
+    try {
+      const res = await fetch("/api/admin/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: tutor.userId, password: newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setModal(null);
+      addToast(`Password reset for ${tutor.name}`);
+    } catch (err) {
+      addToast(`Failed to reset password: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
+    }
+  };
+
+  const handleSuspendUser = async (tutor: AdminTutor) => {
+    const action = tutor.isSuspended ? "unban" : "ban";
+    try {
+      const res = await fetch("/api/admin/users/suspend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: tutor.userId, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setTutors((prev) => prev.map((t) => t.id === tutor.id ? { ...t, isSuspended: !t.isSuspended } : t));
+      setModal(null);
+      addToast(action === "ban" ? `${tutor.name} suspended` : `${tutor.name} unsuspended`);
+    } catch (err) {
+      addToast(`Failed: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
+    }
+  };
+
+  const handleBulkDelete = async (tutorList: AdminTutor[]) => {
+    try {
+      const res = await fetch("/api/admin/users/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: tutorList.map((t) => t.userId), action: "delete" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const deletedIds = new Set(tutorList.map((t) => t.id));
+      setTutors((prev) => prev.filter((t) => !deletedIds.has(t.id)));
+      setSelectedIds(new Set());
+      setModal(null);
+      addToast(`${data.succeeded} accounts deleted${data.failed > 0 ? `, ${data.failed} failed` : ""}`);
+    } catch (err) {
+      addToast(`Bulk delete failed: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
+    }
+  };
+
+  const handleBulkSuspend = async (tutorList: AdminTutor[]) => {
+    try {
+      const res = await fetch("/api/admin/users/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: tutorList.map((t) => t.userId), action: "suspend" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const suspendedIds = new Set(tutorList.map((t) => t.id));
+      setTutors((prev) => prev.map((t) => suspendedIds.has(t.id) ? { ...t, isSuspended: true } : t));
+      setSelectedIds(new Set());
+      setModal(null);
+      addToast(`${data.succeeded} accounts suspended`);
+    } catch (err) {
+      addToast(`Bulk suspend failed: ${err instanceof Error ? err.message : "Unknown error"}`, "error");
+    }
+  };
+
+  const exportCsv = () => {
+    const headers = ["Name", "Email", "Location", "Status", "Reviews", "Vouches", "Badges", "Inquiries", "Joined", "Slug"];
+    const rows = filtered.map((t) => [
+      t.name, t.email, t.location, t.isSuspended ? "Suspended" : t.status,
+      t.reviews, t.vouches, t.badges, t.inquiries,
+      new Date(t.joined).toLocaleDateString("en-US"), t.slug,
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tutorcard-tutors-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast(`Exported ${filtered.length} tutors`);
+  };
+
+  // ─── 3-dot menu items ─────────────────────────────────
+  const menuItems = (tutor: AdminTutor) => [
+    { label: "View Profile", icon: "ext", onClick: () => { window.open(`/${tutor.slug}`, "_blank"); setOpenMenuId(null); } },
+    { label: "Change Email", icon: "mail", onClick: () => { setModal({ type: "changeEmail", tutor }); setOpenMenuId(null); } },
+    { label: "Reset Password", icon: "key", onClick: () => { setModal({ type: "resetPassword", tutor }); setOpenMenuId(null); } },
+    { label: tutor.isSuspended ? "Unsuspend" : "Suspend", icon: "ban", onClick: () => { setModal({ type: "suspend", tutor }); setOpenMenuId(null); } },
+    { label: "Delete Account", icon: "trash", color: "#dc2626", onClick: () => { setModal({ type: "delete", tutor }); setOpenMenuId(null); } },
+  ];
 
   return (
     <>
@@ -278,7 +541,11 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
         .row-hover:hover { background: #fafafa !important; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .menu-item:hover { background: #f3f4f6 !important; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
       `}</style>
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       <div style={{ minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
         {/* Header */}
@@ -359,9 +626,15 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111", margin: 0 }}>
                   Tutors <span style={{ fontWeight: 500, color: "#9ca3af" }}>({filtered.length})</span>
                 </h3>
+                <button onClick={exportCsv} style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10,
+                  border: "1px solid #e5e7eb", background: "white", color: "#374151",
+                  fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  <Icon name="download" size={13} />Export CSV
+                </button>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                {/* Search */}
                 <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 280 }}>
                   <Icon name="search" size={15} style={{ position: "absolute", left: 12, top: 10, color: "#9ca3af" }} />
                   <input value={search} onChange={(e) => setSearch(e.target.value)}
@@ -385,7 +658,11 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
               <table>
                 <thead>
                   <tr>
-                    <th style={{ padding: "10px 12px 10px 24px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 220 }}>Tutor</th>
+                    <th style={{ padding: "10px 8px 10px 24px", textAlign: "left", borderBottom: "1px solid #f3f4f6", width: 32 }}>
+                      <input type="checkbox" checked={allFilteredSelected && filtered.length > 0} onChange={toggleSelectAll}
+                        style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#111" }} />
+                    </th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 220 }}>Tutor</th>
                     <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 120 }}>Location</th>
                     <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6" }}>Status</th>
                     <SortHeader label="Reviews" sortField="reviews" />
@@ -398,29 +675,56 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
                 </thead>
                 <tbody>
                   {filtered.map((t) => (
-                    <tr key={t.id} className="row-hover" style={{ cursor: "pointer", transition: "background 0.1s" }}>
-                      <td style={{ padding: "14px 12px 14px 24px", borderBottom: "1px solid #f9fafb" }}>
+                    <tr key={t.id} className="row-hover" style={{ cursor: "pointer", transition: "background 0.1s", background: selectedIds.has(t.id) ? "#f0f9ff" : undefined }}
+                      onClick={() => setModal({ type: "userDetail", tutor: t })}>
+                      <td style={{ padding: "14px 8px 14px 24px", borderBottom: "1px solid #f9fafb" }} onClick={(e) => e.stopPropagation()}>
+                        <input type="checkbox" checked={selectedIds.has(t.id)} onChange={() => toggleSelect(t.id)}
+                          style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#111" }} />
+                      </td>
+                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#111", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <span style={{ fontSize: 12, color: "white", fontWeight: 600 }}>{t.name.split(" ").map((w) => w[0]).join("")}</span>
+                          <div style={{ width: 34, height: 34, borderRadius: "50%", background: t.avatarColor || "#111", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <span style={{ fontSize: 12, color: isLight(t.avatarColor || "#111") ? "#111" : "white", fontWeight: 600 }}>{t.name.split(" ").map((w) => w[0]).join("")}</span>
                           </div>
                           <div>
                             <p style={{ fontSize: 13.5, fontWeight: 600, color: "#111", margin: 0, lineHeight: 1.3 }}>{t.name}</p>
-                            <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0 }}>{t.headline}</p>
+                            <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0 }}>{t.email}</p>
                           </div>
                         </div>
                       </td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, color: "#6b7280" }}>{t.location}</td>
-                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb" }}><StatusBadge status={t.status} /></td>
+                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb" }}><StatusBadge status={t.status} suspended={t.isSuspended} /></td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.reviews}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.vouches}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.badges}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.inquiries}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 12.5, color: "#9ca3af" }}>{new Date(t.joined).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
-                      <td style={{ padding: "14px 24px 14px 12px", borderBottom: "1px solid #f9fafb" }}>
-                        <Link href={`/${t.slug}`} target="_blank" style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", padding: 4, display: "flex" }}>
-                          <Icon name="ext" size={14} />
-                        </Link>
+                      <td style={{ padding: "14px 24px 14px 12px", borderBottom: "1px solid #f9fafb", position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => setOpenMenuId(openMenuId === t.id ? null : t.id)} style={{
+                          background: openMenuId === t.id ? "#f3f4f6" : "none", border: "none", color: "#9ca3af",
+                          cursor: "pointer", padding: 4, display: "flex", borderRadius: 6,
+                        }}>
+                          <Icon name="moreVertical" size={16} />
+                        </button>
+                        {openMenuId === t.id && (
+                          <div ref={menuRef} style={{
+                            position: "absolute", right: 24, top: 44, background: "white", borderRadius: 12,
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.12)", border: "1px solid #f3f4f6",
+                            minWidth: 180, zIndex: 50, overflow: "hidden",
+                          }}>
+                            {menuItems(t).map((item, i) => (
+                              <button key={i} className="menu-item" onClick={item.onClick} style={{
+                                display: "flex", alignItems: "center", gap: 10, width: "100%",
+                                padding: "10px 16px", border: "none", background: "none",
+                                fontSize: 13, fontWeight: 500, color: item.color || "#374151",
+                                cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left",
+                                borderTop: i === menuItems(t).length - 1 ? "1px solid #f3f4f6" : "none",
+                              }}>
+                                <Icon name={item.icon} size={14} style={{ color: item.color || "#9ca3af" }} />{item.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -434,6 +738,45 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
               </div>
             )}
           </div>
+
+          {/* Bulk action bar */}
+          {selectedIds.size > 0 && (
+            <div style={{
+              position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+              background: "#111", color: "white", borderRadius: 14, padding: "12px 20px",
+              display: "flex", alignItems: "center", gap: 16, boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+              zIndex: 200, fontFamily: "'DM Sans', sans-serif",
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{selectedIds.size} selected</span>
+              <button onClick={() => {
+                const selected = tutors.filter((t) => selectedIds.has(t.id));
+                setModal({ type: "bulkSuspend", tutors: selected });
+              }} style={{
+                padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)",
+                background: "transparent", color: "white", fontSize: 12.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5,
+              }}>
+                <Icon name="ban" size={12} />Suspend
+              </button>
+              <button onClick={() => {
+                const selected = tutors.filter((t) => selectedIds.has(t.id));
+                setModal({ type: "bulkDelete", tutors: selected });
+              }} style={{
+                padding: "7px 14px", borderRadius: 8, border: "none",
+                background: "#dc2626", color: "white", fontSize: 12.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5,
+              }}>
+                <Icon name="trash" size={12} />Delete
+              </button>
+              <button onClick={() => setSelectedIds(new Set())} style={{
+                padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)",
+                background: "transparent", color: "#9ca3af", fontSize: 12.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+              }}>
+                Clear
+              </button>
+            </div>
+          )}
           </>)}
 
           {activeTab === "reports" && (
@@ -462,9 +805,7 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
                     return (
                       <div key={report.id} style={{ padding: "20px 24px", borderBottom: "1px solid #f9fafb" }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                          {/* Left: report info */}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            {/* Header: tutor name, reviewer name, status */}
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                               <span style={{ fontSize: 13.5, fontWeight: 600, color: "#111" }}>{report.tutorName}</span>
                               <span style={{ fontSize: 12, color: "#d1d5db" }}>reported</span>
@@ -474,27 +815,19 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
                                 <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{report.reviewExam}</span>
                               )}
                             </div>
-
-                            {/* Review quote */}
                             <div style={{ background: "#fafafa", borderRadius: 10, padding: "10px 14px", border: "1px solid #f0f0f0", marginBottom: 10 }}>
                               <p style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.5, margin: 0, fontStyle: "italic" }}>&ldquo;{report.reviewQuote.slice(0, 200)}{report.reviewQuote.length > 200 ? "..." : ""}&rdquo;</p>
                             </div>
-
-                            {/* Report reason */}
                             <div style={{ marginBottom: 10 }}>
                               <p style={{ fontSize: 11, fontWeight: 600, color: "#dc2626", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Report reason</p>
                               <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: 0 }}>{report.reason}</p>
                             </div>
-
-                            {/* Reviewer response */}
                             {report.reviewerResponse && (
                               <div style={{ marginBottom: 10 }}>
                                 <p style={{ fontSize: 11, fontWeight: 600, color: "#0284c7", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Reviewer response</p>
                                 <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: 0 }}>{report.reviewerResponse}</p>
                               </div>
                             )}
-
-                            {/* Meta info */}
                             <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "#9ca3af", flexWrap: "wrap" }}>
                               <span>Reported {new Date(report.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                               {currentStatus === "pending" && (
@@ -511,36 +844,14 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
                               )}
                             </div>
                           </div>
-
-                          {/* Right: action buttons */}
                           {isActionable && (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-                              <button
-                                onClick={() => handleResolve(report.id, "revoke")}
-                                disabled={actionLoading === report.id}
-                                style={{
-                                  padding: "8px 16px", borderRadius: 10, border: "none",
-                                  background: "#dc2626", color: "white",
-                                  fontSize: 12.5, fontWeight: 600, cursor: actionLoading === report.id ? "default" : "pointer",
-                                  fontFamily: "'DM Sans', sans-serif",
-                                  display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
-                                  opacity: actionLoading === report.id ? 0.6 : 1,
-                                }}
-                              >
+                              <button onClick={() => handleResolve(report.id, "revoke")} disabled={actionLoading === report.id}
+                                style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: "#dc2626", color: "white", fontSize: 12.5, fontWeight: 600, cursor: actionLoading === report.id ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", opacity: actionLoading === report.id ? 0.6 : 1 }}>
                                 <Icon name="x" size={12} />Revoke Review
                               </button>
-                              <button
-                                onClick={() => handleResolve(report.id, "deny")}
-                                disabled={actionLoading === report.id}
-                                style={{
-                                  padding: "8px 16px", borderRadius: 10,
-                                  border: "1px solid #e5e7eb", background: "white", color: "#374151",
-                                  fontSize: 12.5, fontWeight: 600, cursor: actionLoading === report.id ? "default" : "pointer",
-                                  fontFamily: "'DM Sans', sans-serif",
-                                  display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
-                                  opacity: actionLoading === report.id ? 0.6 : 1,
-                                }}
-                              >
+                              <button onClick={() => handleResolve(report.id, "deny")} disabled={actionLoading === report.id}
+                                style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", color: "#374151", fontSize: 12.5, fontWeight: 600, cursor: actionLoading === report.id ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap", opacity: actionLoading === report.id ? 0.6 : 1 }}>
                                 <Icon name="check" size={12} />Deny Report
                               </button>
                             </div>
@@ -555,6 +866,420 @@ export default function SuperAdminDashboard({ stats, funnel, tutors, locations, 
           )}
         </div>
       </div>
+
+      {/* ─── USER DETAIL POPUP ──────────────────────────── */}
+      {modal?.type === "userDetail" && (() => {
+        const t = modal.tutor;
+        const activity = recentActivity[t.id];
+        return (
+          <div onClick={() => setModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 18, maxWidth: 640, width: "100%", maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+              {/* Header */}
+              <div style={{ padding: "24px 28px 20px", borderBottom: "1px solid #f3f4f6" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ width: 52, height: 52, borderRadius: "50%", background: t.avatarColor || "#111", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: 18, color: isLight(t.avatarColor || "#111") ? "#111" : "white", fontWeight: 700 }}>{t.name.split(" ").map((w) => w[0]).join("")}</span>
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: 20, fontWeight: 800, color: "#111", margin: 0 }}>{t.name}</h2>
+                      <p style={{ fontSize: 13, color: "#9ca3af", margin: "2px 0 0" }}>{t.headline || "No headline"}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}>
+                    <Icon name="x" size={16} />
+                  </button>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                  <StatusBadge status={t.status} suspended={t.isSuspended} />
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>{t.email}</span>
+                  <span style={{ fontSize: 12, color: "#d1d5db" }}>|</span>
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>Joined {new Date(t.joined).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: "flex", gap: 1, background: "#f3f4f6", padding: "0" }}>
+                {[
+                  { label: "Reviews", value: t.reviews, icon: "star" },
+                  { label: "Vouches", value: t.vouches, icon: "shield" },
+                  { label: "Badges", value: t.badges, icon: "award" },
+                  { label: "Inquiries", value: t.inquiries, icon: "inbox" },
+                ].map((s) => (
+                  <div key={s.label} style={{ flex: 1, background: "white", padding: "14px 16px", textAlign: "center" }}>
+                    <p style={{ fontSize: 20, fontWeight: 800, color: "#111", margin: "0 0 2px" }}>{s.value}</p>
+                    <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Details */}
+              <div style={{ padding: "20px 28px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 24px", marginBottom: 20 }}>
+                  {t.slug && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Profile</p>
+                      <Link href={`/${t.slug}`} target="_blank" style={{ fontSize: 13, color: "#0284c7", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                        /{t.slug} <Icon name="ext" size={11} />
+                      </Link>
+                    </div>
+                  )}
+                  {t.businessName && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Business</p>
+                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{t.businessName}</p>
+                    </div>
+                  )}
+                  {t.yearsExperience && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Experience</p>
+                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{t.yearsExperience} years</p>
+                    </div>
+                  )}
+                  {t.allLocations.length > 0 && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Locations</p>
+                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{t.allLocations.join(", ")}</p>
+                    </div>
+                  )}
+                  {t.specialties.length > 0 && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Exams</p>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {t.specialties.map((e) => (
+                          <span key={e} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", padding: "2px 8px", borderRadius: 4 }}>{e}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {t.subjects.length > 0 && (
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Subjects</p>
+                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{t.subjects.join(", ")}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recent Activity */}
+                {activity && (
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#111", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Recent Activity</p>
+                    {activity.reviews.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#f59e0b", margin: "0 0 6px" }}>REVIEWS</p>
+                        {activity.reviews.map((r, i) => (
+                          <div key={i} style={{ padding: "8px 0", borderBottom: i < activity.reviews.length - 1 ? "1px solid #f9fafb" : "none", display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
+                              {[1,2,3,4,5].map((s) => <Icon key={s} name="star" size={9} style={{ color: r.rating >= s ? "#f59e0b" : "#e5e7eb" }} />)}
+                            </div>
+                            <span style={{ fontSize: 12, color: "#374151", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.reviewerName}{r.exam ? ` · ${r.exam}` : ""}</span>
+                            <span style={{ fontSize: 11, color: "#9ca3af", flexShrink: 0 }}>{new Date(r.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {activity.vouches.length > 0 && (
+                      <div style={{ marginBottom: 14 }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#0d9488", margin: "0 0 6px" }}>VOUCHES</p>
+                        {activity.vouches.map((v, i) => (
+                          <div key={i} style={{ padding: "6px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 12, color: "#374151" }}>{v.voucherName}</span>
+                            <span style={{ fontSize: 11, color: "#9ca3af" }}>{new Date(v.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {activity.inquiries.length > 0 && (
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#059669", margin: "0 0 6px" }}>INQUIRIES</p>
+                        {activity.inquiries.map((inq, i) => (
+                          <div key={i} style={{ padding: "6px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 12, color: "#374151" }}>{inq.studentName || "Anonymous"}</span>
+                            <span style={{ fontSize: 11, color: "#9ca3af" }}>{new Date(inq.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {activity.reviews.length === 0 && activity.vouches.length === 0 && activity.inquiries.length === 0 && (
+                      <p style={{ fontSize: 12, color: "#9ca3af", fontStyle: "italic" }}>No recent activity</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div style={{ padding: "16px 28px 24px", borderTop: "1px solid #f3f4f6", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Link href={`/${t.slug}`} target="_blank" style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", color: "#374151", fontSize: 12.5, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans', sans-serif" }}>
+                  <Icon name="ext" size={13} />View Profile
+                </Link>
+                <button onClick={() => setModal({ type: "changeEmail", tutor: t })} style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", color: "#374151", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="mail" size={13} />Email
+                </button>
+                <button onClick={() => setModal({ type: "resetPassword", tutor: t })} style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", color: "#374151", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="key" size={13} />Password
+                </button>
+                <button onClick={() => setModal({ type: "suspend", tutor: t })} style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid #e5e7eb", background: "white", color: t.isSuspended ? "#059669" : "#d97706", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="ban" size={13} />{t.isSuspended ? "Unsuspend" : "Suspend"}
+                </button>
+                <button onClick={() => setModal({ type: "delete", tutor: t })} style={{ padding: "9px 16px", borderRadius: 10, border: "none", background: "#dc2626", color: "white", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+                  <Icon name="trash" size={13} />Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ─── CHANGE EMAIL MODAL ─────────────────────────── */}
+      {modal?.type === "changeEmail" && (() => {
+        const ChangeEmailInner = () => {
+          const [email, setEmail] = useState(modal.tutor.email);
+          const [loading, setLoading] = useState(false);
+          const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email !== modal.tutor.email;
+          return (
+            <ModalOverlay onClose={() => setModal(null)}>
+              <div style={{ padding: "28px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#f0f9ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="mail" size={18} style={{ color: "#0284c7" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Change Email</h3>
+                    <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>{modal.tutor.name}</p>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+                </div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>New email address</label>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif", marginBottom: 20 }}
+                  onFocus={(e) => { e.target.style.borderColor = "#111"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; }} />
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={async () => { setLoading(true); await handleUpdateEmail(modal.tutor, email); setLoading(false); }} disabled={!valid || loading}
+                    style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: valid && !loading ? "#111" : "#e5e7eb", color: valid && !loading ? "white" : "#9ca3af", fontSize: 14, fontWeight: 600, cursor: valid && !loading ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif" }}>
+                    {loading ? "Updating..." : "Update Email"}
+                  </button>
+                  <button onClick={() => setModal(null)} style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+                </div>
+              </div>
+            </ModalOverlay>
+          );
+        };
+        return <ChangeEmailInner />;
+      })()}
+
+      {/* ─── RESET PASSWORD MODAL ───────────────────────── */}
+      {modal?.type === "resetPassword" && (() => {
+        const ResetPasswordInner = () => {
+          const [password, setPassword] = useState("");
+          const [show, setShow] = useState(false);
+          const [loading, setLoading] = useState(false);
+          const valid = password.length >= 6;
+          return (
+            <ModalOverlay onClose={() => setModal(null)}>
+              <div style={{ padding: "28px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fefce8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="key" size={18} style={{ color: "#d97706" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Reset Password</h3>
+                    <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>{modal.tutor.name}</p>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+                </div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>New password</label>
+                <div style={{ position: "relative", marginBottom: 6 }}>
+                  <input value={password} onChange={(e) => setPassword(e.target.value)} type={show ? "text" : "password"}
+                    style={{ width: "100%", padding: "12px 44px 12px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif" }}
+                    onFocus={(e) => { e.target.style.borderColor = "#111"; }}
+                    onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; }} />
+                  <button onClick={() => setShow(!show)} style={{ position: "absolute", right: 12, top: 12, background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0 }}>
+                    <Icon name={show ? "eye" : "eye"} size={16} />
+                  </button>
+                </div>
+                <p style={{ fontSize: 12, color: password.length > 0 && password.length < 6 ? "#dc2626" : "#9ca3af", margin: "0 0 20px" }}>Minimum 6 characters</p>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={async () => { setLoading(true); await handleResetPassword(modal.tutor, password); setLoading(false); }} disabled={!valid || loading}
+                    style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: valid && !loading ? "#111" : "#e5e7eb", color: valid && !loading ? "white" : "#9ca3af", fontSize: 14, fontWeight: 600, cursor: valid && !loading ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif" }}>
+                    {loading ? "Resetting..." : "Reset Password"}
+                  </button>
+                  <button onClick={() => setModal(null)} style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+                </div>
+              </div>
+            </ModalOverlay>
+          );
+        };
+        return <ResetPasswordInner />;
+      })()}
+
+      {/* ─── SUSPEND MODAL ──────────────────────────────── */}
+      {modal?.type === "suspend" && (() => {
+        const t = modal.tutor;
+        const isBanned = t.isSuspended;
+        const SuspendInner = () => {
+          const [loading, setLoading] = useState(false);
+          return (
+            <ModalOverlay onClose={() => setModal(null)}>
+              <div style={{ padding: "28px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: isBanned ? "#ecfdf5" : "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="ban" size={18} style={{ color: isBanned ? "#059669" : "#d97706" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>{isBanned ? "Unsuspend" : "Suspend"} Account</h3>
+                    <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>{t.name}</p>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+                </div>
+                <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, marginBottom: 24 }}>
+                  {isBanned
+                    ? `This will restore ${t.name}'s ability to log in and access their account.`
+                    : `This will prevent ${t.name} from logging in. Their profile and data will be preserved but they won't be able to access their account.`
+                  }
+                </p>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={async () => { setLoading(true); await handleSuspendUser(t); setLoading(false); }} disabled={loading}
+                    style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: isBanned ? "#059669" : "#d97706", color: "white", fontSize: 14, fontWeight: 600, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: loading ? 0.6 : 1 }}>
+                    {loading ? "Processing..." : isBanned ? "Unsuspend Account" : "Suspend Account"}
+                  </button>
+                  <button onClick={() => setModal(null)} style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+                </div>
+              </div>
+            </ModalOverlay>
+          );
+        };
+        return <SuspendInner />;
+      })()}
+
+      {/* ─── DELETE MODAL ───────────────────────────────── */}
+      {modal?.type === "delete" && (() => {
+        const t = modal.tutor;
+        const DeleteInner = () => {
+          const [confirm, setConfirm] = useState("");
+          const [loading, setLoading] = useState(false);
+          const confirmed = confirm === t.name;
+          return (
+            <ModalOverlay onClose={() => setModal(null)}>
+              <div style={{ padding: "28px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="trash" size={18} style={{ color: "#dc2626" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Delete Account</h3>
+                    <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>{t.name}</p>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+                </div>
+                <div style={{ background: "#fef2f2", borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+                  <p style={{ fontSize: 13, color: "#dc2626", lineHeight: 1.6, margin: 0 }}>
+                    This will permanently delete <strong>{t.name}</strong>&apos;s account and all associated data including reviews, vouches, badges, and inquiries. This action cannot be undone.
+                  </p>
+                </div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Type <strong>{t.name}</strong> to confirm</label>
+                <input value={confirm} onChange={(e) => setConfirm(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif", marginBottom: 20 }}
+                  onFocus={(e) => { e.target.style.borderColor = "#dc2626"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; }} />
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={async () => { setLoading(true); await handleDeleteUser(t); setLoading(false); }} disabled={!confirmed || loading}
+                    style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: confirmed && !loading ? "#dc2626" : "#e5e7eb", color: confirmed && !loading ? "white" : "#9ca3af", fontSize: 14, fontWeight: 600, cursor: confirmed && !loading ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif" }}>
+                    {loading ? "Deleting..." : "Delete Account"}
+                  </button>
+                  <button onClick={() => setModal(null)} style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+                </div>
+              </div>
+            </ModalOverlay>
+          );
+        };
+        return <DeleteInner />;
+      })()}
+
+      {/* ─── BULK DELETE MODAL ──────────────────────────── */}
+      {modal?.type === "bulkDelete" && (() => {
+        const list = modal.tutors;
+        const BulkDeleteInner = () => {
+          const [confirm, setConfirm] = useState("");
+          const [loading, setLoading] = useState(false);
+          const target = `DELETE ${list.length}`;
+          const confirmed = confirm === target;
+          return (
+            <ModalOverlay onClose={() => setModal(null)}>
+              <div style={{ padding: "28px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="trash" size={18} style={{ color: "#dc2626" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Delete {list.length} Accounts</h3>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+                </div>
+                <div style={{ background: "#fef2f2", borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+                  <p style={{ fontSize: 13, color: "#dc2626", lineHeight: 1.6, margin: 0 }}>
+                    You are about to permanently delete <strong>{list.length}</strong> accounts and all associated data. This cannot be undone.
+                  </p>
+                </div>
+                <div style={{ maxHeight: 120, overflow: "auto", marginBottom: 16 }}>
+                  {list.map((t) => (
+                    <p key={t.id} style={{ fontSize: 12, color: "#374151", margin: "2px 0" }}>{t.name} ({t.email})</p>
+                  ))}
+                </div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Type <strong>{target}</strong> to confirm</label>
+                <input value={confirm} onChange={(e) => setConfirm(e.target.value)} style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 14, color: "#111", outline: "none", boxSizing: "border-box", fontFamily: "'DM Sans', sans-serif", marginBottom: 20 }}
+                  onFocus={(e) => { e.target.style.borderColor = "#dc2626"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; }} />
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={async () => { setLoading(true); await handleBulkDelete(list); setLoading(false); }} disabled={!confirmed || loading}
+                    style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: confirmed && !loading ? "#dc2626" : "#e5e7eb", color: confirmed && !loading ? "white" : "#9ca3af", fontSize: 14, fontWeight: 600, cursor: confirmed && !loading ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif" }}>
+                    {loading ? "Deleting..." : `Delete ${list.length} Accounts`}
+                  </button>
+                  <button onClick={() => setModal(null)} style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+                </div>
+              </div>
+            </ModalOverlay>
+          );
+        };
+        return <BulkDeleteInner />;
+      })()}
+
+      {/* ─── BULK SUSPEND MODAL ─────────────────────────── */}
+      {modal?.type === "bulkSuspend" && (() => {
+        const list = modal.tutors;
+        const BulkSuspendInner = () => {
+          const [loading, setLoading] = useState(false);
+          return (
+            <ModalOverlay onClose={() => setModal(null)}>
+              <div style={{ padding: "28px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="ban" size={18} style={{ color: "#d97706" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Suspend {list.length} Accounts</h3>
+                  </div>
+                  <button onClick={() => setModal(null)} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+                </div>
+                <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, marginBottom: 16 }}>
+                  This will suspend {list.length} accounts. Users will not be able to log in but their data will be preserved.
+                </p>
+                <div style={{ maxHeight: 120, overflow: "auto", marginBottom: 20 }}>
+                  {list.map((t) => (
+                    <p key={t.id} style={{ fontSize: 12, color: "#374151", margin: "2px 0" }}>{t.name} ({t.email})</p>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={async () => { setLoading(true); await handleBulkSuspend(list); setLoading(false); }} disabled={loading}
+                    style={{ padding: "12px 24px", borderRadius: 12, border: "none", background: loading ? "#e5e7eb" : "#d97706", color: "white", fontSize: 14, fontWeight: 600, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: loading ? 0.6 : 1 }}>
+                    {loading ? "Suspending..." : `Suspend ${list.length} Accounts`}
+                  </button>
+                  <button onClick={() => setModal(null)} style={{ padding: "12px 20px", borderRadius: 12, border: "1px solid #e5e7eb", background: "white", color: "#9ca3af", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+                </div>
+              </div>
+            </ModalOverlay>
+          );
+        };
+        return <BulkSuspendInner />;
+      })()}
     </>
   );
 }

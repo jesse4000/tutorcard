@@ -102,6 +102,7 @@ export default async function DashboardPage() {
     rating: r.rating as number,
     quote: r.quote as string,
     reportStatus: (reportStatusMap[r.id as string] as ReviewData["reportStatus"]) || undefined,
+    isPinned: (r.is_pinned as boolean) || false,
   }));
 
   // Map badges
@@ -128,9 +129,12 @@ export default async function DashboardPage() {
     };
   });
 
-  // Compute average rating
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+  // Compute average rating from non-revoked reviews only
+  const activeReviews = (reviewsRaw || []).filter(
+    (r: Record<string, unknown>) => !r.is_revoked
+  );
+  const averageRating = activeReviews.length > 0
+    ? activeReviews.reduce((sum, r) => sum + (r.rating as number), 0) / activeReviews.length
     : null;
 
   // Fetch invite codes using admin client to bypass RLS issues in server components
@@ -172,7 +176,7 @@ export default async function DashboardPage() {
       tutor={tutor}
       userEmail={user.email || ""}
       vouchCount={vouchCount ?? 0}
-      reviewCount={reviews.length}
+      reviewCount={activeReviews.length}
       averageRating={averageRating}
       reviews={reviews}
       vouchers={vouchers}

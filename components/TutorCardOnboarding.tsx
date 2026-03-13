@@ -657,8 +657,6 @@ export default function TutorCardOnboarding() {
     if (!svg) return;
     const serializer = new XMLSerializer();
     const svgStr = serializer.serializeToString(svg);
-    const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
@@ -669,13 +667,12 @@ export default function TutorCardOnboarding() {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, 512, 512);
       ctx.drawImage(img, 0, 0, 512, 512);
-      URL.revokeObjectURL(url);
       const a = document.createElement("a");
       a.download = `tutorcard-${autoSlug}-qr.png`;
       a.href = canvas.toDataURL("image/png");
       a.click();
     };
-    img.src = url;
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgStr)}`;
   };
 
   const checkProfanity = (): boolean => {
@@ -745,16 +742,26 @@ export default function TutorCardOnboarding() {
     setSubmitting(false);
   };
 
+  const [textCopied, setTextCopied] = useState(false);
+
   const shareAction = (platform: string) => {
     const url = `${window.location.origin}/${autoSlug}`;
-    const text = `Check out my TutorCard — all my info, specialties, and availability in one place.`;
+    const text = `I just joined TutorCard! Check out my tutor profile and connect with me here:`;
     const map: Record<string, string> = {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text + " " + url)}`,
+      twitter: `https://x.com/intent/tweet?text=${encodeURIComponent(text + " " + url)}`,
       email: `mailto:?subject=My TutorCard&body=${encodeURIComponent(text + "\n\n" + url)}`,
-      sms: `sms:?body=${encodeURIComponent(text + " " + url)}`,
     };
     if (map[platform]) window.open(map[platform], "_blank");
+  };
+
+  const handleTextShare = () => {
+    const url = `${window.location.origin}/${autoSlug}`;
+    const text = `I just joined TutorCard! Check out my tutor profile and connect with me here: ${url}`;
+    navigator.clipboard?.writeText(text).catch(() => {});
+    setTextCopied(true);
+    setTimeout(() => setTextCopied(false), 2500);
+    window.open(`sms:&body=${encodeURIComponent(text)}`, "_self");
   };
 
   return (
@@ -1142,7 +1149,6 @@ export default function TutorCardOnboarding() {
                       { icon: "linkedin", label: "Share on LinkedIn", color: "#0A66C2", action: "linkedin" },
                       { icon: "twitter", label: "Share on X", color: "#111", action: "twitter" },
                       { icon: "mail", label: "Send via email", color: "#6b7280", action: "email" },
-                      { icon: "msg", label: "Text to parents", color: "#6b7280", action: "sms" },
                     ].map(s => (
                       <button key={s.icon} className="share-btn" onClick={() => shareAction(s.action)} style={{
                         display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12,
@@ -1153,6 +1159,14 @@ export default function TutorCardOnboarding() {
                         <Icon name="chevron" size={13} style={{ color: "#d1d5db" }} />
                       </button>
                     ))}
+                    <button className="share-btn" onClick={handleTextShare} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12,
+                      border: "1px solid #e5e7eb", background: textCopied ? "#ecfdf5" : "white", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                    }}>
+                      <Icon name="msg" size={16} style={{ color: textCopied ? "#059669" : "#6b7280" }} />
+                      <span style={{ fontSize: 14, fontWeight: 500, color: textCopied ? "#059669" : "#111", flex: 1, textAlign: "left" }}>{textCopied ? "Copied! Paste into any message" : "Text to parents"}</span>
+                      <Icon name={textCopied ? "check" : "chevron"} size={13} style={{ color: textCopied ? "#059669" : "#d1d5db" }} />
+                    </button>
                   </div>
                 </div>
                 <div ref={qrRef} style={{ position: "absolute", left: -9999, top: -9999, pointerEvents: "none" }}>

@@ -94,7 +94,7 @@ export default function RespondClient({ token }: { token: string }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
         <SimpleHeader />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 16px" }}>
           <p style={{ fontSize: 14, color: "#9ca3af" }}>Loading...</p>
@@ -105,7 +105,7 @@ export default function RespondClient({ token }: { token: string }) {
 
   if (error && !context) {
     return (
-      <div style={{ minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
         <SimpleHeader />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 16px" }}>
           <div style={{ background: "white", borderRadius: 20, padding: "40px 32px", maxWidth: 440, width: "100%", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)" }}>
@@ -123,7 +123,7 @@ export default function RespondClient({ token }: { token: string }) {
 
   if (submitted) {
     return (
-      <div style={{ minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
         <SimpleHeader />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 16px" }}>
           <div style={{ background: "white", borderRadius: 20, padding: "40px 32px", maxWidth: 440, width: "100%", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)" }}>
@@ -151,7 +151,7 @@ export default function RespondClient({ token }: { token: string }) {
         * { box-sizing: border-box; margin: 0; padding: 0; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
         <SimpleHeader />
 
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 16px 60px" }}>

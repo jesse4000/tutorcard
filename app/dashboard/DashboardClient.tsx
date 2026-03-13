@@ -95,6 +95,7 @@ const iconPaths: Record<string, React.ReactNode> = {
   gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
   ext: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
   flag: <><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></>,
+  pin: <><path d="M12 17v5"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></>,
   download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
 };
 
@@ -194,6 +195,202 @@ function SharePopup({ onClose, slug }: { onClose: () => void; slug: string }) {
         <Icon name="download" size={14} style={{ color: "#6b7280" }} />Download QR code
       </button>
     </Modal>
+  );
+}
+
+// ─── SIGNATURE HTML GENERATORS ──────────────────────────
+function sigMinimal(tutor: TutorRow, accent: string) {
+  const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111111;">
+  <tr>
+    <td style="padding-bottom:4px;">
+      <strong style="font-size:15px;">${fullName}</strong>
+    </td>
+  </tr>
+  <tr>
+    <td style="font-size:13px;color:#6b7280;padding-bottom:10px;">
+      ${tutor.title || "Tutor"}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-top:8px;border-top:1px solid #e5e7eb;">
+      <a href="https://tutorcard.co/${tutor.slug}" style="color:${accent};text-decoration:none;font-size:13px;font-weight:600;">tutorcard.co/${tutor.slug}</a>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sigStandard(tutor: TutorRow, accent: string) {
+  const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
+  const initials = [tutor.first_name?.[0], tutor.last_name?.[0]].filter(Boolean).join("");
+  const physicalLocations = tutor.locations.filter((l: string) => !/remote|online/i.test(l));
+  const location = physicalLocations[0] || "";
+  const subtitle = [tutor.title || "Tutor", location].filter(Boolean).join(" \u00B7 ");
+  const t = toac(accent);
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111111;">
+  <tr>
+    <td style="padding-right:16px;vertical-align:top;border-right:2px solid ${accent};">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="width:52px;height:52px;background:${accent};border-radius:50%;text-align:center;vertical-align:middle;color:${t};font-size:18px;font-weight:600;">${initials}</td></tr>
+      </table>
+    </td>
+    <td style="padding-left:16px;vertical-align:top;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:16px;font-weight:700;padding-bottom:2px;">${fullName}</td></tr>
+        <tr><td style="font-size:13px;color:#6b7280;padding-bottom:6px;">${subtitle}</td></tr>
+        <tr><td style="padding-bottom:2px;"><a href="https://tutorcard.co/${tutor.slug}" style="color:${accent};text-decoration:none;font-size:13px;font-weight:600;">View my TutorCard &rarr;</a></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sigWithStats(tutor: TutorRow, accent: string, vouchCount: number, averageRating: number | null, reviewCount: number) {
+  const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
+  const initials = [tutor.first_name?.[0], tutor.last_name?.[0]].filter(Boolean).join("");
+  const physicalLocations = tutor.locations.filter((l: string) => !/remote|online/i.test(l));
+  const location = physicalLocations[0] || "";
+  const subtitle = [tutor.title || "Tutor", location].filter(Boolean).join(" \u00B7 ");
+  const t = toac(accent);
+  const ratingDisplay = averageRating != null ? averageRating.toFixed(1) : "-";
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111111;">
+  <tr>
+    <td style="padding-right:16px;vertical-align:top;border-right:2px solid ${accent};">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="width:52px;height:52px;background:${accent};border-radius:50%;text-align:center;vertical-align:middle;color:${t};font-size:18px;font-weight:600;">${initials}</td></tr>
+      </table>
+    </td>
+    <td style="padding-left:16px;vertical-align:top;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:16px;font-weight:700;padding-bottom:2px;">${fullName}</td></tr>
+        <tr><td style="font-size:13px;color:#6b7280;padding-bottom:8px;">${subtitle}</td></tr>
+        <tr>
+          <td style="padding-bottom:8px;">
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="font-size:12px;color:#6b7280;padding-right:12px;">&#9733; <strong style="color:#111;">${ratingDisplay}</strong> <span style="color:#9ca3af;">(${reviewCount})</span></td>
+                <td style="font-size:12px;color:#6b7280;"><strong style="color:#111;">${vouchCount}</strong> peer vouches</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr><td><a href="https://tutorcard.co/${tutor.slug}" style="color:${accent};text-decoration:none;font-size:13px;font-weight:600;">View my TutorCard &rarr;</a></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+// ─── SIGNATURE POPUP ────────────────────────────────────
+function SignaturePopup({ onClose, tutor, accent, vouchCount, averageRating, reviewCount }: {
+  onClose: () => void; tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number;
+}) {
+  const [style, setStyle] = useState("standard");
+  const [copied, setCopied] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const STYLES = [
+    { key: "minimal", label: "Minimal", gen: () => sigMinimal(tutor, accent) },
+    { key: "standard", label: "Standard", gen: () => sigStandard(tutor, accent) },
+    { key: "stats", label: "With stats", gen: () => sigWithStats(tutor, accent, vouchCount, averageRating, reviewCount) },
+  ];
+
+  const currentSig = STYLES.find((s) => s.key === style)!;
+  const html = currentSig.gen();
+
+  const handleCopy = () => {
+    const el = previewRef.current;
+    if (!el) return;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    if (!sel) return;
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand("copy");
+    sel.removeAllRanges();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "fadeIn 0.15s ease" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 520, padding: "32px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="mail" size={18} style={{ color: "#374151" }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Email signature</h3>
+              <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Copy and paste into your email settings.</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}>
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+        {/* Style tabs */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+          {STYLES.map((s) => (
+            <button key={s.key} onClick={() => setStyle(s.key)} style={{
+              padding: "7px 16px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: style === s.key ? "#111" : "#f3f4f6",
+              color: style === s.key ? "white" : "#6b7280",
+              fontSize: 13, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+              transition: "all 0.15s",
+            }}>{s.label}</button>
+          ))}
+        </div>
+        {/* Preview */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Preview</p>
+          <div style={{
+            background: "white", borderRadius: 14, padding: "24px 20px",
+            border: "1px solid #f0f0f0",
+          }}>
+            {/* Fake email context */}
+            <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #f3f4f6" }}>
+              <p style={{ fontSize: 13, color: "#d1d5db", margin: "0 0 8px" }}>...</p>
+              <p style={{ fontSize: 14, color: "#6b7280", margin: 0, lineHeight: 1.5 }}>
+                Looking forward to our session on Thursday. Let me know if you have any questions before then!
+              </p>
+            </div>
+            <div ref={previewRef} dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        </div>
+        {/* Copy button */}
+        <button onClick={handleCopy} style={{
+          width: "100%", padding: "13px", borderRadius: 14, border: "none",
+          background: copied ? "#ecfdf5" : "#111",
+          color: copied ? "#059669" : "white",
+          fontSize: 15, fontWeight: 600, cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          transition: "all 0.2s",
+        }}>
+          <Icon name={copied ? "check" : "copy"} size={16} />
+          {copied ? "Copied to clipboard!" : "Copy signature"}
+        </button>
+        {/* Instructions */}
+        <div style={{ marginTop: 16, padding: "14px 16px", background: "#fafafa", borderRadius: 12, border: "1px solid #f0f0f0" }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 8px" }}>How to add it</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[
+              { app: "Gmail", step: "Settings > See all settings > Signature > Paste" },
+              { app: "Outlook", step: "Settings > Mail > Compose and reply > Signature > Paste" },
+              { app: "Apple Mail", step: "Preferences > Signatures > Paste" },
+            ].map((item) => (
+              <div key={item.app} style={{ display: "flex", gap: 8, fontSize: 12.5, lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 600, color: "#111", flexShrink: 0, width: 72 }}>{item.app}</span>
+                <span style={{ color: "#9ca3af" }}>{item.step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -308,29 +505,17 @@ function InvitePopup({ onClose, codes }: { onClose: () => void; codes: InviteCod
 }
 
 // ─── REVIEW PREVIEW (inline in popup) ───────────────────
-function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe, accent }: {
+function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe }: {
   exam: string; beforeScore: string; afterScore: string; timeframe: string; accent: string;
 }) {
-  const t = toac(accent);
   const imp = beforeScore && afterScore ? Number(afterScore) - Number(beforeScore) : null;
   const hasLeft = exam || beforeScore || afterScore || timeframe;
-
-  const rightContent = (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      <p style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
-        {"\u201CReview will appear here...\u201D"}
-      </p>
-      <p style={{ fontSize: 11.5, color: "#d1d5db", margin: 0, fontWeight: 500 }}>
-        {"- Parent name"}
-      </p>
-    </div>
-  );
 
   return (
     <div style={{ background: "#fafafa", borderRadius: 14, padding: "16px 18px", border: "1px solid #f0f0f0" }}>
       {hasLeft && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             {exam && (
               <span style={{
                 fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase",
@@ -348,23 +533,44 @@ function DashboardReviewPreview({ exam, beforeScore, afterScore, timeframe, acce
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 2,
                 background: "#059669", color: "white", padding: "2px 8px", borderRadius: 20,
-                fontSize: 10.5, fontWeight: 700, marginLeft: "auto", flexShrink: 0,
+                fontSize: 10.5, fontWeight: 700, flexShrink: 0,
               }}>
                 <Icon name="arrowUp" size={9} />+{imp}
               </span>
             )}
+            {timeframe && (
+              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                {timeframe}
+              </span>
+            )}
           </div>
-          {timeframe && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 12, color: "#9ca3af" }}>{timeframe}</span>
-            </div>
-          )}
           <div style={{ height: 1, background: "#ebebeb", marginBottom: 12 }} />
         </>
       )}
-      {rightContent}
+      {/* Bottom: quote placeholder + parent name */}
+      <p style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
+        {"\u201CReview will appear here...\u201D"}
+      </p>
+      <p style={{ fontSize: 11.5, color: "#d1d5db", margin: 0, fontWeight: 500 }}>
+        {"– Parent name"}
+      </p>
     </div>
   );
+}
+
+// ─── SCORE INPUT TYPE HELPER ────────────────────────────
+type ScoreInputType = "numeric" | "ap" | "letter" | "text";
+const LETTER_GRADES = ["A", "B", "C", "D", "F"];
+const AP_SCORES = ["1", "2", "3", "4", "5"];
+const SUBJECT_NAMES = ["algebra", "geometry", "essay writing", "spanish", "french", "english", "reading", "writing", "math", "science", "history", "biology", "chemistry", "physics", "calculus", "statistics", "economics", "psychology", "sociology", "art", "music"];
+const STANDARDIZED_TESTS = ["SAT", "ACT", "GRE", "GMAT", "LSAT", "ISEE", "SSAT", "SHSAT", "HSPT", "PANCE", "MCAT", "PSAT", "TOEFL", "IELTS", "PRAXIS", "DAT", "OAT"];
+
+function getScoreInputType(exam: string): ScoreInputType {
+  if (!exam) return "text";
+  if (/^AP\s/i.test(exam)) return "ap";
+  if (SUBJECT_NAMES.some(s => exam.toLowerCase() === s)) return "letter";
+  if (STANDARDIZED_TESTS.some(t => exam.toUpperCase().includes(t))) return "numeric";
+  return "text";
 }
 
 // ─── REVIEW REQUEST POPUP ───────────────────────────────
@@ -440,7 +646,14 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
           </label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {specialties.map(s => (
-              <button key={s} onClick={() => setExam(exam === s ? "" : s)} style={{
+              <button key={s} onClick={() => {
+                const next = exam === s ? "" : s;
+                if (getScoreInputType(next) !== getScoreInputType(exam)) {
+                  setScoreBefore("");
+                  setScoreAfter("");
+                }
+                setExam(next);
+              }} style={{
                 padding: "6px 14px", borderRadius: 8, cursor: "pointer",
                 border: exam === s ? "1.5px solid #111" : "1.5px solid #e5e7eb",
                 background: exam === s ? "#111" : "white",
@@ -453,23 +666,58 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
         </div>
       )}
 
-      {/* Score improvement */}
-      <div style={{ marginBottom: 16 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
-          Score / grade improvement <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
-        </label>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <input type="number" value={scoreBefore} onChange={e => setScoreBefore(e.target.value)}
-            placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
-            onFocus={e => e.target.style.borderColor = "#111"}
-            onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-          <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>{"\u2192"}</span>
-          <input type="number" value={scoreAfter} onChange={e => setScoreAfter(e.target.value)}
-            placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
-            onFocus={e => e.target.style.borderColor = "#111"}
-            onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-        </div>
-      </div>
+      {/* Score improvement - only shown when an exam is selected */}
+      {exam && (() => {
+        const scoreType = getScoreInputType(exam);
+        const selectStyle: React.CSSProperties = { ...inputStyle, flex: 1, textAlign: "center" as const, appearance: "none" as const, WebkitAppearance: "none" as const, backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" };
+        const options = scoreType === "ap" ? AP_SCORES : scoreType === "letter" ? LETTER_GRADES : [];
+        return (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>
+              Score / grade improvement <span style={{ fontWeight: 400, color: "#9ca3af" }}>(optional)</span>
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {(scoreType === "ap" || scoreType === "letter") ? (
+                <>
+                  <select value={scoreBefore} onChange={e => setScoreBefore(e.target.value)} style={selectStyle}>
+                    <option value="">Before</option>
+                    {options.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>{"\u2192"}</span>
+                  <select value={scoreAfter} onChange={e => setScoreAfter(e.target.value)} style={selectStyle}>
+                    <option value="">After</option>
+                    {options.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </>
+              ) : scoreType === "numeric" ? (
+                <>
+                  <input type="number" value={scoreBefore} onChange={e => setScoreBefore(e.target.value)}
+                    placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+                    onFocus={e => e.target.style.borderColor = "#111"}
+                    onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+                  <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>{"\u2192"}</span>
+                  <input type="number" value={scoreAfter} onChange={e => setScoreAfter(e.target.value)}
+                    placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+                    onFocus={e => e.target.style.borderColor = "#111"}
+                    onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+                </>
+              ) : (
+                <>
+                  <input type="text" value={scoreBefore} onChange={e => setScoreBefore(e.target.value)}
+                    placeholder="Before" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+                    onFocus={e => e.target.style.borderColor = "#111"}
+                    onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+                  <span style={{ fontSize: 14, color: "#d1d5db", flexShrink: 0 }}>{"\u2192"}</span>
+                  <input type="text" value={scoreAfter} onChange={e => setScoreAfter(e.target.value)}
+                    placeholder="After" style={{ ...inputStyle, flex: 1, textAlign: "center" }}
+                    onFocus={e => e.target.style.borderColor = "#111"}
+                    onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Timeframe */}
       <div style={{ marginBottom: 20 }}>
@@ -498,17 +746,6 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
         />
         <p style={{ fontSize: 11, color: "#d1d5db", textAlign: "center", marginTop: 8 }}>Updates as the parent fills in their review</p>
       </div>
-
-      <a href={reviewUrl} target="_blank" rel="noopener noreferrer" style={{
-        width: "100%", padding: "12px", borderRadius: 12,
-        border: "1px solid #e5e7eb", background: "white", color: "#374151",
-        fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-        textDecoration: "none", marginBottom: 20, boxSizing: "border-box",
-      }}>
-        Preview what the parent sees
-        <Icon name="arrowRight" size={14} />
-      </a>
 
       {/* Divider */}
       <div style={{ height: 1, background: "#f3f4f6", margin: "0 0 20px" }} />
@@ -643,8 +880,8 @@ function EmptyState({ icon, title, desc, actionLabel, actionIcon, onAction }: {
 }
 
 // ─── OWNER CARD ─────────────────────────────────────────
-function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, onShare }: {
-  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; onShare: () => void;
+function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, onShare, onSignature }: {
+  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; onShare: () => void; onSignature: () => void;
 }) {
   const t = toac(accent);
   const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
@@ -730,10 +967,25 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
           transition: "background 0.15s", textDecoration: "none",
         }}><Icon name="edit" size={15} /></Link>
       </div>
-      <div style={{ textAlign: "center", paddingBottom: 16 }}>
+      <div style={{ textAlign: "center", paddingBottom: 10 }}>
         <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}>
           <span style={{ fontWeight: 600 }}>tutorcard</span>.co/{tutor.slug}
         </p>
+      </div>
+      {/* Email signature link */}
+      <div style={{ borderTop: "1px solid #f3f4f6", padding: "10px 20px", textAlign: "center" }}>
+        <button onClick={onSignature} style={{
+          background: "none", border: "none", cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif",
+          display: "inline-flex", alignItems: "center", gap: 5,
+          color: "#9ca3af", fontSize: 12.5, fontWeight: 500, padding: 0,
+          transition: "color 0.15s",
+        }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = accent; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "#9ca3af"; }}
+        >
+          <Icon name="mail" size={13} />Add to email signature
+        </button>
       </div>
     </div>
   );
@@ -766,10 +1018,10 @@ function TabBar({ tab, setTab }: { tab: string; setTab: (t: string) => void }) {
 }
 
 // ─── TAB CONTENT ────────────────────────────────────────
-function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport }: {
+function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport, onPin }: {
   tab: string; wide: boolean;
   reviews: ReviewData[]; vouchers: VoucherData[]; badges: BadgeData[];
-  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void;
+  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void;
 }) {
   const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: 0 };
 
@@ -806,7 +1058,7 @@ function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onV
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {reviews.map(r => (
-                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} />
+                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} onPin={onPin} />
               ))}
             </div>
           )}
@@ -896,11 +1148,20 @@ function ReportStatusBadge({ status }: { status: string }) {
 }
 
 // ─── REVIEW ROW ─────────────────────────────────────────
-function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void }) {
+function ReviewRow({ review, wide, onReport, onPin }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void }) {
   const hasScores = review.scoreBefore && review.scoreAfter;
   const imp = hasScores ? Number(review.scoreAfter) - Number(review.scoreBefore) : null;
   const [hoverReport, setHoverReport] = useState(false);
+  const [hoverPin, setHoverPin] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [clamped, setClamped] = useState(false);
+  const quoteRef = useRef<HTMLParagraphElement>(null);
   const rs = review.reportStatus;
+
+  useEffect(() => {
+    const el = quoteRef.current;
+    if (el) setClamped(el.scrollHeight > el.clientHeight + 1);
+  }, [review.quote]);
 
   const statusMessage = rs === "pending"
     ? "We emailed the reviewer. If no response in 7 days, this review is automatically removed."
@@ -914,6 +1175,13 @@ function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boole
 
   const statusColor = rs === "pending" ? "#d97706" : rs === "responded" ? "#0284c7" : rs === "revoked" ? "#dc2626" : rs === "denied" ? "#6b7280" : "#9ca3af";
 
+  const clampStyle: React.CSSProperties = expanded ? {} : {
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical" as const,
+    overflow: "hidden",
+  };
+
   return (
     <div style={{
       background: "#fafafa", borderRadius: 14,
@@ -922,58 +1190,8 @@ function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boole
       opacity: rs === "revoked" ? 0.5 : 1,
       transition: "opacity 0.2s",
     }}>
-      {wide ? (
-        <div style={{ display: "flex", gap: 20 }}>
-          <div style={{ flex: "0 0 auto", minWidth: 160, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-              {review.exam && (
-                <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
-              )}
-              {rs && <ReportStatusBadge status={rs} />}
-            </div>
-            {hasScores && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 20, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
-                <span style={{ fontSize: 13, color: "#d1d5db" }}>&rarr;</span>
-                <span style={{ fontSize: 20, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
-                {imp != null && imp > 0 && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#111", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: "auto" }}>
-                    <Icon name="arrowUp" size={9} />+{imp}
-                  </span>
-                )}
-              </div>
-            )}
-            <div style={{ display: "flex", gap: 1, marginTop: 8 }}>
-              {Array.from({ length: review.rating }).map((_, i) => (
-                <Icon key={i} name="star" size={10} style={{ color: "#f59e0b" }} />
-              ))}
-            </div>
-          </div>
-          <div style={{ flex: 1, borderLeft: "1px solid #ebebeb", paddingLeft: 20, display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: 0, fontStyle: "italic" }}>&ldquo;{review.quote}&rdquo;</p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
-              {!rs && (
-                <button
-                  onClick={() => onReport(review)}
-                  onMouseEnter={() => setHoverReport(true)}
-                  onMouseLeave={() => setHoverReport(false)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
-                    color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
-                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
-                  }}
-                >
-                  <Icon name="flag" size={11} />Report
-                </button>
-              )}
-            </div>
-            {statusMessage && (
-              <p style={{ fontSize: 11.5, color: statusColor, margin: "4px 0 0", lineHeight: 1.4 }}>{statusMessage}</p>
-            )}
-          </div>
-        </div>
-      ) : (
+      {/* Top section: exam tag, scores, improvement badge */}
+      {(review.exam || hasScores) && (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
             {review.exam && (
@@ -982,41 +1200,88 @@ function ReviewRow({ review, wide, onReport }: { review: ReviewData; wide: boole
             {rs && <ReportStatusBadge status={rs} />}
             {hasScores && (
               <>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
-                <span style={{ color: "#d1d5db" }}>&rarr;</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
+                <span style={{ fontSize: wide ? 20 : 16, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
+                <span style={{ fontSize: 13, color: "#d1d5db" }}>&rarr;</span>
+                <span style={{ fontSize: wide ? 20 : 16, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
               </>
             )}
-          </div>
-          <div style={{ display: "flex", gap: 1, marginBottom: 8 }}>
-            {Array.from({ length: review.rating }).map((_, i) => (
-              <Icon key={i} name="star" size={10} style={{ color: "#f59e0b" }} />
-            ))}
-          </div>
-          <div style={{ borderTop: "1px solid #ebebeb", paddingTop: 10 }}>
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: "0 0 4px", fontStyle: "italic" }}>&ldquo;{review.quote}&rdquo;</p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
-              {!rs && (
-                <button
-                  onClick={() => onReport(review)}
-                  onMouseEnter={() => setHoverReport(true)}
-                  onMouseLeave={() => setHoverReport(false)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
-                    color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
-                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
-                  }}
-                >
-                  <Icon name="flag" size={11} />Report
-                </button>
-              )}
-            </div>
-            {statusMessage && (
-              <p style={{ fontSize: 11.5, color: statusColor, margin: "4px 0 0", lineHeight: 1.4 }}>{statusMessage}</p>
+            {imp != null && imp > 0 && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
+                <Icon name="arrowUp" size={9} />+{imp}
+              </span>
+            )}
+            {review.months && (
+              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                {review.months} months
+              </span>
             )}
           </div>
+          <div style={{ height: 1, background: "#ebebeb", marginBottom: 10 }} />
         </>
+      )}
+      {/* If no exam/scores, still show report status */}
+      {!review.exam && !hasScores && rs && (
+        <div style={{ marginBottom: 10 }}>
+          <ReportStatusBadge status={rs} />
+        </div>
+      )}
+
+      {/* Bottom section: quote + reviewer name with stars */}
+      <p ref={quoteRef} style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, margin: "0 0 4px", fontStyle: "italic", ...clampStyle }}>&ldquo;{review.quote}&rdquo;</p>
+      {clamped && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            background: "none", border: "none", padding: 0, cursor: "pointer",
+            fontSize: 11, fontWeight: 500, color: "#9ca3af", fontFamily: "'DM Sans', sans-serif",
+            marginBottom: 4,
+          }}
+        >
+          {expanded ? "show less" : "show more"}
+        </button>
+      )}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Icon key={i} name="star" size={10} style={{ color: i < review.rating ? "#f59e0b" : "#e5e7eb" }} />
+            ))}
+          </div>
+          {!rs && (
+            <>
+              <button
+                onClick={() => onPin(review)}
+                onMouseEnter={() => setHoverPin(true)}
+                onMouseLeave={() => setHoverPin(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+                  color: review.isPinned ? "#111" : hoverPin ? "#111" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+                  marginLeft: 8,
+                }}
+              >
+                <Icon name="pin" size={11} />{review.isPinned ? "Pinned" : "Pin"}
+              </button>
+              <button
+                onClick={() => onReport(review)}
+                onMouseEnter={() => setHoverReport(true)}
+                onMouseLeave={() => setHoverReport(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+                  color: hoverReport ? "#dc2626" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+                  marginLeft: 8,
+                }}
+              >
+                <Icon name="flag" size={11} />Report
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      {statusMessage && (
+        <p style={{ fontSize: 11.5, color: statusColor, margin: "4px 0 0", lineHeight: 1.4 }}>{statusMessage}</p>
       )}
     </div>
   );
@@ -1197,6 +1462,12 @@ function VouchRow({ vouch, wide }: { vouch: VoucherData; wide: boolean }) {
         <p style={{ fontSize: 14, fontWeight: 600, color: "#111", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{fullName}</p>
         {vouch.title && <p style={{ fontSize: 12, color: "#9ca3af", margin: "2px 0 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{vouch.title}</p>}
       </div>
+      <Link
+        href={`/${vouch.slug}`}
+        style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, padding: wide ? "5px 12px" : "4px 10px", borderRadius: 20, background: "white", border: "1px solid #e5e7eb", fontSize: wide ? 12 : 11, fontWeight: 500, color: "#6b7280", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textDecoration: "none", transition: "border-color 0.15s, color 0.15s" }}
+      >
+        View card<Icon name="ext" size={wide ? 11 : 10} />
+      </Link>
     </div>
   );
 }
@@ -1232,16 +1503,26 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
-  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed">(null);
+  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed" | "signature">(null);
   const [reportingReview, setReportingReview] = useState<ReviewData | null>(null);
   const [localReportStatuses, setLocalReportStatuses] = useState<Record<string, string>>({});
   const [isMobile, setIsMobile] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 800);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setCardHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   async function handleSignOut() {
@@ -1265,10 +1546,32 @@ export default function DashboardClient({
     setPopup("reportConfirmed");
   };
 
+  const [localPinId, setLocalPinId] = useState<string | null>(() => {
+    const pinned = reviews.find(r => r.isPinned);
+    return pinned ? pinned.id : null;
+  });
+
+  const handlePin = async (review: ReviewData) => {
+    const prevPinId = localPinId;
+    const newPinId = localPinId === review.id ? null : review.id;
+    setLocalPinId(newPinId);
+    try {
+      const res = await fetch("/api/reviews/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: review.id }),
+      });
+      if (!res.ok) setLocalPinId(prevPinId);
+    } catch {
+      setLocalPinId(prevPinId);
+    }
+  };
+
   // Merge server report statuses with local (optimistic) ones
   const reviewsWithReportStatus = reviews.map(r => ({
     ...r,
     reportStatus: (localReportStatuses[r.id] || r.reportStatus) as ReviewData["reportStatus"],
+    isPinned: localPinId === r.id,
   }));
 
   // No tutor — empty state
@@ -1279,7 +1582,7 @@ export default function DashboardClient({
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
           * { box-sizing: border-box; }
         `}</style>
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
           <header style={{ background: "white", borderBottom: "1px solid #f3f4f6", padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
               <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1326,7 +1629,7 @@ export default function DashboardClient({
         .action-btn:hover { background: #f9fafb !important; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%" }}>
         <header style={{
           background: "white", borderBottom: "1px solid #f3f4f6",
           padding: "0 24px", height: 56, display: "flex", alignItems: "center",
@@ -1371,29 +1674,33 @@ export default function DashboardClient({
         <main style={{ flex: 1 }}>
           {isMobile ? (
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
-              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
+              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
                 <TabContent tab={tab} wide={false} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
                   onReviewRequest={() => setPopup("review")}
                   onVouchRequest={() => setPopup("vouch")}
                   onReport={handleReport}
+                  onPin={handlePin}
                 />
               </div>
             </div>
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
-              <div style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
-                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} />
+              <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
+                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px" }}>
+              <div style={{ flex: 1, minWidth: 0, height: cardHeight, display: "flex", flexDirection: "column" as const }}>
+                <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden", minHeight: 0 }}>
                   <TabBar tab={tab} setTab={setTab} />
-                  <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
-                    onReviewRequest={() => setPopup("review")}
-                    onVouchRequest={() => setPopup("vouch")}
-                    onReport={handleReport}
-                  />
+                  <div style={{ flex: 1, overflowY: "auto" as const, minHeight: 0 }}>
+                    <TabContent tab={tab} wide={true} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
+                      onReviewRequest={() => setPopup("review")}
+                      onVouchRequest={() => setPopup("vouch")}
+                      onReport={handleReport}
+                      onPin={handlePin}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1412,6 +1719,7 @@ export default function DashboardClient({
       {popup === "invite" && <InvitePopup onClose={close} codes={inviteCodes} />}
       {popup === "report" && reportingReview && <ReportReviewPopup review={reportingReview} tutorId={tutor.id} onClose={close} onSubmitted={handleReportSubmitted} />}
       {popup === "reportConfirmed" && reportingReview && <ReportConfirmationPopup review={reportingReview} onClose={close} />}
+      {popup === "signature" && <SignaturePopup onClose={close} tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} />}
     </>
   );
 }

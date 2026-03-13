@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import Icon, { textOnAccent } from "@/app/[slug]/Icon";
 
 interface TutorData {
@@ -59,31 +58,27 @@ function StarRating({ value, onChange, size = 28 }: { value: number; onChange: (
 
 // ─── REVIEW PREVIEW CARD ────────────────────────────────
 function ReviewPreview({
-  reviewText, stars, sigName, accent, wide,
+  reviewText, stars, sigName,
 }: {
   reviewText: string; stars: number; sigName: string; accent: string; wide: boolean;
 }) {
-  const rightContent = (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-      <p style={{ fontSize: wide ? 14 : 13, color: reviewText ? "#374151" : "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
-        {reviewText ? `\u201C${reviewText}\u201D` : '\u201CReview will appear here...\u201D'}
-      </p>
-      <p style={{ fontSize: wide ? 12 : 11.5, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
-        {"- "}{sigName || "Parent name"}
-      </p>
-      {stars > 0 && (
-        <div style={{ display: "flex", gap: 1, marginTop: 6 }}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <Icon key={i} name="star" size={12} style={{ color: stars >= i ? "#f59e0b" : "#d1d5db" }} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <div style={{ background: "#fafafa", borderRadius: 14, padding: "16px 18px", border: "1px solid #f0f0f0" }}>
-      {rightContent}
+      <p style={{ fontSize: 13, color: reviewText ? "#374151" : "#d1d5db", lineHeight: 1.55, margin: "0 0 6px", fontStyle: "italic" }}>
+        {reviewText ? `\u201C${reviewText}\u201D` : '\u201CReview will appear here...\u201D'}
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {stars > 0 && (
+          <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <Icon key={i} name="star" size={11} style={{ color: stars >= i ? "#f59e0b" : "#d1d5db" }} />
+            ))}
+          </div>
+        )}
+        <p style={{ fontSize: 11.5, color: sigName ? "#9ca3af" : "#d1d5db", margin: 0, fontWeight: 500 }}>
+          {"– "}{sigName || "Parent name"}
+        </p>
+      </div>
     </div>
   );
 }
@@ -309,19 +304,6 @@ function ReviewConfirmation({ tutor, accent, submittedReview }: {
         />
       </div>
 
-      <div>
-        <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>Are you a tutor yourself?</p>
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <button style={{
-            padding: "11px 22px", borderRadius: 12, border: "none",
-            background: "#111", color: "white", fontSize: 13, fontWeight: 600,
-            cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-            display: "inline-flex", alignItems: "center", gap: 6,
-          }}>
-            Create your own TutorCard <Icon name="arrowRight" size={13} />
-          </button>
-        </Link>
-      </div>
     </div>
   );
 }

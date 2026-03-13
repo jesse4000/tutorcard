@@ -290,7 +290,7 @@ function TutorCardAuthInner({ defaultMode = "login" }: { defaultMode?: string })
 
       <div style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
-        fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4",
+        fontFamily: "'DM Sans', sans-serif", background: "#f5f5f4", width: "100%",
       }}>
         <SimpleHeader />
 

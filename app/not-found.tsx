@@ -34,6 +34,7 @@ export default function NotFound() {
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
+          width: "100%",
         }}
       >
         {/* Header */}
