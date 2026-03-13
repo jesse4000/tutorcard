@@ -281,7 +281,7 @@ export default function NotFound() {
           }}
         >
           <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>
-            &copy; 2026 TutorCard &middot; A StudySpaces product
+            &copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#d1d5db", textDecoration: "none" }}>StudySpaces</a> product
           </p>
         </footer>
       </div>

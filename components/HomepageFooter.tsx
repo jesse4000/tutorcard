@@ -41,7 +41,7 @@ export default function HomepageFooter({ isMobile }: { isMobile: boolean }) {
         </div>
       </div>
       <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", justifyContent: "center" }}>
-        <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>&copy; 2026 TutorCard &middot; A StudySpaces product</p>
+        <p style={{ fontSize: 12, color: "#d1d5db", margin: 0 }}>&copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#d1d5db", textDecoration: "none" }}>StudySpaces</a> product</p>
       </div>
     </footer>
   );

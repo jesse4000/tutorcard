@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import HomepageFooter from "@/components/HomepageFooter";
-
-const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: unknown }) => {
-  const d: Record<string, React.ReactNode> = {
-    plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
-  };
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{d[name]}</svg>;
-};
+import HomepageHeader from "@/components/HomepageHeader";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -41,18 +35,7 @@ export default function TermsConditions() {
         .cta-main:hover { opacity: 0.88; }
       `}</style>
       <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", color: "#111" }}>
-        {/* Header */}
-        <header style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid #f3f4f6", padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 6, background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>tc</span>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>tutorcard</span>
-          </div>
-          <button className="cta-main" style={{ padding: "7px 16px", borderRadius: 10, border: "none", background: "#111", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
-            <Icon name="plus" size={14} />Create your card
-          </button>
-        </header>
+        <HomepageHeader isMobile={isMobile} />
 
         {/* Content */}
         <main style={{ maxWidth: 680, margin: "0 auto", padding: isMobile ? "40px 20px 60px" : "56px 32px 80px" }}>
@@ -64,7 +47,7 @@ export default function TermsConditions() {
 
           <div style={{ background: "white", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", border: "1px solid #f0f0f0" }}>
             <Section title="Agreement">
-              <P>By creating a TutorCard account, you agree to these terms. TutorCard is operated by Better Search Corporation (doing business as StudySpaces). If something in here doesn&apos;t sit right, email us at hello@studyspaces.com before using the platform.</P>
+              <P>By creating a TutorCard account, you agree to these terms. TutorCard is operated by Better Search Corporation (doing business as StudySpaces). If something in here doesn&apos;t sit right, email us at hello@tutorcard.co before using the platform.</P>
             </Section>
 
             <Section title="Your account">
@@ -119,7 +102,7 @@ export default function TermsConditions() {
             </Section>
 
             <div style={{ paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
-              <P>Questions about these terms? Email us at <a href="mailto:hello@studyspaces.com" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>hello@studyspaces.com</a></P>
+              <P>Questions about these terms? Email us at <a href="mailto:hello@tutorcard.co" style={{ color: "#4f46e5", textDecoration: "none", fontWeight: 600 }}>hello@tutorcard.co</a></P>
             </div>
           </div>
         </main>
