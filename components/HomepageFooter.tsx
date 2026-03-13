@@ -25,8 +25,17 @@ export default function HomepageFooter({ isMobile }: { isMobile: boolean }) {
         <div style={{ display: "flex", gap: isMobile ? 32 : 48, marginLeft: isMobile ? 0 : "auto", textAlign: "right" }}>
           <div>
             <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Platform</p>
-            {["Create a card", "Log in", "For associations", "For parents"].map((l) => (
-              <p key={l} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l}</p>
+            {[
+              { label: "Create a card", href: "/create" },
+              { label: "Log in", href: "/login" },
+              { label: "For associations", href: "/for-associations" },
+              { label: "For parents", href: undefined },
+            ].map((l) => (
+              l.href ? (
+                <Link key={l.label} href={l.href} style={{ display: "block", fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer", textDecoration: "none" }}>{l.label}</Link>
+              ) : (
+                <p key={l.label} style={{ fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer" }}>{l.label}</p>
+              )
             ))}
           </div>
           <div>
