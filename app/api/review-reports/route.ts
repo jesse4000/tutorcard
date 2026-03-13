@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -140,15 +141,10 @@ export async function POST(request: Request) {
       `;
 
       try {
-        const emailUrl = `${request.url.split("/api/")[0]}/api/email`;
-        await fetch(emailUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: review.reviewer_email,
-            subject: "Your review on TutorCard has been flagged",
-            html,
-          }),
+        await sendEmail({
+          to: review.reviewer_email,
+          subject: "Your review on TutorCard has been flagged",
+          html,
         });
       } catch (emailError) {
         // Log but don't fail the report submission
