@@ -55,7 +55,7 @@ export default function ForAssociations() {
           <p style={{ fontSize: isMobile ? 16 : 18, color: "#6b7280", lineHeight: 1.55, margin: "0 auto 32px", maxWidth: 520 }}>
             Partner with TutorCard to give every member in your organization a free professional card with verified credentials, peer endorsements, and a shareable link parents trust.
           </p>
-          <a href="mailto:hello@studyspaces.com" className="cta-main" style={{ padding: "13px 28px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
+          <a href="https://calendly.com/jesse-studyspaces/30min" target="_blank" rel="noopener noreferrer" className="cta-main" style={{ padding: "13px 28px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
             Get in touch <Icon name="arrowRight" size={16} />
           </a>
         </section>
@@ -129,8 +129,8 @@ export default function ForAssociations() {
             <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto 28px", maxWidth: 420, lineHeight: 1.5 }}>
               We work with tutoring associations of all sizes. Reach out and we will get your members set up.
             </p>
-            <a href="mailto:hello@studyspaces.com" className="cta-main" style={{ padding: "15px 36px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-              <Icon name="mail" size={18} />hello@studyspaces.com
+            <a href="https://calendly.com/jesse-studyspaces/30min" target="_blank" rel="noopener noreferrer" className="cta-main" style={{ padding: "15px 36px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+              <Icon name="calendar" size={18} />Get in touch
             </a>
           </div>
         </section>

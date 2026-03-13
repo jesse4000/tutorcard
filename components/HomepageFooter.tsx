@@ -28,8 +28,8 @@ export default function HomepageFooter({ isMobile }: { isMobile: boolean }) {
             {[
               { label: "Create a card", href: "/create" },
               { label: "For associations", href: "/for-associations" },
-              { label: "Privacy", href: undefined },
-              { label: "Terms", href: undefined },
+              { label: "Privacy", href: "/privacy" },
+              { label: "Terms", href: "/terms" },
             ].map((l) => (
               l.href ? (
                 <Link key={l.label} href={l.href} style={{ display: "block", fontSize: 13, color: "#6b7280", margin: "0 0 6px", cursor: "pointer", textDecoration: "none" }}>{l.label}</Link>
