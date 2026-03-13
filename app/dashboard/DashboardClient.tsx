@@ -968,7 +968,7 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
         }}><Icon name="edit" size={15} /></Link>
       </div>
       <div style={{ textAlign: "center", paddingBottom: 10 }}>
-        <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}>
+        <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>
           <span style={{ fontWeight: 600 }}>tutorcard</span>.co/{tutor.slug}
         </p>
       </div>
@@ -1707,7 +1707,7 @@ export default function DashboardClient({
           )}
         </main>
         <footer style={{ padding: "20px 24px", display: "flex", justifyContent: "center", width: "100%" }}>
-          <p style={{ fontSize: 12, color: "#d1d5db", margin: 0, textAlign: "center" }}>
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, textAlign: "center" }}>
             &copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#9ca3af", textDecoration: "none" }}>StudySpaces</a> product
           </p>
         </footer>

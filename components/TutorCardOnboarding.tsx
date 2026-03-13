@@ -214,7 +214,7 @@ function CardPreview({ data, accent }: { data: OnboardingData; accent: string })
         <div style={{ width: "100%", padding: "13px", borderRadius: 14, background: accent, color: t, fontSize: 14.5, fontWeight: 600, textAlign: "center", transition: "background 0.25s" }}>Send a message</div>
       </div>
       <div style={{ textAlign: "center", paddingBottom: 16 }}>
-        <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}><span style={{ fontWeight: 600 }}>tutorcard</span>.co/{data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "")}</p>
+        <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}><span style={{ fontWeight: 600 }}>tutorcard</span>.co/{data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "")}</p>
       </div>
     </div>
   );

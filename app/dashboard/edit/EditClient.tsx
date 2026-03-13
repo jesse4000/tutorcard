@@ -566,7 +566,7 @@ function CardPreview({
         </div>
       </div>
       <div style={{ textAlign: "center", paddingBottom: 16 }}>
-        <p style={{ fontSize: 11, color: "#d1d5db", margin: 0 }}>
+        <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>
           <span style={{ fontWeight: 600 }}>tutorcard</span>.co/{data.slug}
         </p>
       </div>
