@@ -19,7 +19,7 @@ export default function HomepageFooter({ isMobile }: { isMobile: boolean }) {
             <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>tutorcard</span>
           </Link>
           <p style={{ fontSize: 12.5, color: "#9ca3af", margin: 0, maxWidth: 280, lineHeight: 1.5 }}>
-            The professional identity platform for tutors. Free to create, easy to share.
+            The professional identity platform for tutors. $20/year. Easy to share.
           </p>
         </div>
         <div style={{ display: "flex", gap: isMobile ? 32 : 48, marginLeft: isMobile ? 0 : "auto", textAlign: "right" }}>

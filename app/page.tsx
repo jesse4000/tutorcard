@@ -259,7 +259,7 @@ export default function TutorCardLanding() {
               padding: "5px 14px", borderRadius: 20, background: "white",
               border: "1px solid #e5e7eb", fontSize: 12.5, fontWeight: 500, color: "#6b7280", marginBottom: 20,
             }}>
-              Free for the first 100 tutors &middot; Set up in 5 minutes
+              $20/year &middot; Set up in 5 minutes
             </div>
             <h1 style={{
               fontSize: isMobile ? 34 : 48, fontWeight: 800,
@@ -284,7 +284,7 @@ export default function TutorCardLanding() {
               }}>Create your card <Icon name="arrowRight" size={16} /></button>
             </div>
             <p style={{ fontSize: 12.5, color: "#9ca3af", marginTop: 20 }}>
-              $20/year. First 100 tutors get in free.
+              Takes 5 minutes. Less if you type fast.
             </p>
           </div>
           {!isMobile && <MiniCard />}
@@ -502,19 +502,18 @@ export default function TutorCardLanding() {
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               }}>Create your card <Icon name="arrowRight" size={16} /></button>
-              {/* First 100 free */}
+              {/* Pricing note */}
               <div style={{
                 marginTop: 16, padding: "10px 14px", borderRadius: 10,
-                background: "#ecfdf5", border: "1px solid #d1fae5",
+                background: "#f9fafb", border: "1px solid #e5e7eb",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               }}>
-                <Icon name="sparkle" size={13} style={{ color: "#059669" }} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#059669" }}>First 100 tutors get it free</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>$20/year — because free tools don&apos;t last</span>
               </div>
             </div>
-            {/* Free access paths */}
+            {/* Alternative access paths */}
             <div style={{ marginTop: 32, textAlign: "center" }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", margin: "0 0 12px" }}>Other ways to join free</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", margin: "0 0 12px" }}>Other ways to get access</p>
               <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 12 : 20, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: "white", border: "1px solid #e5e7eb" }}>
                   <Icon name="gift" size={14} style={{ color: "#6b7280" }} />
@@ -539,10 +538,10 @@ export default function TutorCardLanding() {
             fontSize: isMobile ? 28 : 40, fontWeight: 800, color: "#111",
             letterSpacing: "-0.03em", margin: "0 0 10px", lineHeight: 1.15,
           }}>
-            Be first in your community with a card.
+            You scrolled this far. Might as well make one.
           </h2>
           <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto 28px", maxWidth: 400, lineHeight: 1.5 }}>
-            $20/year. First 100 tutors join free.
+            $20/year. Takes 5 minutes to set up.
           </p>
           <button onClick={() => router.push("/create")} className="cta-main" style={{
             padding: "15px 36px", borderRadius: 14, border: "none",

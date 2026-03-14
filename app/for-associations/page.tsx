@@ -53,7 +53,7 @@ export default function ForAssociations() {
             Give your members a professional edge.
           </h1>
           <p style={{ fontSize: isMobile ? 16 : 18, color: "#6b7280", lineHeight: 1.55, margin: "0 auto 32px", maxWidth: 520 }}>
-            Partner with TutorCard to give every member in your organization a free professional card with verified credentials, peer endorsements, and a shareable link parents trust.
+            Partner with TutorCard to give every member in your organization a professional card with verified credentials, peer endorsements, and a shareable link parents trust — included with their membership, courtesy of your organization.
           </p>
           <a href="https://calendly.com/jesse-studyspaces/30min" target="_blank" rel="noopener noreferrer" className="cta-main" style={{ padding: "13px 28px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
             Get in touch <Icon name="arrowRight" size={16} />
@@ -69,7 +69,7 @@ export default function ForAssociations() {
                 What your members get
               </h2>
               <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto", maxWidth: 480, lineHeight: 1.5 }}>
-                Every member in your organization gets a free TutorCard account. No annual fee, no strings.
+                Every member in your organization gets a TutorCard account at no cost — covered by your organization as a member benefit.
               </p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 20 }}>
@@ -105,7 +105,7 @@ export default function ForAssociations() {
             <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, margin: "0 auto" }}>
               {[
                 { num: "1", title: "We set up your organization", desc: "We create your association profile on TutorCard with your logo, name, and a unique access code for your members." },
-                { num: "2", title: "Members sign up for free", desc: "They enter your organization's code during signup and get full access with no annual fee. Your badge appears on their card automatically." },
+                { num: "2", title: "Members sign up at no cost", desc: "They enter your organization's code during signup and get full access — the $20/year fee is covered by your organization. Your badge appears on their card automatically." },
                 { num: "3", title: "You get visibility", desc: "Every card with your badge links back to your organization. As your members share their cards, your reach grows with them." },
               ].map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 16, padding: "20px", background: "white", borderRadius: 14, border: "1px solid #f0f0f0" }}>

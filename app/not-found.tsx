@@ -232,7 +232,7 @@ export default function NotFound() {
                 desc: "Learn what TutorCard is all about",
               },
               {
-                label: "Create a free card",
+                label: "Create a card",
                 href: "/create",
                 desc: "Set up your tutor profile in minutes",
               },

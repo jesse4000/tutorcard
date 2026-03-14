@@ -110,7 +110,7 @@ function AuthForm({ mode, onToggle, redirectTo }: { mode: string; onToggle: () =
           {isSignup ? "Join TutorCard" : "Welcome back"}
         </h1>
         <p style={{ fontSize: 15, color: "#9ca3af", margin: 0 }}>
-          {isSignup ? "Create your free professional card in minutes." : "Sign in to manage your card."}
+          {isSignup ? "Create your professional card in minutes. $20/year." : "Sign in to manage your card."}
         </p>
       </div>
 
@@ -255,7 +255,7 @@ function AuthForm({ mode, onToggle, redirectTo }: { mode: string; onToggle: () =
           fontFamily: "'DM Sans', sans-serif", textDecoration: "underline",
           textUnderlineOffset: 2,
         }}>
-          {isSignup ? "Sign in" : "Create one free"}
+          {isSignup ? "Sign in" : "Create one"}
         </button>
       </p>
     </form>
