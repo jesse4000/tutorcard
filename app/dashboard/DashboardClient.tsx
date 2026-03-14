@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
+import { toPng, toBlob } from "html-to-image";
 import { createClient } from "@/lib/supabase/client";
 import type { TutorLink } from "@/components/TutorCard";
 import { LINK_TYPE_ICONS } from "../[slug]/Icon";
@@ -1018,10 +1019,10 @@ function TabBar({ tab, setTab }: { tab: string; setTab: (t: string) => void }) {
 }
 
 // ─── TAB CONTENT ────────────────────────────────────────
-function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport, onPin }: {
+function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onVouchRequest, onReport, onPin, onShare }: {
   tab: string; wide: boolean;
   reviews: ReviewData[]; vouchers: VoucherData[]; badges: BadgeData[];
-  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void;
+  onReviewRequest: () => void; onVouchRequest: () => void; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void; onShare: (review: ReviewData) => void;
 }) {
   const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: 0 };
 
@@ -1058,7 +1059,7 @@ function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onV
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {reviews.map(r => (
-                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} onPin={onPin} />
+                <ReviewRow key={r.id} review={r} wide={wide} onReport={onReport} onPin={onPin} onShare={onShare} />
               ))}
             </div>
           )}
@@ -1148,11 +1149,12 @@ function ReportStatusBadge({ status }: { status: string }) {
 }
 
 // ─── REVIEW ROW ─────────────────────────────────────────
-function ReviewRow({ review, wide, onReport, onPin }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void }) {
+function ReviewRow({ review, wide, onReport, onPin, onShare }: { review: ReviewData; wide: boolean; onReport: (review: ReviewData) => void; onPin: (review: ReviewData) => void; onShare: (review: ReviewData) => void }) {
   const hasScores = review.scoreBefore && review.scoreAfter;
   const imp = hasScores ? Number(review.scoreAfter) - Number(review.scoreBefore) : null;
   const [hoverReport, setHoverReport] = useState(false);
   const [hoverPin, setHoverPin] = useState(false);
+  const [hoverShare, setHoverShare] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [clamped, setClamped] = useState(false);
   const quoteRef = useRef<HTMLParagraphElement>(null);
@@ -1248,6 +1250,19 @@ function ReviewRow({ review, wide, onReport, onPin }: { review: ReviewData; wide
               <Icon key={i} name="star" size={10} style={{ color: i < review.rating ? "#f59e0b" : "#e5e7eb" }} />
             ))}
           </div>
+          <button
+            onClick={() => onShare(review)}
+            onMouseEnter={() => setHoverShare(true)}
+            onMouseLeave={() => setHoverShare(false)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4, background: "none", border: "none",
+              color: hoverShare ? "#111" : "#d1d5db", fontSize: 11.5, fontWeight: 500,
+              cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: 0, transition: "color 0.15s",
+              marginLeft: 8,
+            }}
+          >
+            <Icon name="share" size={11} />Share
+          </button>
           {!rs && (
             <>
               <button
@@ -1284,6 +1299,210 @@ function ReviewRow({ review, wide, onReport, onPin }: { review: ReviewData; wide
         <p style={{ fontSize: 11.5, color: statusColor, margin: "4px 0 0", lineHeight: 1.4 }}>{statusMessage}</p>
       )}
     </div>
+  );
+}
+
+// ─── SHARE REVIEW GRAPHIC ──────────────────────────────
+const ShareReviewGraphic = forwardRef<HTMLDivElement, { review: ReviewData; tutor: TutorRow; accent: string }>(
+  function ShareReviewGraphic({ review, tutor, accent }, ref) {
+    const hasScores = review.scoreBefore && review.scoreAfter;
+    const imp = hasScores ? Number(review.scoreAfter) - Number(review.scoreBefore) : null;
+    const accentText = toac(accent);
+    const initials = `${tutor.first_name[0] || ""}${tutor.last_name[0] || ""}`.toUpperCase();
+    const fullName = `${tutor.first_name} ${tutor.last_name}`;
+    const dimText = accentText === "white" ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.4)";
+    const pillBg = accentText === "white" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.1)";
+
+    return (
+      <div ref={ref} style={{ width: 480, fontFamily: "'DM Sans', sans-serif", borderRadius: 20, overflow: "hidden", background: "white" }}>
+        {/* Top colored section */}
+        {hasScores ? (
+          <div style={{ background: accent, padding: "32px 36px 28px", textAlign: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 }}>
+              {review.exam && (
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: accentText, background: pillBg, padding: "4px 10px", borderRadius: 20 }}>{review.exam}</span>
+              )}
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: dimText }}>VERIFIED RESULT</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 16, marginBottom: 16 }}>
+              <span style={{ fontSize: 64, fontWeight: 300, color: dimText, lineHeight: 1 }}>{review.scoreBefore}</span>
+              <span style={{ fontSize: 24, color: dimText }}>→</span>
+              <span style={{ fontSize: 64, fontWeight: 800, color: accentText, lineHeight: 1 }}>{review.scoreAfter}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+              {imp != null && (
+                <span style={{ background: accentText === "white" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)", color: accentText, padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700 }}>+{imp} points</span>
+              )}
+              {review.months && (
+                <span style={{ fontSize: 14, color: dimText }}>{review.months} month{review.months !== 1 ? "s" : ""}</span>
+              )}
+              <div style={{ display: "flex", gap: 2 }}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <svg key={i} width={14} height={14} viewBox="0 0 24 24" fill={i < review.rating ? (accentText === "white" ? "#fbbf24" : "#f59e0b") : (accentText === "white" ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)")} stroke="none">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: "28px 36px 0", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", gap: 2 }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <svg key={i} width={16} height={16} viewBox="0 0 24 24" fill={i < review.rating ? "#f59e0b" : "#e5e7eb"} stroke="none">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              ))}
+            </div>
+            {review.exam && (
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#f3f4f6", padding: "3px 8px", borderRadius: 4 }}>{review.exam}</span>
+            )}
+          </div>
+        )}
+
+        {/* Quote section */}
+        <div style={{ padding: hasScores ? "28px 36px" : "20px 36px 28px" }}>
+          <p style={{ fontSize: 17, color: "#374151", lineHeight: 1.6, margin: "0 0 14px", fontStyle: "italic" }}>
+            &ldquo;{review.quote}&rdquo;
+          </p>
+          <p style={{ fontSize: 14, color: "#9ca3af", margin: 0, fontWeight: 500 }}>
+            – {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}
+          </p>
+        </div>
+
+        {/* Bottom tutor section */}
+        <div style={{ padding: "16px 36px 20px", borderTop: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {tutor.profile_image_url ? (
+              <img src={tutor.profile_image_url} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center", color: accentText, fontSize: 14, fontWeight: 700 }}>{initials}</div>
+            )}
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#111", margin: 0, lineHeight: 1.3 }}>{fullName}</p>
+              {tutor.title && <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, lineHeight: 1.3 }}>{tutor.title}</p>}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 18, height: 18, borderRadius: 4, background: accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 8, fontWeight: 800, color: accentText }}>tc</span>
+            </div>
+            <span style={{ fontSize: 12, color: "#b0b0b0", fontWeight: 500 }}>tutorcard.co</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+// ─── SHARE REVIEW POPUP ───────────────────────────────
+function ShareReviewPopup({ review, tutor, accent, onClose }: { review: ReviewData; tutor: TutorRow; accent: string; onClose: () => void }) {
+  const graphicRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const cardUrl = typeof window !== "undefined" ? `${window.location.origin}/${tutor.slug}` : `/${tutor.slug}`;
+
+  const capture = async () => {
+    const node = graphicRef.current;
+    if (!node) return null;
+    await document.fonts.ready;
+    return node;
+  };
+
+  const handleCopy = async () => {
+    setGenerating(true);
+    try {
+      const node = await capture();
+      if (!node) return;
+      const blob = await toBlob(node, { pixelRatio: 2, cacheBust: true });
+      if (!blob) return;
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard may not be available */ }
+    setGenerating(false);
+  };
+
+  const handleDownload = async () => {
+    setGenerating(true);
+    try {
+      const node = await capture();
+      if (!node) return;
+      const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true });
+      const a = document.createElement("a");
+      a.download = `tutorcard-review-${review.id.slice(0, 8)}.png`;
+      a.href = dataUrl;
+      a.click();
+    } catch { /* fallback: nothing */ }
+    setGenerating(false);
+  };
+
+  const socialBtns: { icon: string; label: string; onClick: () => void }[] = [
+    { icon: "linkedin", label: "LinkedIn", onClick: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(cardUrl)}`, "_blank") },
+    { icon: "facebook", label: "Facebook", onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(cardUrl)}`, "_blank") },
+    { icon: "x", label: "X / Twitter", onClick: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent("Check out this review on TutorCard!")}&url=${encodeURIComponent(cardUrl)}`, "_blank") },
+  ];
+
+  return (
+    <Modal onClose={onClose}>
+      <ModalHeader title="Share this review" onClose={onClose} />
+
+      {/* Scaled preview */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 20, overflow: "hidden", borderRadius: 14, border: "1px solid #f0f0f0" }}>
+        <div style={{ transform: "scale(0.88)", transformOrigin: "top center", marginBottom: -20 }}>
+          <ShareReviewGraphic ref={graphicRef} review={review} tutor={tutor} accent={accent} />
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+        <button
+          onClick={handleCopy}
+          disabled={generating}
+          style={{
+            padding: "10px", borderRadius: 10, border: "1px solid #e5e7eb",
+            background: copied ? "#ecfdf5" : "white", cursor: generating ? "wait" : "pointer",
+            fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 6, fontSize: 13, fontWeight: 500, color: copied ? "#059669" : "#374151", transition: "all 0.15s",
+          }}
+        >
+          <Icon name={copied ? "check" : "copy"} size={14} />{copied ? "Copied!" : "Copy image"}
+        </button>
+        <button
+          onClick={handleDownload}
+          disabled={generating}
+          style={{
+            padding: "10px", borderRadius: 10, border: "1px solid #e5e7eb",
+            background: "white", cursor: generating ? "wait" : "pointer",
+            fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 6, fontSize: 13, fontWeight: 500, color: "#374151", transition: "all 0.15s",
+          }}
+        >
+          <Icon name="download" size={14} />Download PNG
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+        {socialBtns.map(b => (
+          <button
+            key={b.icon}
+            onClick={b.onClick}
+            style={{
+              padding: "10px", borderRadius: 10, border: "1px solid #e5e7eb",
+              background: "white", cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 6, fontSize: 12, fontWeight: 500, color: "#374151", transition: "all 0.15s",
+            }}
+          >
+            <Icon name={b.icon} size={14} />{b.label}
+          </button>
+        ))}
+      </div>
+
+      <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, textAlign: "center", lineHeight: 1.4 }}>
+        Download the image and attach it to your post for best results
+      </p>
+    </Modal>
   );
 }
 
@@ -1503,8 +1722,9 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const router = useRouter();
   const [tab, setTab] = useState("reviews");
-  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed" | "signature">(null);
+  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed" | "signature" | "shareReview">(null);
   const [reportingReview, setReportingReview] = useState<ReviewData | null>(null);
+  const [sharingReview, setSharingReview] = useState<ReviewData | null>(null);
   const [localReportStatuses, setLocalReportStatuses] = useState<Record<string, string>>({});
   const [isMobile, setIsMobile] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -1532,11 +1752,16 @@ export default function DashboardClient({
     router.refresh();
   }
 
-  const close = () => { setPopup(null); setReportingReview(null); };
+  const close = () => { setPopup(null); setReportingReview(null); setSharingReview(null); };
 
   const handleReport = (review: ReviewData) => {
     setReportingReview(review);
     setPopup("report");
+  };
+
+  const handleShareReview = (review: ReviewData) => {
+    setSharingReview(review);
+    setPopup("shareReview");
   };
 
   const handleReportSubmitted = () => {
@@ -1682,6 +1907,7 @@ export default function DashboardClient({
                   onVouchRequest={() => setPopup("vouch")}
                   onReport={handleReport}
                   onPin={handlePin}
+                  onShare={handleShareReview}
                 />
               </div>
             </div>
@@ -1699,6 +1925,7 @@ export default function DashboardClient({
                       onVouchRequest={() => setPopup("vouch")}
                       onReport={handleReport}
                       onPin={handlePin}
+                      onShare={handleShareReview}
                     />
                   </div>
                 </div>
@@ -1720,6 +1947,7 @@ export default function DashboardClient({
       {popup === "report" && reportingReview && <ReportReviewPopup review={reportingReview} tutorId={tutor.id} onClose={close} onSubmitted={handleReportSubmitted} />}
       {popup === "reportConfirmed" && reportingReview && <ReportConfirmationPopup review={reportingReview} onClose={close} />}
       {popup === "signature" && <SignaturePopup onClose={close} tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} />}
+      {popup === "shareReview" && sharingReview && <ShareReviewPopup review={sharingReview} tutor={tutor} accent={accent} onClose={close} />}
     </>
   );
 }
