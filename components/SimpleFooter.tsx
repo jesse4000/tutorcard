@@ -4,9 +4,6 @@ export default function SimpleFooter() {
       <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
         &copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#9ca3af", textDecoration: "none" }}>StudySpaces</a> product
       </p>
-      <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>
-        Powered by <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#9ca3af", textDecoration: "none" }}>StudySpaces</a>
-      </p>
     </footer>
   );
 }
