@@ -259,7 +259,7 @@ export default function TutorCardLanding() {
               padding: "5px 14px", borderRadius: 20, background: "white",
               border: "1px solid #e5e7eb", fontSize: 12.5, fontWeight: 500, color: "#6b7280", marginBottom: 20,
             }}>
-              $20/year &middot; Set up in 5 minutes
+              $20/year &middot; Set up in 2 minutes
             </div>
             <h1 style={{
               fontSize: isMobile ? 34 : 48, fontWeight: 800,
@@ -284,7 +284,7 @@ export default function TutorCardLanding() {
               }}>Create your card <Icon name="arrowRight" size={16} /></button>
             </div>
             <p style={{ fontSize: 12.5, color: "#9ca3af", marginTop: 20 }}>
-              Takes 5 minutes. Less if you type fast.
+              Takes 2 minutes. Less if you type fast.
             </p>
           </div>
           {!isMobile && <MiniCard />}
@@ -419,7 +419,7 @@ export default function TutorCardLanding() {
           <div style={{ maxWidth: 800, margin: "0 auto", padding: isMobile ? "56px 20px" : "80px 32px" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: accent, margin: "0 0 8px" }}>How it works</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: 0 }}>Live in 5 minutes</h2>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: 0 }}>Live in 2 minutes</h2>
             </div>
             <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
               <Step num="1" title="Create your card" desc="Add your name, specialties, bio, and links. Choose your accent color. Your unique URL and QR code are generated instantly." />
@@ -541,7 +541,7 @@ export default function TutorCardLanding() {
             You scrolled this far. Might as well make one.
           </h2>
           <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto 28px", maxWidth: 400, lineHeight: 1.5 }}>
-            $20/year. Takes 5 minutes to set up.
+            $20/year. Takes 2 minutes to set up.
           </p>
           <button onClick={() => router.push("/create")} className="cta-main" style={{
             padding: "15px 36px", borderRadius: 14, border: "none",
