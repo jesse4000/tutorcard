@@ -1,12 +1,24 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import CreateClient from "./CreateClient";
 
-import { Suspense } from "react";
-import TutorCardOnboarding from "@/components/TutorCardOnboarding";
+export default async function CreatePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function CreatePage() {
-  return (
-    <Suspense>
-      <TutorCardOnboarding />
-    </Suspense>
-  );
+  if (user) {
+    const { data: tutors } = await supabase
+      .from("tutors")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1);
+
+    if (tutors && tutors.length > 0) {
+      redirect("/dashboard");
+    }
+  }
+
+  return <CreateClient />;
 }
