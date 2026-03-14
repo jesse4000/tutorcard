@@ -1,5 +1,19 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export interface ReferrerData {
+  tutorId: string;
+  firstName: string;
+  lastName: string;
+  initials: string;
+  headline: string;
+  locations: string[];
+  specialties: string[];
+  avatarColor: string;
+  profileImageUrl: string | null;
+  slug: string;
+  vouchCount: number;
+}
+
 const CODE_PREFIX = "TC-";
 const CODE_LENGTH = 6;
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I to avoid ambiguity
@@ -62,6 +76,46 @@ export async function validateInviteCode(
   if (data.claimed)
     return { valid: false, error: "This code has already been used" };
   return { valid: true };
+}
+
+export async function getReferrerByInviteCode(
+  code: string
+): Promise<ReferrerData | null> {
+  const admin = createAdminClient();
+
+  const { data: codeRow } = await admin
+    .from("invite_codes")
+    .select("owner_id")
+    .eq("code", code.toUpperCase().trim())
+    .eq("claimed", false)
+    .single();
+  if (!codeRow) return null;
+
+  const { data: tutor } = await admin
+    .from("tutors")
+    .select("id, first_name, last_name, title, locations, exams, avatar_color, profile_image_url, slug")
+    .eq("user_id", codeRow.owner_id)
+    .single();
+  if (!tutor) return null;
+
+  const { count } = await admin
+    .from("vouches")
+    .select("id", { count: "exact", head: true })
+    .eq("vouched_tutor_id", tutor.id);
+
+  return {
+    tutorId: tutor.id,
+    firstName: tutor.first_name,
+    lastName: tutor.last_name || "",
+    initials: (tutor.first_name[0] + (tutor.last_name?.[0] || "")).toUpperCase(),
+    headline: tutor.title || "",
+    locations: tutor.locations || [],
+    specialties: tutor.exams || [],
+    avatarColor: tutor.avatar_color || "#4f46e5",
+    profileImageUrl: tutor.profile_image_url || null,
+    slug: tutor.slug,
+    vouchCount: count ?? 0,
+  };
 }
 
 export async function claimInviteCode(

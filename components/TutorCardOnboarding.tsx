@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { saveCardDraft, loadCardDraft, clearCardDraft } from "@/lib/cardDraft";
-import type { OnboardingData, OnboardingLink } from "@/lib/cardDraft";
+import type { OnboardingData, OnboardingLink, OnboardingReferrer } from "@/lib/cardDraft";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { containsProfanity } from "@/lib/profanityFilter";
 import { QRCodeSVG } from "qrcode.react";
@@ -46,6 +46,9 @@ const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key
     sparkle: <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>,
     link2: <><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></>,
     zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
+    gift: <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></>,
+    clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+    heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>,
     video: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></>,
     instagram: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></>,
     chevDown: <polyline points="6 9 12 15 18 9"/>,
@@ -472,6 +475,12 @@ export default function TutorCardOnboarding() {
   const [inviteCodeValid, setInviteCodeValid] = useState<boolean | null>(null);
   const [inviteCodeChecking, setInviteCodeChecking] = useState(false);
 
+  // Referrer & post-publish flow state
+  const [referrerData, setReferrerData] = useState<OnboardingReferrer | null>(null);
+  const [hasVouched, setHasVouched] = useState(false);
+  const [vouchLoading, setVouchLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -565,7 +574,10 @@ export default function TutorCardOnboarding() {
         }
 
         clearCardDraft();
-        setScreen("share");
+        if (draft.referrer) {
+          setReferrerData(draft.referrer);
+        }
+        setScreen("loading");
       } catch {
         alert("Network error. Please try again.");
       }
@@ -598,6 +610,7 @@ export default function TutorCardOnboarding() {
   // Debounced invite code validation
   useEffect(() => {
     setInviteCodeValid(null);
+    setReferrerData(null);
     const trimmed = inviteCode.trim();
     if (!trimmed) return;
     setInviteCodeChecking(true);
@@ -606,6 +619,9 @@ export default function TutorCardOnboarding() {
         const res = await fetch(`/api/invite-codes/validate?code=${encodeURIComponent(trimmed)}`);
         const result = await res.json();
         setInviteCodeValid(result.valid);
+        if (result.valid && result.referrer) {
+          setReferrerData(result.referrer);
+        }
       } catch {
         setInviteCodeValid(null);
       }
@@ -735,7 +751,7 @@ export default function TutorCardOnboarding() {
         return;
       }
 
-      setScreen("share");
+      setScreen("loading");
     } catch {
       alert("Network error. Please try again.");
     }
@@ -764,6 +780,38 @@ export default function TutorCardOnboarding() {
     window.open(`sms:&body=${encodeURIComponent(text)}`, "_self");
   };
 
+  // Loading screen auto-advance
+  useEffect(() => {
+    if (screen !== "loading") return;
+    setLoadingStep(0);
+    const steps = referrerData ? 4 : 3;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 1; i <= steps; i++) {
+      timers.push(setTimeout(() => setLoadingStep(i), i * 900));
+    }
+    timers.push(setTimeout(() => setScreen("reveal"), steps * 900 + 600));
+    return () => timers.forEach(clearTimeout);
+  }, [screen, referrerData]);
+
+  // Vouch handler
+  const handleVouch = async () => {
+    if (!referrerData || hasVouched || vouchLoading) return;
+    setVouchLoading(true);
+    try {
+      const res = await fetch("/api/vouches/direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vouchedTutorId: referrerData.tutorId }),
+      });
+      if (res.ok) {
+        setHasVouched(true);
+      }
+    } catch {
+      // Non-critical — silently fail
+    }
+    setVouchLoading(false);
+  };
+
   return (
     <>
       <style>{`
@@ -773,6 +821,26 @@ export default function TutorCardOnboarding() {
         .tag-btn { transition: all 0.15s; } .tag-btn:hover { border-color: #111 !important; }
         .color-dot { transition: all 0.15s; cursor: pointer; border: none; } .color-dot:hover { transform: scale(1.12); }
         .share-btn { transition: all 0.15s; } .share-btn:hover { background: #f3f4f6 !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        @keyframes popIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeUp {
+          from { transform: translateY(16px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes dotBurst {
+          0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+          60% { opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
 
       <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fafafa", minHeight: "100vh" }}>
@@ -966,7 +1034,7 @@ export default function TutorCardOnboarding() {
 
                 <GoogleSignInButton
                   redirectTo="/create?resume=true"
-                  onClick={() => saveCardDraft({ ...data, inviteCode: inviteCode.trim() || undefined })}
+                  onClick={() => saveCardDraft({ ...data, inviteCode: inviteCode.trim() || undefined, referrer: referrerData || undefined })}
                 />
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0", color: "#9ca3af", fontSize: 13 }}>
@@ -1110,6 +1178,361 @@ export default function TutorCardOnboarding() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOADING */}
+        {screen === "loading" && (() => {
+          const checks = referrerData
+            ? [
+                { label: "Creating your account" },
+                { label: "Setting up your TutorCard" },
+                { label: `Validating invite code` },
+                { label: "Applying invite reward" },
+              ]
+            : [
+                { label: "Creating your account" },
+                { label: "Setting up your TutorCard" },
+                { label: "Checking promotion eligibility" },
+              ];
+          return (
+            <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "96px 20px 40px" }}>
+              <div style={{ maxWidth: 380, width: "100%", animation: "fadeIn 0.3s ease both" }}>
+                <div style={{ textAlign: "center", marginBottom: 40 }}>
+                  <div style={{
+                    width: 40, height: 40, border: "3px solid #f3f4f6",
+                    borderTopColor: "#111", borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                    margin: "0 auto 20px",
+                  }} />
+                  <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+                    Setting things up...
+                  </h2>
+                  <p style={{ fontSize: 14, color: "#9ca3af", margin: 0 }}>This&apos;ll only take a moment.</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {checks.map((check, i) => {
+                    const done = i < loadingStep;
+                    const active = i === loadingStep;
+                    const pending = i > loadingStep;
+                    return (
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "14px 0",
+                        borderBottom: i < checks.length - 1 ? "1px solid #f3f4f6" : "none",
+                        opacity: pending ? 0.35 : 1, transition: "opacity 0.4s ease",
+                      }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: done ? "#ecfdf5" : active ? "white" : "#fafafa",
+                          border: done ? "none" : active ? "2px solid #111" : "2px solid #e5e7eb",
+                          transition: "all 0.3s ease",
+                        }}>
+                          {done ? (
+                            <Icon name="check" size={14} style={{ color: "#059669" }} />
+                          ) : active ? (
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#111", animation: "pulse-dot 1s ease infinite" }} />
+                          ) : (
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#e5e7eb" }} />
+                          )}
+                        </div>
+                        <span style={{
+                          fontSize: 14, fontWeight: active ? 600 : 500,
+                          color: done ? "#059669" : active ? "#111" : "#9ca3af",
+                          transition: "all 0.3s ease",
+                        }}>
+                          {check.label}{done ? "" : active ? "..." : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* REVEAL */}
+        {screen === "reveal" && (
+          <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "96px 20px 40px" }}>
+            <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
+              {/* Icon burst */}
+              <div style={{
+                position: "relative", display: "inline-block", marginBottom: 24,
+                animation: "popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
+              }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: referrerData ? "#eff6ff" : "#ecfdf5",
+                  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto",
+                }}>
+                  <Icon name="gift" size={32} style={{ color: referrerData ? "#2563eb" : "#059669" }} />
+                </div>
+                {[0, 1, 2, 3, 4, 5].map(i => (
+                  <div key={i} style={{
+                    position: "absolute", width: i % 2 === 0 ? 6 : 4, height: i % 2 === 0 ? 6 : 4,
+                    borderRadius: "50%",
+                    background: ["#2563eb", "#f59e0b", "#059669", "#ec4899", "#2563eb", "#f59e0b"][i],
+                    top: `${50 + 48 * Math.sin((i * Math.PI * 2) / 6)}%`,
+                    left: `${50 + 48 * Math.cos((i * Math.PI * 2) / 6)}%`,
+                    transform: "translate(-50%, -50%)",
+                    animation: `dotBurst 0.6s ease both ${0.1 + i * 0.05}s`, opacity: 0,
+                  }} />
+                ))}
+              </div>
+
+              {/* Badge */}
+              {referrerData ? (
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 6, background: "#eff6ff",
+                  border: "1px solid #bfdbfe", borderRadius: 20, padding: "6px 14px", marginBottom: 20,
+                  animation: "fadeUp 0.5s ease both 0.15s", opacity: 0,
+                }}>
+                  <Icon name="gift" size={13} style={{ color: "#2563eb" }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#2563eb" }}>Invite reward applied</span>
+                </div>
+              ) : (
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 6, background: "#ecfdf5",
+                  border: "1px solid #bbf7d0", borderRadius: 20, padding: "6px 14px", marginBottom: 20,
+                  animation: "fadeUp 0.5s ease both 0.15s", opacity: 0,
+                }}>
+                  <Icon name="zap" size={13} style={{ color: "#059669" }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#059669" }}>Early access promotion</span>
+                </div>
+              )}
+
+              {/* Headline */}
+              <h2 style={{
+                fontSize: isMobile ? 26 : 30, fontWeight: 800, color: "#111",
+                letterSpacing: "-0.03em", lineHeight: 1.2, margin: "0 0 14px",
+                animation: "fadeUp 0.6s ease both 0.25s", opacity: 0,
+              }}>
+                {referrerData ? "Your first year is free." : (<>You&apos;re in! Your first year<br />is on us.</>)}
+              </h2>
+
+              {/* Referrer callout (invite code only) */}
+              {referrerData && (
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 10,
+                  background: "#fafafa", border: "1px solid #f0f0f0", borderRadius: 12,
+                  padding: "10px 18px", marginBottom: 20,
+                  animation: "fadeUp 0.6s ease both 0.35s", opacity: 0,
+                }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: "50%", background: referrerData.avatarColor,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: isLight(referrerData.avatarColor) ? "#111" : "white" }}>{referrerData.initials}</span>
+                  </div>
+                  <span style={{ fontSize: 14, color: "#374151" }}>
+                    Thanks to <strong style={{ color: "#111" }}>{referrerData.firstName} {referrerData.lastName}</strong>
+                  </span>
+                </div>
+              )}
+
+              {/* Explanation */}
+              {referrerData ? (
+                <p style={{
+                  fontSize: 15, color: "#6b7280", lineHeight: 1.6, margin: "0 auto 28px", maxWidth: 380,
+                  animation: "fadeUp 0.6s ease both 0.45s", opacity: 0,
+                }}>
+                  {referrerData.firstName} shared their invite code with you, unlocking a free year of TutorCard. No payment needed today.
+                </p>
+              ) : (
+                <>
+                  <p style={{
+                    fontSize: 15, color: "#6b7280", lineHeight: 1.6, margin: "0 auto 8px", maxWidth: 380,
+                    animation: "fadeUp 0.6s ease both 0.4s", opacity: 0,
+                  }}>
+                    As one of our first 100 tutors, your TutorCard is completely free for the first year.
+                  </p>
+                  <p style={{
+                    fontSize: 14, color: "#9ca3af", margin: "0 auto 32px", maxWidth: 360,
+                    animation: "fadeUp 0.6s ease both 0.5s", opacity: 0,
+                  }}>
+                    After that, it&apos;s just $20/year to keep your card live and verified.
+                  </p>
+                </>
+              )}
+
+              {/* What you're getting (no-code only) */}
+              {!referrerData && (
+                <div style={{
+                  background: "#fafafa", borderRadius: 16, border: "1px solid #f0f0f0",
+                  padding: "20px 24px", textAlign: "left", marginBottom: 28,
+                  maxWidth: 360, marginLeft: "auto", marginRight: "auto",
+                  animation: "fadeUp 0.6s ease both 0.55s", opacity: 0,
+                }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "#9ca3af", letterSpacing: "0.05em", display: "block", marginBottom: 14 }}>What you&apos;re getting</span>
+                  {[
+                    { icon: "shield", label: "Verified tutor profile", color: "#4f46e5" },
+                    { icon: "star", label: "Reviews and peer vouches", color: "#f59e0b" },
+                    { icon: "users", label: "5 invite codes to share", color: "#059669" },
+                    { icon: "clock", label: "Free for 12 months", color: "#111" },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: i < 3 ? "1px solid #f0f0f0" : "none" }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "white", border: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Icon name={item.icon} size={15} style={{ color: item.color }} />
+                      </div>
+                      <span style={{ fontSize: 14, fontWeight: 500, color: "#111" }}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Savings */}
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "white", border: "1px solid #e5e7eb", borderRadius: 12,
+                padding: "10px 18px", marginBottom: 32,
+                animation: `fadeUp 0.6s ease both ${referrerData ? "0.6s" : "0.65s"}`, opacity: 0,
+              }}>
+                <span style={{ fontSize: 14, color: "#9ca3af", textDecoration: "line-through" }}>$20.00</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#059669" }}>$0.00</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#059669", background: "#ecfdf5", padding: "2px 8px", borderRadius: 6 }}>SAVED</span>
+              </div>
+
+              {/* CTA */}
+              <div style={{ animation: `fadeUp 0.6s ease both ${referrerData ? "0.7s" : "0.75s"}`, opacity: 0 }}>
+                <button onClick={() => setScreen(referrerData ? "vouch" : "share")} className="cta-main" style={{
+                  padding: "15px 48px", borderRadius: 14, border: "none", background: "#111", color: "white",
+                  fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                }}>
+                  {referrerData ? "Continue" : "Finalize my TutorCard"} <Icon name="arrowRight" size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VOUCH */}
+        {screen === "vouch" && referrerData && (
+          <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "96px 20px 40px" }}>
+            <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
+              {/* Vouch card */}
+              <div style={{
+                background: "white", borderRadius: 24,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)",
+                padding: "36px 28px 28px", maxWidth: 400, marginLeft: "auto", marginRight: "auto", marginBottom: 28,
+              }}>
+                {/* Users icon */}
+                <div style={{
+                  width: 52, height: 52, borderRadius: 14, background: "#f3f4f6",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 20px",
+                }}>
+                  <Icon name="users" size={24} style={{ color: "#9ca3af" }} />
+                </div>
+
+                {/* Headline */}
+                <h2 style={{ fontSize: 24, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 10px" }}>
+                  Vouch for {referrerData.firstName}
+                </h2>
+                <p style={{ fontSize: 14, color: "#9ca3af", lineHeight: 1.55, margin: "0 auto 24px", maxWidth: 320 }}>
+                  {referrerData.firstName} {referrerData.lastName} invited you to TutorCard. A vouch is a one-click endorsement that shows parents you trust their work.
+                </p>
+
+                {/* Profile preview */}
+                <div style={{
+                  background: "#fafafa", borderRadius: 16, border: "1px solid #f0f0f0",
+                  padding: "16px", marginBottom: 20,
+                  display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                }}>
+                  <div style={{
+                    width: 52, height: 52, borderRadius: "50%", background: referrerData.avatarColor,
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: isLight(referrerData.avatarColor) ? "#111" : "white" }}>{referrerData.initials}</span>
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: "#111", margin: 0 }}>{referrerData.firstName} {referrerData.lastName}</h3>
+                    {referrerData.headline && <p style={{ fontSize: 13, color: "#6b7280", margin: "1px 0 0" }}>{referrerData.headline}</p>}
+                    {referrerData.locations.length > 0 && <span style={{ fontSize: 12, color: "#9ca3af" }}>{referrerData.locations[0]}</span>}
+                  </div>
+                </div>
+
+                {/* Vouch count */}
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  border: "1px solid #e5e7eb", borderRadius: 20, padding: "5px 14px",
+                  marginBottom: 16,
+                }}>
+                  <Icon name="users" size={14} style={{ color: "#9ca3af" }} />
+                  <span style={{ fontSize: 13, color: "#6b7280" }}><strong style={{ color: "#111" }}>{referrerData.vouchCount}</strong> vouches</span>
+                </div>
+
+                {/* Specialty tags */}
+                {referrerData.specialties.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 24 }}>
+                    {referrerData.specialties.slice(0, 4).map(s => (
+                      <span key={s} style={{ fontSize: 12, fontWeight: 500, color: "#374151", background: "#f3f4f6", padding: "5px 12px", borderRadius: 8, border: "1px solid #e5e7eb" }}>{s}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Vouch button */}
+                {!hasVouched ? (
+                  <button onClick={handleVouch} disabled={vouchLoading} className="cta-main" style={{
+                    width: "100%", padding: 15, borderRadius: 14, border: "none",
+                    background: vouchLoading ? "#e5e7eb" : "#111",
+                    color: vouchLoading ? "#9ca3af" : "white",
+                    fontSize: 15, fontWeight: 600, cursor: vouchLoading ? "default" : "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    transition: "all 0.3s ease",
+                  }}>
+                    {vouchLoading ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 16, height: 16, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                        Vouching...
+                      </div>
+                    ) : (
+                      <><Icon name="check" size={17} /> Vouch for {referrerData.firstName}</>
+                    )}
+                  </button>
+                ) : (
+                  <div style={{
+                    width: "100%", padding: 15, borderRadius: 14,
+                    background: "#ecfdf5", border: "1px solid #bbf7d0",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    animation: "fadeIn 0.3s ease both",
+                  }}>
+                    <Icon name="check" size={17} style={{ color: "#059669" }} />
+                    <span style={{ fontSize: 15, fontWeight: 600, color: "#059669" }}>Vouched!</span>
+                  </div>
+                )}
+
+                {/* View full card link */}
+                <div style={{ marginTop: 14 }}>
+                  <button onClick={() => window.open(`/${referrerData.slug}`, "_blank")} style={{
+                    background: "none", border: "none", color: "#9ca3af", fontSize: 13, fontWeight: 500,
+                    cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                  }}>
+                    View full card <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Continue button */}
+              <button onClick={() => setScreen("share")} className="cta-main" style={{
+                padding: "14px 44px", borderRadius: 14,
+                background: hasVouched ? "#111" : "transparent",
+                color: hasVouched ? "white" : "#9ca3af",
+                border: hasVouched ? "none" : "1.5px solid #e5e7eb",
+                fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.25s ease",
+              }}>
+                {hasVouched ? "Continue to your card" : "Skip for now"} <Icon name="arrowRight" size={17} />
+              </button>
+              {!hasVouched && (
+                <p style={{ fontSize: 12, color: "#d1d5db", marginTop: 12 }}>
+                  You can always vouch from their profile later.
+                </p>
+              )}
             </div>
           </div>
         )}

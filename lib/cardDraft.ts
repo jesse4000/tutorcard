@@ -6,6 +6,20 @@ export interface OnboardingLink {
   label: string;
 }
 
+export interface OnboardingReferrer {
+  tutorId: string;
+  firstName: string;
+  lastName: string;
+  initials: string;
+  headline: string;
+  locations: string[];
+  specialties: string[];
+  avatarColor: string;
+  profileImageUrl: string | null;
+  slug: string;
+  vouchCount: number;
+}
+
 export interface OnboardingData {
   name: string;
   headline: string;
@@ -17,6 +31,7 @@ export interface OnboardingData {
   links: OnboardingLink[];
   accent: string;
   inviteCode?: string;
+  referrer?: OnboardingReferrer;
 }
 
 const DRAFT_KEY = "tutorcard_draft";
