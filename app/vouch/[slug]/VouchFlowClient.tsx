@@ -282,7 +282,7 @@ function AuthToVouch({ tutor, accent, onComplete }: {
           </h2>
           <p style={{ fontSize: 14, color: "#9ca3af", margin: 0, lineHeight: 1.5 }}>
             {isSignup
-              ? "You need a TutorCard to vouch. It takes 30 seconds and it is free."
+              ? "You need a TutorCard to vouch. It takes 30 seconds to set up."
               : "Sign in with your TutorCard account to vouch."}
           </p>
         </div>
@@ -359,7 +359,7 @@ function AuthToVouch({ tutor, accent, onComplete }: {
             fontFamily: "'DM Sans', sans-serif", textDecoration: "underline",
             textUnderlineOffset: 2,
           }}>
-            {isSignup ? "Sign in" : "Create one free"}
+            {isSignup ? "Sign in" : "Create one"}
           </button>
         </p>
       </div>
