@@ -195,18 +195,23 @@ export default async function AdminPage() {
     };
   });
 
-  // --- Fetch auth users to check banned status ---
+  // --- Fetch auth users to check banned status and get signup emails ---
   try {
     const { data: authUsersData } = await admin.auth.admin.listUsers({ perPage: 1000 });
     if (authUsersData?.users) {
-      const bannedSet = new Set(
-        authUsersData.users
-          .filter((u) => u.banned_until && new Date(u.banned_until).getTime() > Date.now())
-          .map((u) => u.id)
+      const authUserMap = new Map(
+        authUsersData.users.map((u) => [u.id, u])
       );
       for (const row of tutorRows) {
-        if (bannedSet.has(row.userId)) {
-          row.isSuspended = true;
+        const authUser = authUserMap.get(row.userId);
+        if (authUser) {
+          if (authUser.banned_until && new Date(authUser.banned_until).getTime() > Date.now()) {
+            row.isSuspended = true;
+          }
+          // Use auth email as source of truth (includes +alias emails)
+          if (authUser.email) {
+            row.email = authUser.email;
+          }
         }
       }
     }
