@@ -662,7 +662,8 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
                       <input type="checkbox" checked={allFilteredSelected && filtered.length > 0} onChange={toggleSelectAll}
                         style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#111" }} />
                     </th>
-                    <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 220 }}>Tutor</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 180 }}>Tutor</th>
+                    <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 200 }}>Email</th>
                     <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 120 }}>Location</th>
                     <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6" }}>Status</th>
                     <SortHeader label="Reviews" sortField="reviews" />
@@ -686,12 +687,10 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
                           <div style={{ width: 34, height: 34, borderRadius: "50%", background: t.avatarColor || "#111", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <span style={{ fontSize: 12, color: isLight(t.avatarColor || "#111") ? "#111" : "white", fontWeight: 600 }}>{t.name.split(" ").map((w) => w[0]).join("")}</span>
                           </div>
-                          <div>
-                            <p style={{ fontSize: 13.5, fontWeight: 600, color: "#111", margin: 0, lineHeight: 1.3 }}>{t.name}</p>
-                            <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0 }}>{t.email}</p>
-                          </div>
+                          <p style={{ fontSize: 13.5, fontWeight: 600, color: "#111", margin: 0, lineHeight: 1.3 }}>{t.name}</p>
                         </div>
                       </td>
+                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, color: "#6b7280" }}>{t.email}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, color: "#6b7280" }}>{t.location}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb" }}><StatusBadge status={t.status} suspended={t.isSuspended} /></td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.reviews}</td>
@@ -892,9 +891,12 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                   <StatusBadge status={t.status} suspended={t.isSuspended} />
-                  <span style={{ fontSize: 12, color: "#9ca3af" }}>{t.email}</span>
                   <span style={{ fontSize: 12, color: "#d1d5db" }}>|</span>
                   <span style={{ fontSize: 12, color: "#9ca3af" }}>Joined {new Date(t.joined).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, padding: "8px 12px", background: "#f9fafb", borderRadius: 8 }}>
+                  <Icon name="mail" size={14} style={{ color: "#6b7280", flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, userSelect: "all" }}>{t.email}</span>
                 </div>
               </div>
 
