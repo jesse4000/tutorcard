@@ -49,6 +49,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if user already has a tutor profile
+    const { data: existingTutor } = await supabase
+      .from("tutors")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (existingTutor) {
+      return NextResponse.json(
+        { error: "You already have a tutor card. Please edit your existing card instead." },
+        { status: 409 }
+      );
+    }
+
     const body = await request.json();
     const {
       firstName,
@@ -126,8 +140,11 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Tutor insert error:", error);
       if (error.code === "23505") {
+        const msg = error.message?.includes("user_id")
+          ? "You already have a tutor card."
+          : "That slug is already taken.";
         return NextResponse.json(
-          { error: "That slug is already taken." },
+          { error: msg },
           { status: 409 }
         );
       }

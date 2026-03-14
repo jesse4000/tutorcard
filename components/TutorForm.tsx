@@ -181,7 +181,10 @@ export default function TutorForm({ mode, initialData }: TutorFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        if (data.error?.includes("slug")) {
+        if (data.error?.includes("already have")) {
+          window.location.href = "/dashboard";
+          return;
+        } else if (data.error?.includes("slug")) {
           setStep(1);
           setErrors({ slug: true });
           alert("That card URL is already taken. Please choose another.");

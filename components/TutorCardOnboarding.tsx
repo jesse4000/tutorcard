@@ -554,7 +554,10 @@ export default function TutorCardOnboarding() {
 
         if (!res.ok) {
           const result = await res.json();
-          if (result.error?.includes("slug")) {
+          if (result.error?.includes("already have")) {
+            window.location.href = "/dashboard";
+            return;
+          } else if (result.error?.includes("slug")) {
             alert("That card URL is already taken. Please choose another.");
             setScreen("step1");
           } else {
@@ -725,7 +728,10 @@ export default function TutorCardOnboarding() {
 
       if (!res.ok) {
         const result = await res.json();
-        if (result.error?.includes("slug")) {
+        if (result.error?.includes("already have")) {
+          window.location.href = "/dashboard";
+          return;
+        } else if (result.error?.includes("slug")) {
           alert("That card URL is already taken. Please choose another.");
           setScreen("step1");
         } else {
