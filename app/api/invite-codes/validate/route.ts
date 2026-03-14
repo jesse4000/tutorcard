@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateInviteCode } from "@/lib/inviteCodes";
+import { validateInviteCode, getReferrerByInviteCode } from "@/lib/inviteCodes";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,5 +13,11 @@ export async function GET(request: Request) {
   }
 
   const result = await validateInviteCode(code);
+
+  if (result.valid) {
+    const referrer = await getReferrerByInviteCode(code);
+    return NextResponse.json({ ...result, referrer });
+  }
+
   return NextResponse.json(result);
 }
