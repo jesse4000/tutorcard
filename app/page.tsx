@@ -259,7 +259,7 @@ export default function TutorCardLanding() {
               padding: "5px 14px", borderRadius: 20, background: "white",
               border: "1px solid #e5e7eb", fontSize: 12.5, fontWeight: 500, color: "#6b7280", marginBottom: 20,
             }}>
-              $20/year &middot; Set up in 2 minutes
+              Set up in 2 minutes
             </div>
             <h1 style={{
               fontSize: isMobile ? 34 : 48, fontWeight: 800,
@@ -502,14 +502,6 @@ export default function TutorCardLanding() {
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               }}>Create your card <Icon name="arrowRight" size={16} /></button>
-              {/* Pricing note */}
-              <div style={{
-                marginTop: 16, padding: "10px 14px", borderRadius: 10,
-                background: "#f9fafb", border: "1px solid #e5e7eb",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>$20/year — because free tools don&apos;t last</span>
-              </div>
             </div>
             {/* Alternative access paths */}
             <div style={{ marginTop: 32, textAlign: "center" }}>
