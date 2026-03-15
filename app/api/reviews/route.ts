@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email";
+import { newReviewEmail } from "@/lib/email-templates";
 
 export async function POST(request: Request) {
   try {
@@ -68,6 +70,22 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Review insert error:", error.message, error.code, error.details);
       return NextResponse.json({ error: "Failed to submit review" }, { status: 500 });
+    }
+
+    // Notify tutor about the new review
+    try {
+      const { data: tutorData } = await supabase
+        .from("tutors")
+        .select("first_name, last_name, email, user_id")
+        .eq("id", tutorId)
+        .single();
+      if (tutorData?.email) {
+        const tutorName = `${tutorData.first_name} ${tutorData.last_name}`.trim();
+        const tpl = newReviewEmail(tutorName, reviewerName, rating, exam || null, trimmedQuote);
+        await sendEmail({ to: tutorData.email, ...tpl });
+      }
+    } catch (emailErr) {
+      console.error("Failed to send new review email:", emailErr);
     }
 
     return NextResponse.json({ success: true });

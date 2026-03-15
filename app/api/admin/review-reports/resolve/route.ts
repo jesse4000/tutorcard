@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email";
+import { reviewReportResolvedEmail } from "@/lib/email-templates";
 
 export async function POST(request: Request) {
   try {
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
     // Fetch the report
     const { data: report } = await admin
       .from("review_reports")
-      .select("id, review_id, status")
+      .select("id, review_id, tutor_id, status")
       .eq("id", reportId)
       .single();
 
@@ -86,6 +88,27 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
+    }
+
+    // Notify the tutor about the resolution
+    try {
+      const { data: tutor } = await admin
+        .from("tutors")
+        .select("first_name, last_name, email")
+        .eq("id", report.tutor_id)
+        .single();
+      const { data: review } = await admin
+        .from("reviews")
+        .select("reviewer_name")
+        .eq("id", report.review_id)
+        .single();
+      if (tutor?.email && review) {
+        const tutorName = `${tutor.first_name} ${tutor.last_name}`.trim();
+        const tpl = reviewReportResolvedEmail(tutorName, newStatus as "revoked" | "denied", review.reviewer_name);
+        await sendEmail({ to: tutor.email, ...tpl });
+      }
+    } catch (emailErr) {
+      console.error("Failed to send report resolution email:", emailErr);
     }
 
     return NextResponse.json({ success: true, status: newStatus });

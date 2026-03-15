@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email";
+import { vouchReceivedEmail } from "@/lib/email-templates";
 
 // POST: toggle vouch for a tutor
 export async function POST(request: Request) {
@@ -53,6 +55,28 @@ export async function POST(request: Request) {
       });
       if (error) {
         return NextResponse.json({ error: "Failed to vouch" }, { status: 500 });
+      }
+
+      // Notify the vouched tutor
+      try {
+        const { data: vouchedTutor } = await supabase
+          .from("tutors")
+          .select("first_name, last_name, email")
+          .eq("id", tutorId)
+          .single();
+        const { data: voucherTutor } = await supabase
+          .from("tutors")
+          .select("first_name, last_name, slug")
+          .eq("id", tutor.id)
+          .single();
+        if (vouchedTutor?.email && voucherTutor) {
+          const vouchedName = `${vouchedTutor.first_name} ${vouchedTutor.last_name}`.trim();
+          const voucherName = `${voucherTutor.first_name} ${voucherTutor.last_name}`.trim();
+          const tpl = vouchReceivedEmail(vouchedName, voucherName, voucherTutor.slug || null);
+          await sendEmail({ to: vouchedTutor.email, ...tpl });
+        }
+      } catch (emailErr) {
+        console.error("Failed to send vouch notification:", emailErr);
       }
     }
 

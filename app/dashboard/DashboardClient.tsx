@@ -609,13 +609,16 @@ function ReviewRequestPopup({ onClose, slug, tutor }: { onClose: () => void; slu
     if (!email.trim()) return;
     setSent(true);
     try {
-      await fetch("/api/email", {
+      await fetch("/api/review-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: email.trim(),
-          subject: `${tutorName} is requesting a review on TutorCard`,
-          html: `<p>Hi,</p><p>${tutorName} would like you to leave a review on their TutorCard profile.</p><p><a href="${reviewUrl}">Leave a review</a></p><p>Thank you!</p>`,
+          slug,
+          exam: exam || undefined,
+          scoreBefore: scoreBefore || undefined,
+          scoreAfter: scoreAfter || undefined,
+          timeframe: timeframe || undefined,
         }),
       });
     } catch {

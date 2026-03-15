@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email";
+import { newInquiryEmail } from "@/lib/email-templates";
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +28,22 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json({ error: "Failed to send inquiry" }, { status: 500 });
+    }
+
+    // Notify the tutor about the new inquiry
+    try {
+      const { data: tutor } = await supabase
+        .from("tutors")
+        .select("first_name, last_name, email")
+        .eq("id", tutorId)
+        .single();
+      if (tutor?.email) {
+        const tutorName = `${tutor.first_name} ${tutor.last_name}`.trim();
+        const tpl = newInquiryEmail(tutorName, senderName, senderEmail, message, examsOfInterest || []);
+        await sendEmail({ to: tutor.email, ...tpl });
+      }
+    } catch (emailErr) {
+      console.error("Failed to send inquiry notification:", emailErr);
     }
 
     return NextResponse.json({ success: true });
