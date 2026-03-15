@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateCodesForUser, claimInviteCode } from "@/lib/inviteCodes";
 import { containsProfanity } from "@/lib/profanityFilter";
+import { sendEmail, FROM_HELLO } from "@/lib/email";
+import { welcomeEmail, inviteCodeClaimedEmail } from "@/lib/email-templates";
 
 function sanitizeSlug(slug: string) {
   return slug
@@ -162,9 +165,45 @@ export async function POST(request: Request) {
       if (body.inviteCode) {
         const fullName = `${firstName.trim()} ${(lastName || "").trim()}`.trim();
         await claimInviteCode(body.inviteCode, user.id, fullName, cleanSlug);
+
+        // Notify the referrer that their invite code was claimed
+        try {
+          const admin = createAdminClient();
+          const { data: inviteCode } = await admin
+            .from("invite_codes")
+            .select("owner_id")
+            .eq("code", body.inviteCode)
+            .single();
+          if (inviteCode?.owner_id) {
+            const { data: ownerAuth } = await admin.auth.admin.getUserById(inviteCode.owner_id);
+            const { data: ownerTutor } = await admin
+              .from("tutors")
+              .select("first_name, last_name")
+              .eq("user_id", inviteCode.owner_id)
+              .single();
+            if (ownerAuth?.user?.email && ownerTutor) {
+              const referrerName = `${ownerTutor.first_name} ${ownerTutor.last_name}`.trim();
+              const claimedByName = `${firstName.trim()} ${(lastName || "").trim()}`.trim();
+              const tpl = inviteCodeClaimedEmail(referrerName, claimedByName, cleanSlug);
+              await sendEmail({ to: ownerAuth.user.email, ...tpl });
+            }
+          }
+        } catch (emailErr) {
+          console.error("Failed to send invite claimed email:", emailErr);
+        }
       }
     } catch (e) {
       console.error("Invite code processing error:", e);
+    }
+
+    // Send welcome email to the new tutor
+    if (user.email) {
+      try {
+        const tpl = welcomeEmail(firstName.trim(), cleanSlug);
+        await sendEmail({ to: user.email, from: FROM_HELLO, ...tpl });
+      } catch (emailErr) {
+        console.error("Failed to send welcome email:", emailErr);
+      }
     }
 
     return NextResponse.json({ success: true, tutor: data, codesGenerated });
