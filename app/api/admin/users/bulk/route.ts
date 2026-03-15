@@ -55,7 +55,8 @@ export async function POST(request: Request) {
             error: error?.message,
           });
         } else {
-          // Default: delete
+          // Default: delete — remove tutor profile first (cascades to child tables)
+          await supabaseAdmin.from("tutors").delete().eq("user_id", userId);
           const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
           results.push({
             userId,
