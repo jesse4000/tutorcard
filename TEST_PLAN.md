@@ -6,13 +6,14 @@
 
 ## Issues Found During Automated Checks
 
-| # | Issue | Severity | Fix |
-|---|-------|----------|-----|
-| 1 | `node_modules` missing — build fails | P0 | Run `npm install` |
-| 2 | ESLint broken — missing `@eslint/eslintrc` | P0 | `npm install @eslint/eslintrc` or update config |
-| 3 | TypeScript errors — `style` prop on `IconProps` in `BadgeCard.tsx` and `ProfileCard.tsx` | P0 | Remove `style` prop from `<Icon>` calls or add `style` to `IconProps` interface |
-| 4 | Zero automated tests (no unit, integration, or E2E) | P1 | See recommendations below |
-| 5 | No CI/CD pipeline | P1 | See recommendations below |
+| # | Issue | Severity | Status |
+|---|-------|----------|--------|
+| 1 | `node_modules` missing — build fails | P0 | **Fixed** — `npm install` restores all deps including `@eslint/eslintrc` |
+| 2 | ~~TypeScript errors in BadgeCard/ProfileCard~~ | ~P0~ | **False positive** — `IconProps extends SVGProps<SVGSVGElement>` already includes `style`. Errors were from missing `@types/react` |
+| 3 | 18 ESLint warnings — `<img>` vs `next/image` | P2 | Non-blocking. Consider migrating to `<Image>` for LCP optimization |
+| 4 | 1 ESLint warning — missing `useEffect` dependency in `VouchFlowClient.tsx:508` | P2 | Non-blocking. Consider wrapping `submitVouch` in `useCallback` |
+| 5 | Zero automated tests (no unit, integration, or E2E) | P1 | See recommendations below |
+| 6 | No CI/CD pipeline | P1 | See recommendations below |
 
 ---
 
