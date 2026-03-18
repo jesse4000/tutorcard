@@ -324,4 +324,12 @@ WHERE id IN (
   ) dups ON t.user_id = dups.user_id AND t.created_at < dups.max_created
 );
 
-ALTER TABLE tutors ADD CONSTRAINT IF NOT EXISTS tutors_user_id_unique UNIQUE (user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'tutors_user_id_unique'
+  ) THEN
+    ALTER TABLE tutors ADD CONSTRAINT tutors_user_id_unique UNIQUE (user_id);
+  END IF;
+END;
+$$;
