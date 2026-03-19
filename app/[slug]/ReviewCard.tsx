@@ -38,24 +38,24 @@ export default function ReviewCard({ review, wide }: ReviewCardProps) {
       {/* Top section: exam tag, scores, improvement badge */}
       {(review.exam || hasScores) && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: wide ? 8 : 5, marginBottom: 10, flexWrap: "nowrap", overflow: "hidden" }}>
             {review.exam && (
-              <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
+              <span style={{ fontSize: wide ? 10.5 : 10, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 1, minWidth: 0 }}>{review.exam}</span>
             )}
             {hasScores && (
               <>
-                <span style={{ fontSize: wide ? 24 : 20, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
-                <span style={{ fontSize: wide ? 14 : 13, color: "#d1d5db" }}>→</span>
-                <span style={{ fontSize: wide ? 24 : 20, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
+                <span style={{ fontSize: wide ? 24 : 16, fontWeight: 700, color: "#b0b0b0", flexShrink: 0 }}>{review.scoreBefore}</span>
+                <span style={{ fontSize: wide ? 14 : 11, color: "#d1d5db", flexShrink: 0 }}>→</span>
+                <span style={{ fontSize: wide ? 24 : 16, fontWeight: 700, color: "#111", flexShrink: 0 }}>{review.scoreAfter}</span>
               </>
             )}
             {imp != null && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700, marginLeft: hasScores && !review.months ? "auto" : undefined }}>
-                <Icon name="arrowUp" size={9} />+{imp}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: wide ? "2px 7px" : "2px 6px", borderRadius: 20, fontSize: wide ? 10.5 : 10, fontWeight: 700, marginLeft: hasScores && !review.months ? "auto" : undefined, flexShrink: 0 }}>
+                <Icon name="arrowUp" size={wide ? 9 : 8} />+{imp}
               </span>
             )}
             {review.months && (
-              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+              <span style={{ fontSize: wide ? 12 : 11, color: "#9ca3af", marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {review.months} months
               </span>
             )}
