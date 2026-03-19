@@ -3,6 +3,13 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
+import {
+  buildTutorJsonLd,
+  buildBreadcrumbJsonLd,
+  buildProfilePageJsonLd,
+  buildSeoDescription,
+  buildSeoTitle,
+} from "@/lib/seo/json-ld";
 import ProfileClient from "./ProfileClient";
 import type { ReviewData, VoucherData, BadgeData } from "./types";
 
@@ -22,20 +29,83 @@ async function getTutor(slug: string) {
   return data;
 }
 
+async function getReviewStats(slug: string) {
+  const supabase = await createClient();
+  const { data: tutor } = await supabase
+    .from("tutors")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+  if (!tutor) return { averageRating: null, reviewCount: 0 };
+
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("tutor_id", tutor.id)
+    .eq("is_revoked", false);
+
+  const ratings = (reviews || []).map((r: { rating: number }) => r.rating);
+  return {
+    averageRating: ratings.length > 0
+      ? ratings.reduce((sum: number, r: number) => sum + r, 0) / ratings.length
+      : null,
+    reviewCount: ratings.length,
+  };
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const tutor = await getTutor(slug);
+  const [tutor, reviewStats] = await Promise.all([
+    getTutor(slug),
+    getReviewStats(slug),
+  ]);
   if (!tutor) return { title: "Card not found" };
 
-  const name = `${tutor.first_name} ${tutor.last_name}`;
+  const tutorSeo = {
+    firstName: tutor.first_name,
+    lastName: tutor.last_name,
+    title: tutor.title || undefined,
+    slug: tutor.slug,
+    exams: tutor.exams || [],
+    subjects: tutor.subjects || [],
+    locations: tutor.locations || [],
+  };
+
+  const title = buildSeoTitle(tutorSeo);
+  const { short: description, long: ogDescription } = buildSeoDescription(tutorSeo, reviewStats);
+  const url = `https://tutorcard.co/${slug}`;
+
   return {
-    title: `${name} — TutorCard`,
-    description: tutor.title || `${name}'s tutor card on StudySpaces`,
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
-      title: `${name} — TutorCard`,
-      description: tutor.title || `${name}'s tutor card on StudySpaces`,
+      title,
+      description: ogDescription,
       type: "profile",
+      url,
+      siteName: "TutorCard",
+      locale: "en_US",
+      images: [{
+        url: `${url}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: `${tutor.first_name} ${tutor.last_name}'s TutorCard profile`,
+      }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${url}/opengraph-image`],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      noarchive: true,
+      "max-snippet": 200,
     },
   };
 }
@@ -169,19 +239,47 @@ export default async function ProfilePage({ params }: PageProps) {
     profileImageUrl: tutor.profile_image_url || "",
   };
 
+  // Build JSON-LD structured data for SEO
+  const name = `${tutor.first_name} ${tutor.last_name}`;
+  const tutorSeo = {
+    firstName: tutor.first_name,
+    lastName: tutor.last_name,
+    title: tutor.title || undefined,
+    slug: tutor.slug,
+    exams: tutor.exams || [],
+    subjects: tutor.subjects || [],
+    locations: tutor.locations || [],
+    businessName: tutor.business_name || undefined,
+    facebook: tutor.facebook || undefined,
+    linkedin: tutor.linkedin || undefined,
+    instagram: tutor.instagram || undefined,
+  };
+  const reviewStats = { averageRating, reviewCount: reviews.length };
+  const jsonLdGraph = [
+    buildTutorJsonLd(tutorSeo, reviewStats),
+    buildBreadcrumbJsonLd(name, tutor.slug),
+    buildProfilePageJsonLd(tutor.slug),
+  ];
+
   return (
-    <ProfileClient
-      tutor={tutorData}
-      vouchCount={vouchCount ?? 0}
-      hasVouched={hasVouched}
-      currentTutorId={currentTutorId}
-      viewedTutorId={tutor.id}
-      isLoggedIn={!!user}
-      averageRating={averageRating}
-      reviewCount={reviews.length}
-      reviews={reviews}
-      vouchers={vouchers}
-      badges={badges}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+      />
+      <ProfileClient
+        tutor={tutorData}
+        vouchCount={vouchCount ?? 0}
+        hasVouched={hasVouched}
+        currentTutorId={currentTutorId}
+        viewedTutorId={tutor.id}
+        isLoggedIn={!!user}
+        averageRating={averageRating}
+        reviewCount={reviews.length}
+        reviews={reviews}
+        vouchers={vouchers}
+        badges={badges}
+      />
+    </>
   );
 }
