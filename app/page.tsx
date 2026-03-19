@@ -5,7 +5,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://tutorcard.co";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "TutorCard — Your tutor card. Your referral network.",
+    absolute: "TutorCard | Your professional identity, one link.",
   },
   description:
     "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
