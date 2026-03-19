@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | TutorCard",
   },
   description:
-    "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
+    "Professional tutor profiles with verified reviews, peer endorsements, and credentials. Easy to share.",
   openGraph: {
     type: "website",
     siteName: "TutorCard",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "TutorCard | Your professional identity, one link.",
     description:
-      "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
+      "Professional tutor profiles with verified reviews, peer endorsements, and credentials. Easy to share.",
     images: [
       {
         url: "/og-default.png",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "TutorCard | Your professional identity, one link.",
     description:
-      "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
+      "Professional tutor profiles with verified reviews, peer endorsements, and credentials. Easy to share.",
     images: ["/og-default.png"],
   },
   icons: {

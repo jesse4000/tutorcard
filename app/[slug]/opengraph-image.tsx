@@ -1,10 +1,29 @@
 import { ImageResponse } from "@vercel/og";
-import { createClient } from "@/lib/supabase/server";
 
 export const alt = "TutorCard Profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-dynamic";
+
+// Use direct REST fetch to avoid any client library issues in OG image context
+async function fetchTutor(slug: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+
+  const res = await fetch(
+    `${url}/rest/v1/tutors?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`,
+    {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+      },
+    }
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows?.[0] ?? null;
+}
 
 export default async function OgImage({
   params,
@@ -12,49 +31,47 @@ export default async function OgImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
 
-  const { data: tutor, error } = await supabase
-    .from("tutors")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  let tutor: Record<string, unknown> | null = null;
+  try {
+    tutor = await fetchTutor(slug);
+  } catch (e) {
+    console.error("OG image fetch error:", e);
+  }
 
-  if (error || !tutor) {
-    console.error("OG image: tutor not found", { slug, error });
+  if (!tutor) {
     return new ImageResponse(
       <div
         style={{
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: "#f8fafc",
-          fontSize: 32,
+          fontSize: 48,
           color: "#64748b",
-          gap: 12,
         }}
       >
-        <div style={{ display: "flex" }}>Card not found</div>
-        <div style={{ fontSize: 18, display: "flex" }}>slug: {slug}</div>
+        Card not found
       </div>,
       { ...size }
     );
   }
 
   const name = `${tutor.first_name} ${tutor.last_name}`;
-  const accent = tutor.avatar_color || "#0f172a";
-  const locations = tutor.locations || [];
-  const initials = `${(tutor.first_name || "")[0] || ""}${(tutor.last_name || "")[0] || ""}`.toUpperCase();
+  const accent = (tutor.avatar_color as string) || "#0f172a";
+  const locations = (tutor.locations as string[]) || [];
+  const initials = `${((tutor.first_name as string) || "")[0] || ""}${((tutor.last_name as string) || "")[0] || ""}`.toUpperCase();
+  const title = tutor.title as string | null;
+  const profileImageUrl = tutor.profile_image_url as string | null;
 
   // Load font
-  const fontUrl =
-    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap";
   let fontData: ArrayBuffer | undefined;
   try {
-    const cssRes = await fetch(fontUrl);
+    const cssRes = await fetch(
+      "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+    );
     const css = await cssRes.text();
     const fontFileUrl = css.match(/url\(([^)]+)\)/)?.[1];
     if (fontFileUrl) {
@@ -95,9 +112,9 @@ export default async function OgImage({
             marginBottom: 28,
           }}
         >
-          {tutor.profile_image_url ? (
+          {profileImageUrl ? (
             <img
-              src={tutor.profile_image_url}
+              src={profileImageUrl}
               width={140}
               height={140}
               style={{
@@ -140,7 +157,7 @@ export default async function OgImage({
         </div>
 
         {/* Title / Headline */}
-        {tutor.title && (
+        {title && (
           <div
             style={{
               fontSize: 24,
@@ -151,9 +168,7 @@ export default async function OgImage({
               marginTop: 12,
             }}
           >
-            {tutor.title.length > 80
-              ? tutor.title.slice(0, 77) + "..."
-              : tutor.title}
+            {title.length > 80 ? title.slice(0, 77) + "..." : title}
           </div>
         )}
 
