@@ -72,10 +72,29 @@ export default function ProfileClient({
   const accentText = textOnAccent(accent);
   const isOwnCard = currentTutorId === viewedTutorId;
 
-  function handleSaveContact() {
+  async function handleSaveContact() {
     const fullName = [tutor.firstName, tutor.lastName].filter(Boolean).join(" ");
     const phone = tutor.links.find((l) => l.type === "Phone" || l.type === "📞 Phone");
     const email = tutor.links.find((l) => l.type === "Email" || l.type === "📧 Email");
+
+    // Fetch profile image as base64 if available
+    let photoBase64: string | null = null;
+    let photoType = "JPEG";
+    if (tutor.profileImageUrl) {
+      try {
+        const res = await fetch(tutor.profileImageUrl);
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("png")) photoType = "PNG";
+        else if (contentType.includes("gif")) photoType = "GIF";
+        const buf = await res.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        photoBase64 = btoa(binary);
+      } catch {
+        // Silently skip photo if fetch fails
+      }
+    }
 
     const lines = [
       "BEGIN:VCARD",
@@ -87,6 +106,7 @@ export default function ProfileClient({
     if (tutor.businessName) lines.push(`ORG:${tutor.businessName}`);
     if (phone) lines.push(`TEL;TYPE=CELL:${phone.url}`);
     if (email) lines.push(`EMAIL:${email.url}`);
+    if (photoBase64) lines.push(`PHOTO;ENCODING=b;TYPE=${photoType}:${photoBase64}`);
     lines.push(`URL:https://tutorcard.co/${tutor.slug}`);
     if (tutor.exams.length > 0 || tutor.subjects.length > 0) {
       const note = [...tutor.exams, ...tutor.subjects].join(", ");
