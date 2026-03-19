@@ -30,7 +30,7 @@ export default function InquirySheet({ onClose, accent, tutorId, tutorExams }: I
     padding: "11px 14px",
     borderRadius: 10,
     border: "1.5px solid #e5e7eb",
-    fontSize: 14,
+    fontSize: 16,
     color: "#111",
     outline: "none",
     marginBottom: 8,
