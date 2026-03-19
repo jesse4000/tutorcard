@@ -1993,20 +1993,33 @@ export default function DashboardClient({
     const pinned = reviews.find(r => r.isPinned);
     return pinned ? pinned.id : null;
   });
+  const pinInFlight = useRef(false);
+
+  // Sync localPinId when reviews prop changes (e.g. server re-render),
+  // but skip during in-flight pin operations to preserve optimistic state
+  useEffect(() => {
+    if (!pinInFlight.current) {
+      const pinned = reviews.find(r => r.isPinned);
+      setLocalPinId(pinned ? pinned.id : null);
+    }
+  }, [reviews]);
 
   const handlePin = async (review: ReviewData) => {
     const prevPinId = localPinId;
     const newPinId = localPinId === review.id ? null : review.id;
     setLocalPinId(newPinId);
+    pinInFlight.current = true;
     try {
       const res = await fetch("/api/reviews/pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewId: review.id }),
+        body: JSON.stringify({ reviewId: review.id, pin: newPinId !== null }),
       });
       if (!res.ok) setLocalPinId(prevPinId);
     } catch {
       setLocalPinId(prevPinId);
+    } finally {
+      pinInFlight.current = false;
     }
   };
 

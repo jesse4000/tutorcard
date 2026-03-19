@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { reviewId } = await request.json();
+    const { reviewId, pin } = await request.json();
     if (!reviewId) {
       return NextResponse.json({ error: "reviewId is required" }, { status: 400 });
     }
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 
-    const shouldPin = !review.is_pinned;
+    // Use explicit pin value from client if provided, otherwise toggle
+    const shouldPin = typeof pin === "boolean" ? pin : !review.is_pinned;
 
     // Unpin all reviews for this tutor
     await admin
