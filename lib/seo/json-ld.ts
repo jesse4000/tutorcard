@@ -193,7 +193,7 @@ export function buildSeoTitle(tutor: TutorSeoData): string {
   const primaryExam = tutor.exams?.[0] || tutor.subjects?.[0];
 
   if (primaryExam) {
-    return `${name} — ${primaryExam} Tutor | TutorCard`;
+    return `${name} | ${primaryExam} Tutor | TutorCard`;
   }
-  return `${name} — TutorCard`;
+  return `${name} | TutorCard`;
 }
