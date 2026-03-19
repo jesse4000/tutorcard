@@ -1281,25 +1281,25 @@ function ReviewRow({ review, wide, onReport, onPin, onShare }: { review: ReviewD
       {/* Top section: exam tag, scores, improvement badge */}
       {(review.exam || hasScores) && (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: wide ? 8 : 5, marginBottom: 10, flexWrap: "nowrap", overflow: "hidden" }}>
             {review.exam && (
-              <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{review.exam}</span>
+              <span style={{ fontSize: wide ? 10.5 : 10, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 1, minWidth: 0 }}>{review.exam}</span>
             )}
             {rs && <ReportStatusBadge status={rs} />}
             {hasScores && (
               <>
-                <span style={{ fontSize: wide ? 20 : 16, fontWeight: 700, color: "#b0b0b0" }}>{review.scoreBefore}</span>
-                <span style={{ fontSize: 13, color: "#d1d5db" }}>&rarr;</span>
-                <span style={{ fontSize: wide ? 20 : 16, fontWeight: 700, color: "#111" }}>{review.scoreAfter}</span>
+                <span style={{ fontSize: wide ? 20 : 16, fontWeight: 700, color: "#b0b0b0", flexShrink: 0 }}>{review.scoreBefore}</span>
+                <span style={{ fontSize: wide ? 13 : 11, color: "#d1d5db", flexShrink: 0 }}>&rarr;</span>
+                <span style={{ fontSize: wide ? 20 : 16, fontWeight: 700, color: "#111", flexShrink: 0 }}>{review.scoreAfter}</span>
               </>
             )}
             {imp != null && imp > 0 && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
-                <Icon name="arrowUp" size={9} />+{imp}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: wide ? "2px 7px" : "2px 6px", borderRadius: 20, fontSize: wide ? 10.5 : 10, fontWeight: 700, flexShrink: 0 }}>
+                <Icon name="arrowUp" size={wide ? 9 : 8} />+{imp}
               </span>
             )}
             {review.months && (
-              <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+              <span style={{ fontSize: wide ? 12 : 11, color: "#9ca3af", marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {review.months} months
               </span>
             )}
@@ -1328,7 +1328,7 @@ function ReviewRow({ review, wide, onReport, onPin, onShare }: { review: ReviewD
           {expanded ? "show less" : "show more"}
         </button>
       )}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", flexDirection: wide ? "row" : "column", alignItems: wide ? "center" : "flex-start", justifyContent: wide ? "space-between" : undefined, gap: wide ? 0 : 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ display: "flex", gap: 1, flexShrink: 0 }}>
             {Array.from({ length: 5 }).map((_, i) => (
@@ -1337,7 +1337,7 @@ function ReviewRow({ review, wide, onReport, onPin, onShare }: { review: ReviewD
           </div>
           <p style={{ fontSize: 11.5, color: "#9ca3af", margin: 0, fontWeight: 500 }}>— {review.reviewerName}{review.reviewerRole ? `, ${review.reviewerRole}` : ""}</p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, alignSelf: wide ? undefined : "flex-end" }}>
           <button
             onClick={() => onShare(review)}
             onMouseEnter={() => setHoverShare(true)}

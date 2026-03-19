@@ -37,11 +37,11 @@ function FeaturedReview({ a, hasScores, imp }: { a: ReviewData; hasScores: boole
     <>
       <div style={{ padding: "16px 20px" }}>
         <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>Verified Result</p>
-        <div style={{ background: "#fafafa", borderRadius: 14, padding: "14px 16px", border: "1px solid #f0f0f0" }}>
+        <div style={{ background: "#fafafa", borderRadius: 14, padding: "14px 14px", border: "1px solid #f0f0f0" }}>
           {/* Top: exam, scores, improvement */}
           {(a.exam || hasScores) && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, flexWrap: "nowrap", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10, flexWrap: "nowrap", overflow: "hidden" }}>
                 {a.exam && (
                   <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 1, minWidth: 0 }}>{a.exam}</span>
                 )}
