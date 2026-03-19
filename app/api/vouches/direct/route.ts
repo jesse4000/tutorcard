@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, getTutorNotificationEmail } from "@/lib/email";
 import { vouchReceivedEmail } from "@/lib/email-templates";
 
 const AVATAR_COLORS = [
@@ -75,6 +75,7 @@ export async function POST(request: Request) {
           first_name: firstName,
           last_name: lastName,
           slug,
+          email: user.email || "",
           avatar_color: randomColor(),
         })
         .select("id")
@@ -109,9 +110,10 @@ export async function POST(request: Request) {
 
       // Notify the vouched tutor
       try {
+        const vouchedEmail = await getTutorNotificationEmail(vouchedTutorId);
         const { data: vouchedTutor } = await supabase
           .from("tutors")
-          .select("first_name, last_name, email")
+          .select("first_name, last_name")
           .eq("id", vouchedTutorId)
           .single();
         const { data: voucherTutor } = await supabase
@@ -119,11 +121,11 @@ export async function POST(request: Request) {
           .select("first_name, last_name, slug")
           .eq("id", tutor.id)
           .single();
-        if (vouchedTutor?.email && voucherTutor) {
+        if (vouchedEmail && vouchedTutor && voucherTutor) {
           const vouchedName = `${vouchedTutor.first_name} ${vouchedTutor.last_name}`.trim();
           const voucherName = `${voucherTutor.first_name} ${voucherTutor.last_name}`.trim();
           const tpl = vouchReceivedEmail(vouchedName, voucherName, voucherTutor.slug || null);
-          await sendEmail({ to: vouchedTutor.email, ...tpl });
+          await sendEmail({ to: vouchedEmail, ...tpl });
         }
       } catch (emailErr) {
         console.error("Failed to send vouch notification:", emailErr);
