@@ -1009,7 +1009,8 @@ export default function EditClient({
       data.headline,
       ...data.specialties,
       ...data.links.map((l) => l.label),
-    ];
+      data.location,
+    ].filter(Boolean);
     for (const field of fieldsToCheck) {
       if (containsProfanity(field)) {
         setProfanityError("Please remove inappropriate language from your card before saving.");
