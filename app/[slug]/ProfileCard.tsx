@@ -41,24 +41,24 @@ function FeaturedReview({ a, hasScores, imp }: { a: ReviewData; hasScores: boole
           {/* Top: exam, scores, improvement */}
           {(a.exam || hasScores) && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, flexWrap: "nowrap", overflow: "hidden" }}>
                 {a.exam && (
-                  <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4 }}>{a.exam}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#6b7280", background: "#e5e7eb", padding: "2px 7px", borderRadius: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flexShrink: 1, minWidth: 0 }}>{a.exam}</span>
                 )}
                 {hasScores && (
                   <>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "#b0b0b0" }}>{a.scoreBefore}</span>
-                    <span style={{ fontSize: 13, color: "#d1d5db" }}>→</span>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "#111" }}>{a.scoreAfter}</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: "#b0b0b0", flexShrink: 0 }}>{a.scoreBefore}</span>
+                    <span style={{ fontSize: 11, color: "#d1d5db", flexShrink: 0 }}>→</span>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: "#111", flexShrink: 0 }}>{a.scoreAfter}</span>
                   </>
                 )}
                 {imp != null && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 7px", borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>
-                    <Icon name="arrowUp" size={9} />+{imp}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "#059669", color: "white", padding: "2px 6px", borderRadius: 20, fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                    <Icon name="arrowUp" size={8} />+{imp}
                   </span>
                 )}
                 {a.months && (
-                  <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
+                  <span style={{ fontSize: 11, color: "#9ca3af", marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {a.months} months
                   </span>
                 )}
