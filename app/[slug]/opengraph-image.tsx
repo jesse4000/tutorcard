@@ -39,36 +39,14 @@ export default async function OgImage({
     );
   }
 
-  // Fetch review stats
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("rating")
-    .eq("tutor_id", tutor.id)
-    .eq("is_revoked", false);
-
-  const ratings = (reviews || []).map((r: { rating: number }) => r.rating);
-  const avgRating =
-    ratings.length > 0
-      ? Math.round((ratings.reduce((s: number, r: number) => s + r, 0) / ratings.length) * 10) / 10
-      : null;
-  const reviewCount = ratings.length;
-
-  // Fetch vouch count
-  const { count: vouchCount } = await supabase
-    .from("vouches")
-    .select("id", { count: "exact", head: true })
-    .eq("vouched_tutor_id", tutor.id);
-
   const name = `${tutor.first_name} ${tutor.last_name}`;
   const accent = tutor.avatar_color || "#0f172a";
-  const exams = tutor.exams || [];
-  const subjects = tutor.subjects || [];
   const locations = tutor.locations || [];
-  const allTags = [...exams, ...subjects].slice(0, 5);
   const initials = `${(tutor.first_name || "")[0] || ""}${(tutor.last_name || "")[0] || ""}`.toUpperCase();
 
   // Load font
-  const fontUrl = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&display=swap";
+  const fontUrl =
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap";
   let fontData: ArrayBuffer | undefined;
   try {
     const cssRes = await fetch(fontUrl);
@@ -89,60 +67,51 @@ export default async function OgImage({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "#ffffff",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#fafafa",
         position: "relative",
       }}
     >
-      {/* Top accent bar */}
-      <div
-        style={{
-          width: "100%",
-          height: 8,
-          backgroundColor: accent,
-          display: "flex",
-        }}
-      />
-
+      {/* Card container */}
       <div
         style={{
           display: "flex",
-          flexDirection: "row",
-          padding: "48px 56px",
-          flex: 1,
-          gap: 48,
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 0,
         }}
       >
-        {/* Left: Avatar */}
+        {/* Avatar */}
         <div
           style={{
             display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "center",
+            marginBottom: 28,
           }}
         >
           {tutor.profile_image_url ? (
             <img
               src={tutor.profile_image_url}
-              width={160}
-              height={160}
+              width={140}
+              height={140}
               style={{
-                borderRadius: 80,
+                borderRadius: 70,
                 objectFit: "cover",
-                border: `4px solid ${accent}`,
               }}
             />
           ) : (
             <div
               style={{
-                width: 160,
-                height: 160,
-                borderRadius: 80,
+                width: 140,
+                height: 140,
+                borderRadius: 70,
                 backgroundColor: accent,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 color: "#ffffff",
-                fontSize: 56,
+                fontSize: 52,
                 fontWeight: 700,
               }}
             >
@@ -151,150 +120,86 @@ export default async function OgImage({
           )}
         </div>
 
-        {/* Right: Info */}
+        {/* Name */}
         <div
           style={{
+            fontSize: 48,
+            fontWeight: 700,
+            color: "#1a1a1a",
+            lineHeight: 1.1,
             display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            gap: 12,
+            textAlign: "center",
           }}
         >
+          {name}
+        </div>
+
+        {/* Title / Headline */}
+        {tutor.title && (
           <div
             style={{
-              fontSize: 48,
-              fontWeight: 700,
-              color: "#0f172a",
-              lineHeight: 1.1,
+              fontSize: 24,
+              color: "#4a4a4a",
+              lineHeight: 1.4,
               display: "flex",
-            }}
-          >
-            {name}
-          </div>
-
-          {tutor.title && (
-            <div
-              style={{
-                fontSize: 24,
-                color: "#475569",
-                lineHeight: 1.3,
-                display: "flex",
-              }}
-            >
-              {tutor.title.length > 80
-                ? tutor.title.slice(0, 77) + "..."
-                : tutor.title}
-            </div>
-          )}
-
-          {/* Tags */}
-          {allTags.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 8,
-                marginTop: 8,
-              }}
-            >
-              {allTags.map((tag) => (
-                <div
-                  key={tag}
-                  style={{
-                    backgroundColor: `${accent}18`,
-                    color: accent,
-                    padding: "6px 16px",
-                    borderRadius: 20,
-                    fontSize: 20,
-                    fontWeight: 600,
-                    display: "flex",
-                  }}
-                >
-                  {tag}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Location */}
-          {locations.length > 0 && (
-            <div
-              style={{
-                fontSize: 20,
-                color: "#64748b",
-                marginTop: 4,
-                display: "flex",
-              }}
-            >
-              {locations.slice(0, 3).join("  ·  ")}
-            </div>
-          )}
-
-          {/* Stats row */}
-          <div
-            style={{
-              display: "flex",
-              gap: 32,
+              textAlign: "center",
               marginTop: 12,
             }}
           >
-            {avgRating !== null && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ fontSize: 28, display: "flex" }}>★</div>
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                    display: "flex",
-                  }}
-                >
-                  {avgRating}/5
-                </div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    color: "#64748b",
-                    display: "flex",
-                  }}
-                >
-                  ({reviewCount} review{reviewCount === 1 ? "" : "s"})
-                </div>
-              </div>
-            )}
-            {(vouchCount ?? 0) > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 600,
-                    color: "#0f172a",
-                    display: "flex",
-                  }}
-                >
-                  {vouchCount} vouch{vouchCount === 1 ? "" : "es"}
-                </div>
-              </div>
-            )}
+            {tutor.title.length > 80
+              ? tutor.title.slice(0, 77) + "..."
+              : tutor.title}
           </div>
-        </div>
+        )}
+
+        {/* Location */}
+        {locations.length > 0 && (
+          <div
+            style={{
+              fontSize: 20,
+              color: "#888888",
+              marginTop: 10,
+              display: "flex",
+              textAlign: "center",
+            }}
+          >
+            {locations.slice(0, 3).join("  ·  ")}
+          </div>
+        )}
       </div>
 
       {/* Footer branding */}
       <div
         style={{
+          position: "absolute",
+          bottom: 40,
           display: "flex",
-          justifyContent: "flex-end",
           alignItems: "center",
-          padding: "0 56px 32px",
-          gap: 12,
+          gap: 10,
         }}
       >
+        {/* Small dark rounded square icon */}
         <div
           style={{
-            fontSize: 22,
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            backgroundColor: "#333333",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            fontSize: 14,
             fontWeight: 700,
-            color: "#94a3b8",
+          }}
+        >
+          tc
+        </div>
+        <div
+          style={{
+            fontSize: 20,
+            color: "#888888",
+            fontWeight: 600,
             display: "flex",
           }}
         >
