@@ -36,23 +36,48 @@ export async function POST(request: Request) {
     const admin = createAdminClient();
 
     // Verify the review exists and belongs to this tutor
-    const { data: review } = await admin
+    const { data: review, error: reviewError } = await admin
       .from("reviews")
       .select("id, tutor_id, reviewer_name, reviewer_email, exam, quote")
       .eq("id", reviewId)
       .single();
+
+    if (reviewError) {
+      if (reviewError.code === "PGRST116") {
+        return NextResponse.json({ error: "Review not found" }, { status: 404 });
+      }
+      console.error("Review lookup error:", reviewError);
+      return NextResponse.json(
+        { error: "Failed to look up review" },
+        { status: 500 }
+      );
+    }
 
     if (!review) {
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 
     // Verify the tutor owns this review
-    const { data: tutor } = await admin
+    const { data: tutor, error: tutorError } = await admin
       .from("tutors")
       .select("id, first_name, last_name, slug")
       .eq("user_id", user.id)
       .eq("id", review.tutor_id)
       .single();
+
+    if (tutorError) {
+      if (tutorError.code === "PGRST116") {
+        return NextResponse.json(
+          { error: "Not authorized to report this review" },
+          { status: 403 }
+        );
+      }
+      console.error("Tutor lookup error:", tutorError);
+      return NextResponse.json(
+        { error: "Failed to verify tutor ownership" },
+        { status: 500 }
+      );
+    }
 
     if (!tutor) {
       return NextResponse.json(
@@ -62,12 +87,20 @@ export async function POST(request: Request) {
     }
 
     // Check for existing active report on this review
-    const { data: existing } = await admin
+    const { data: existing, error: existingError } = await admin
       .from("review_reports")
       .select("id")
       .eq("review_id", reviewId)
       .in("status", ["pending", "responded"])
       .limit(1);
+
+    if (existingError) {
+      console.error("Existing report check error:", existingError);
+      return NextResponse.json(
+        { error: "Failed to check existing reports" },
+        { status: 500 }
+      );
+    }
 
     if (existing && existing.length > 0) {
       return NextResponse.json(
