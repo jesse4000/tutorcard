@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   const tutor = tutors?.[0] || null;
 
   if (!tutor) {
-    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inviteCodes={[]} />;
+    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inquiries={[]} inviteCodes={[]} />;
   }
 
   // Parallel data fetching (same pattern as [slug]/page.tsx)
