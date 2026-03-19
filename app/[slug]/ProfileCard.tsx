@@ -183,21 +183,24 @@ export default function ProfileCard({
         {tutor.links.map((link, i) => {
           const iconName = LINK_TYPE_ICONS[link.type] || "link";
           const label = link.label || link.url || link.type.replace(/^\S+\s/, "");
-          const href =
-            link.type === "📞 Phone"
-              ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+          const isPhone = link.type === "📞 Phone" || link.type === "Phone";
+          const isEmail = link.type === "📧 Email" || link.type === "Email";
+          const href = isPhone
+            ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+            : isEmail
+              ? `mailto:${link.url}`
               : link.url.startsWith("http")
                 ? link.url
                 : link.url.includes("@")
                   ? `mailto:${link.url}`
                   : `https://${link.url}`;
+          const isNativeProtocol = isPhone || isEmail || href.startsWith("mailto:");
 
           return (
             <a
               key={i}
               href={href}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...(!isNativeProtocol && { target: "_blank", rel: "noopener noreferrer" })}
               className="pf-link"
               style={{
                 display: "flex",

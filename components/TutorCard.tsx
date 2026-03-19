@@ -133,14 +133,18 @@ export default function TutorCard({ data, variant = "preview", vouchCount }: Tut
             const icon = LINK_ICONS[link.type] || "🔗";
             const label =
               link.label || link.url || link.type.replace(/^\S+\s/, "");
-            const href =
-              link.type === "📞 Phone"
-                ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+            const isPhone = link.type === "📞 Phone" || link.type === "Phone";
+            const isEmail = link.type === "📧 Email" || link.type === "Email";
+            const href = isPhone
+              ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+              : isEmail
+                ? `mailto:${link.url}`
                 : link.url.startsWith("http")
                   ? link.url
                   : link.url.includes("@")
                     ? `mailto:${link.url}`
                     : `https://${link.url}`;
+            const isNativeProtocol = isPhone || isEmail || href.startsWith("mailto:");
 
             if (isPreview) {
               const cls =
@@ -168,8 +172,7 @@ export default function TutorCard({ data, variant = "preview", vouchCount }: Tut
               <a
                 key={i}
                 href={href}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(!isNativeProtocol && { target: "_blank", rel: "noopener noreferrer" })}
                 className={cls}
               >
                 <span className="btn-icon">{icon}</span>

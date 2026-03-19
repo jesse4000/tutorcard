@@ -34,13 +34,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical: `/${slug}/review`,
     },
     openGraph: {
-      title: `Review ${name} — TutorCard`,
+      title: `Review ${name} | TutorCard`,
       description,
       type: "profile",
     },
     twitter: {
       card: "summary",
-      title: `Review ${name} — TutorCard`,
+      title: `Review ${name} | TutorCard`,
       description,
     },
     robots: {

@@ -1047,16 +1047,20 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
         {(tutor.links || []).map((link: TutorLink, i: number) => {
           const iconName = LINK_TYPE_ICONS[link.type] || "link";
           const label = link.label || link.url || link.type.replace(/^\S+\s/, "");
-          const href =
-            link.type === "📞 Phone"
-              ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+          const isPhone = link.type === "📞 Phone" || link.type === "Phone";
+          const isEmail = link.type === "📧 Email" || link.type === "Email";
+          const href = isPhone
+            ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+            : isEmail
+              ? `mailto:${link.url}`
               : link.url.startsWith("http")
                 ? link.url
                 : link.url.includes("@")
                   ? `mailto:${link.url}`
                   : `https://${link.url}`;
+          const isNativeProtocol = isPhone || isEmail || href.startsWith("mailto:");
           return (
-            <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="tc-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, cursor: "pointer", transition: "background 0.15s", textDecoration: "none", color: "inherit" }}>
+            <a key={i} href={href} {...(!isNativeProtocol && { target: "_blank", rel: "noopener noreferrer" })} className="tc-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, cursor: "pointer", transition: "background 0.15s", textDecoration: "none", color: "inherit" }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name={iconName} size={15} style={{ color: "#374151" }} />
               </div>
@@ -1993,20 +1997,33 @@ export default function DashboardClient({
     const pinned = reviews.find(r => r.isPinned);
     return pinned ? pinned.id : null;
   });
+  const pinInFlight = useRef(false);
+
+  // Sync localPinId when reviews prop changes (e.g. server re-render),
+  // but skip during in-flight pin operations to preserve optimistic state
+  useEffect(() => {
+    if (!pinInFlight.current) {
+      const pinned = reviews.find(r => r.isPinned);
+      setLocalPinId(pinned ? pinned.id : null);
+    }
+  }, [reviews]);
 
   const handlePin = async (review: ReviewData) => {
     const prevPinId = localPinId;
     const newPinId = localPinId === review.id ? null : review.id;
     setLocalPinId(newPinId);
+    pinInFlight.current = true;
     try {
       const res = await fetch("/api/reviews/pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewId: review.id }),
+        body: JSON.stringify({ reviewId: review.id, pin: newPinId !== null }),
       });
       if (!res.ok) setLocalPinId(prevPinId);
     } catch {
       setLocalPinId(prevPinId);
+    } finally {
+      pinInFlight.current = false;
     }
   };
 
@@ -2167,7 +2184,7 @@ export default function DashboardClient({
         </main>
         <footer style={{ padding: "20px 24px", display: "flex", justifyContent: "center", width: "100%" }}>
           <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, textAlign: "center" }}>
-            &copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#9ca3af", textDecoration: "none" }}>StudySpaces</a> product
+            &copy; 2026 TutorCard &middot; A <a href="https://studyspaces.com/" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "#9ca3af", textDecoration: "underline" }}>StudySpaces</a> product
           </p>
         </footer>
       </div>
