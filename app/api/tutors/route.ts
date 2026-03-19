@@ -21,6 +21,7 @@ function checkContentProfanity(body: Record<string, unknown>): string | null {
   if (body.title) texts.push(String(body.title));
   if (Array.isArray(body.exams)) texts.push(...body.exams.map(String));
   if (Array.isArray(body.subjects)) texts.push(...body.subjects.map(String));
+  if (Array.isArray(body.locations)) texts.push(...body.locations.map(String));
   if (Array.isArray(body.links)) {
     for (const link of body.links) {
       if (link && typeof link === "object" && "label" in link) {

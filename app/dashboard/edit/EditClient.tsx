@@ -653,7 +653,7 @@ function LocationInput({
           padding: "11px 14px",
           borderRadius: 10,
           border: "1.5px solid #e5e7eb",
-          fontSize: 14,
+          fontSize: 16,
           color: "#111",
           outline: "none",
           boxSizing: "border-box",
@@ -1009,7 +1009,8 @@ export default function EditClient({
       data.headline,
       ...data.specialties,
       ...data.links.map((l) => l.label),
-    ];
+      data.location,
+    ].filter(Boolean);
     for (const field of fieldsToCheck) {
       if (containsProfanity(field)) {
         setProfanityError("Please remove inappropriate language from your card before saving.");
@@ -1109,7 +1110,7 @@ export default function EditClient({
     padding: "11px 14px",
     borderRadius: 10,
     border: "1.5px solid #e5e7eb",
-    fontSize: 14,
+    fontSize: 16,
     color: "#111",
     outline: "none",
     boxSizing: "border-box",

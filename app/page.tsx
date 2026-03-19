@@ -415,6 +415,50 @@ export default function TutorCardLanding() {
                 })}
               </div>
             </DeepDive>
+
+            {/* One-Tap Save */}
+            <DeepDive
+              icon="phone" badge="One-Tap Save" flipped={true} isMobile={isMobile}
+              title="You're in their phone before they leave the page"
+              subtitle="One tap. Name, number, photo. Saved."
+              desc="When a parent views your card, they can save your contact info to their phone in one tap. Your name, number, email, and photo go straight into their contacts. No copying, no screenshots, no 'I'll look them up later' that never happens. You go from a link they clicked to a person in their phone. That's the difference between a lead and a contact."
+            >
+              <div style={{ background: "white", borderRadius: 16, border: "1px solid #f0f0f0", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <div style={{ padding: "20px 18px 14px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #f3f4f6" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: "white" }}>SM</span>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: "#111", margin: 0 }}>Sarah Mitchell</p>
+                    <p style={{ fontSize: 12, color: "#6b7280", margin: "1px 0 0" }}>SAT & ACT Specialist</p>
+                  </div>
+                </div>
+                <div style={{ padding: "6px 10px" }}>
+                  {[
+                    { icon: "phone", label: "(555) 234-5678" },
+                    { icon: "msg", label: "sarah@sarahtestprep.com" },
+                    { icon: "globe", label: "tutorcard.co/sarah-mitchell" },
+                  ].map((row, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 8px", borderRadius: 10 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Icon name={row.icon} size={13} style={{ color: "#374151" }} />
+                      </div>
+                      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{row.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ padding: "8px 18px 18px" }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    padding: "10px", borderRadius: 12,
+                    background: "#ecfdf5", border: "1px solid #d1fae5",
+                  }}>
+                    <Icon name="check" size={14} style={{ color: "#059669" }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#059669" }}>Added to Contacts</span>
+                  </div>
+                </div>
+              </div>
+            </DeepDive>
           </div>
         </section>
 

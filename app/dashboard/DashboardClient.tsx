@@ -113,7 +113,7 @@ function Icon({ name, size = 16, ...props }: { name: string; size?: number } & R
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "fadeIn 0.15s ease" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 480, padding: "28px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 480, padding: "28px", margin: "0 16px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto" }}>
         {children}
       </div>
     </div>
