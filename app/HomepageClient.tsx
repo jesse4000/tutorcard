@@ -553,7 +553,7 @@ export default function HomepageClient() {
             </div>
             {/* Alternative access paths */}
             <div style={{ marginTop: 32, textAlign: "center" }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", margin: "0 0 12px" }}>Other ways to get access</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", margin: "0 0 12px" }}>Other ways to get free access</p>
               <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 12 : 20, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: "white", border: "1px solid #e5e7eb" }}>
                   <Icon name="gift" size={14} style={{ color: "#6b7280" }} />
