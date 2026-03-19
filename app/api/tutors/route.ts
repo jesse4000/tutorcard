@@ -169,10 +169,11 @@ export async function POST(request: Request) {
         // Notify the referrer that their invite code was claimed
         try {
           const admin = createAdminClient();
+          const normalizedCode = body.inviteCode.toUpperCase().trim();
           const { data: inviteCode } = await admin
             .from("invite_codes")
             .select("owner_id")
-            .eq("code", body.inviteCode)
+            .eq("code", normalizedCode)
             .single();
           if (inviteCode?.owner_id) {
             const { data: ownerAuth } = await admin.auth.admin.getUserById(inviteCode.owner_id);

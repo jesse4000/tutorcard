@@ -470,8 +470,17 @@ export default function TutorCardOnboarding() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Invite code state
-  const [inviteCode, setInviteCode] = useState("");
+  // Invite code state — check if one was stored during signup
+  const [inviteCode, setInviteCode] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("tutorcard_invite_code");
+      if (stored) {
+        localStorage.removeItem("tutorcard_invite_code");
+        return stored;
+      }
+    }
+    return "";
+  });
   const [inviteCodeValid, setInviteCodeValid] = useState<boolean | null>(null);
   const [inviteCodeChecking, setInviteCodeChecking] = useState(false);
 
