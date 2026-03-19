@@ -1,52 +1,50 @@
-import type { MetadataRoute } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { MetadataRoute } from "next";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tutorcard.co";
-
-  let tutors: { slug: string; updated_at: string | null }[] | null = null;
+  let tutorEntries: MetadataRoute.Sitemap = [];
   try {
-    const admin = createAdminClient();
-    const { data } = await admin
+    const supabase = createAdminClient();
+    const { data: tutors } = await supabase
       .from("tutors")
       .select("slug, updated_at");
-    tutors = data;
+
+    tutorEntries = (tutors || []).map(
+      (t: { slug: string; updated_at?: string }) => ({
+        url: `https://tutorcard.co/${t.slug}`,
+        lastModified: t.updated_at || new Date().toISOString(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })
+    );
   } catch {
-    tutors = [];
+    tutorEntries = [];
   }
 
-  const staticPages: MetadataRoute.Sitemap = [
+  return [
     {
-      url: siteUrl,
+      url: "https://tutorcard.co",
       lastModified: new Date(),
-      changeFrequency: "weekly",
+      changeFrequency: "monthly",
       priority: 1.0,
     },
     {
-      url: `${siteUrl}/for-associations`,
+      url: "https://tutorcard.co/for-associations",
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: `${siteUrl}/privacy`,
+      url: "https://tutorcard.co/privacy",
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: `${siteUrl}/terms`,
+      url: "https://tutorcard.co/terms",
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    ...tutorEntries,
   ];
-
-  const tutorPages: MetadataRoute.Sitemap = (tutors || []).map((t) => ({
-    url: `${siteUrl}/${t.slug}`,
-    lastModified: t.updated_at ? new Date(t.updated_at) : new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
-
-  return [...staticPages, ...tutorPages];
 }

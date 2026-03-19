@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tutorcard.co";
   return {
     rules: [
       {
@@ -9,14 +8,15 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/dashboard",
-          "/dashboard/edit",
           "/admin",
           "/create",
+          "/login",
+          "/signup",
           "/review-report/",
           "/api/",
         ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: "https://tutorcard.co/sitemap.xml",
   };
 }

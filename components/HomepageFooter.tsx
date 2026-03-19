@@ -22,7 +22,7 @@ export default function HomepageFooter({ isMobile }: { isMobile: boolean }) {
             The professional identity platform for tutors. Easy to share.
           </p>
         </div>
-        <div style={{ display: "flex", gap: isMobile ? 32 : 48, marginLeft: isMobile ? 0 : "auto", textAlign: "right" }}>
+        <div style={{ display: "flex", gap: isMobile ? 32 : 48, marginLeft: isMobile ? 0 : "auto", textAlign: isMobile ? "center" : "right" }}>
           <div>
             <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", margin: "0 0 10px" }}>TutorCard</p>
             {[
