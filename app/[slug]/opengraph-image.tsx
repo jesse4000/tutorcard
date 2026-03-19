@@ -1,5 +1,5 @@
 import { ImageResponse } from "@vercel/og";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const alt = "TutorCard Profile";
 export const size = { width: 1200, height: 630 };
@@ -11,7 +11,7 @@ export default async function OgImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: tutor } = await supabase
     .from("tutors")
