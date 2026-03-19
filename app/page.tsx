@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     absolute: "TutorCard | Your professional identity, one link.",
   },
   description:
-    "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
+    "Professional tutor profiles with verified reviews, peer endorsements, and credentials. Easy to share.",
   alternates: {
     canonical: "/",
   },

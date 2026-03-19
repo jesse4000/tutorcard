@@ -133,67 +133,46 @@ export function buildProfilePageJsonLd(slug: string): Record<string, unknown> {
 }
 
 /**
- * Build a keyword-rich SEO description for a tutor card.
- * Short version (~155 chars) for SERP, long version for OG.
+ * Build an SEO description for a tutor card.
+ * Format: Full Name | Professional Headline | Location
+ * Exam/Subject, Exam/Subject | View TutorCard
  */
 export function buildSeoDescription(
   tutor: TutorSeoData,
-  reviewStats: ReviewStats
+  _reviewStats: ReviewStats
 ): { short: string; long: string } {
   const name = `${tutor.firstName} ${tutor.lastName}`;
   const allExpertise = [
     ...(tutor.exams || []),
     ...(tutor.subjects || []),
   ];
-
-  const parts: string[] = [];
-
-  // "{Name} is a {exam1, exam2} tutor"
-  if (allExpertise.length > 0) {
-    const expertiseStr = allExpertise.slice(0, 3).join(", ");
-    parts.push(`${name} is a ${expertiseStr} tutor`);
-  } else {
-    parts.push(`${name} is a tutor`);
-  }
-
-  // "in {Location1, Location2}"
   const locations = tutor.locations || [];
+
+  // First line: Name | Title | Location
+  const firstLineParts: string[] = [name];
+  if (tutor.title) {
+    firstLineParts.push(tutor.title);
+  }
   if (locations.length > 0) {
-    parts[parts.length - 1] += ` in ${locations.slice(0, 2).join(" & ")}`;
+    firstLineParts.push(locations.slice(0, 3).join(", "));
   }
+  const firstLine = firstLineParts.join(" | ");
 
-  // "Rated {X}/5 from {N} reviews"
-  if (reviewStats.averageRating !== null && reviewStats.reviewCount > 0) {
-    const rating = Math.round(reviewStats.averageRating * 10) / 10;
-    parts.push(`Rated ${rating}/5 from ${reviewStats.reviewCount} review${reviewStats.reviewCount === 1 ? "" : "s"}`);
-  }
+  // Second line: Exams/Subjects | View TutorCard
+  const secondLine = allExpertise.length > 0
+    ? `${allExpertise.join(", ")} | View TutorCard`
+    : "View TutorCard";
 
-  const shortBase = parts.join(". ") + ".";
+  const description = `${firstLine}\n${secondLine}`;
 
-  // Long version includes title
-  const longParts = [...parts];
-  if (tutor.title && !longParts[0].includes(tutor.title)) {
-    longParts.splice(1, 0, tutor.title);
-  }
-  const longBase = longParts.join(". ") + " View their TutorCard.";
-
-  // Cap short at ~155 chars
-  const short = shortBase.length > 155
-    ? shortBase.slice(0, 152) + "..."
-    : shortBase;
-
-  return { short, long: longBase };
+  return { short: description, long: description };
 }
 
 /**
- * Build a keyword-rich SEO title for a tutor card.
+ * Build an SEO title for a tutor card.
+ * Format: Full Name | TutorCard
  */
 export function buildSeoTitle(tutor: TutorSeoData): string {
   const name = `${tutor.firstName} ${tutor.lastName}`;
-  const primaryExam = tutor.exams?.[0] || tutor.subjects?.[0];
-
-  if (primaryExam) {
-    return `${name} | ${primaryExam} Tutor | TutorCard`;
-  }
   return `${name} | TutorCard`;
 }
