@@ -72,6 +72,39 @@ export default function ProfileClient({
   const accentText = textOnAccent(accent);
   const isOwnCard = currentTutorId === viewedTutorId;
 
+  function handleSaveContact() {
+    const fullName = [tutor.firstName, tutor.lastName].filter(Boolean).join(" ");
+    const phone = tutor.links.find((l) => l.type === "Phone" || l.type === "📞 Phone");
+    const email = tutor.links.find((l) => l.type === "Email" || l.type === "📧 Email");
+
+    const lines = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${fullName}`,
+      `N:${tutor.lastName || ""};${tutor.firstName || ""};;;`,
+    ];
+    if (tutor.title) lines.push(`TITLE:${tutor.title}`);
+    if (tutor.businessName) lines.push(`ORG:${tutor.businessName}`);
+    if (phone) lines.push(`TEL;TYPE=CELL:${phone.url}`);
+    if (email) lines.push(`EMAIL:${email.url}`);
+    lines.push(`URL:https://tutorcard.co/${tutor.slug}`);
+    if (tutor.exams.length > 0 || tutor.subjects.length > 0) {
+      const note = [...tutor.exams, ...tutor.subjects].join(", ");
+      lines.push(`NOTE:${note}`);
+    }
+    lines.push("END:VCARD");
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/vcard" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${tutor.firstName}-${tutor.lastName}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function handleVouch() {
     if (!currentTutorId) {
       router.push(`/vouch/${tutor.slug}`);
@@ -289,6 +322,33 @@ export default function ProfileClient({
                 firstBadge={badges[0] || null}
                 onMessage={() => setShowInquiry(true)}
               />
+              {!isOwnCard && (
+                <button
+                  onClick={handleSaveContact}
+                  style={{
+                    width: "100%",
+                    marginTop: 12,
+                    padding: "13px",
+                    borderRadius: 14,
+                    border: "1.5px solid #e5e7eb",
+                    background: "white",
+                    color: "#374151",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    transition: "border-color 0.15s, background 0.15s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fafafa"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "white"; }}
+                >
+                  <Icon name="download" size={15} />Save Contact
+                </button>
+              )}
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} accent={accent} reviewCount={reviews.length} vouchCount={localVouchCount} badgeCount={badges.length} />
                 {renderTabContent()}
