@@ -1768,6 +1768,7 @@ function VouchRow({ vouch, wide }: { vouch: VoucherData; wide: boolean }) {
       </div>
       <Link
         href={`/${vouch.slug}`}
+        target="_blank"
         style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, padding: wide ? "5px 12px" : "4px 10px", borderRadius: 20, background: "white", border: "1px solid #e5e7eb", fontSize: wide ? 12 : 11, fontWeight: 500, color: "#6b7280", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textDecoration: "none", transition: "border-color 0.15s, color 0.15s" }}
       >
         View card<Icon name="ext" size={wide ? 11 : 10} />
