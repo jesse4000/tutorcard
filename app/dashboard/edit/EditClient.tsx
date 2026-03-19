@@ -92,6 +92,7 @@ const LINK_TYPE_OPTIONS = [
   { key: "website", label: "Website", icon: "globe" },
   { key: "booking", label: "Booking", icon: "calendar" },
   { key: "phone", label: "Phone", icon: "phone" },
+  { key: "email", label: "Email", icon: "mail" },
   { key: "zoom", label: "Zoom", icon: "video" },
   { key: "instagram", label: "Instagram", icon: "instagram" },
   { key: "linkedin", label: "LinkedIn", icon: "linkedin" },
@@ -102,7 +103,7 @@ const DB_TYPE_TO_KEY: Record<string, string> = {
   "🌐 Website": "website",
   "📅 Booking": "booking",
   "📞 Phone": "phone",
-  "📧 Email": "website",
+  "📧 Email": "email",
   "💼 LinkedIn": "linkedin",
   "📘 Facebook": "other",
   "📸 Instagram": "instagram",
@@ -111,6 +112,7 @@ const DB_TYPE_TO_KEY: Record<string, string> = {
   Website: "website",
   Booking: "booking",
   Phone: "phone",
+  Email: "email",
   Zoom: "zoom",
   Instagram: "instagram",
   LinkedIn: "linkedin",
@@ -120,6 +122,7 @@ const KEY_TO_DB_TYPE: Record<string, string> = {
   website: "Website",
   booking: "Booking",
   phone: "Phone",
+  email: "Email",
   zoom: "Zoom",
   instagram: "Instagram",
   linkedin: "LinkedIn",
@@ -533,7 +536,7 @@ function CardPreview({
                   flexShrink: 0,
                 }}
               >
-                <Icon name={lk.type} size={15} style={{ color: "#374151" }} />
+                <Icon name={lk.icon} size={15} style={{ color: "#374151" }} />
               </div>
               <span
                 style={{

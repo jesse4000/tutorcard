@@ -1047,16 +1047,20 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
         {(tutor.links || []).map((link: TutorLink, i: number) => {
           const iconName = LINK_TYPE_ICONS[link.type] || "link";
           const label = link.label || link.url || link.type.replace(/^\S+\s/, "");
-          const href =
-            link.type === "📞 Phone"
-              ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+          const isPhone = link.type === "📞 Phone" || link.type === "Phone";
+          const isEmail = link.type === "📧 Email" || link.type === "Email";
+          const href = isPhone
+            ? `tel:${link.url.replace(/[^+\d]/g, "")}`
+            : isEmail
+              ? `mailto:${link.url}`
               : link.url.startsWith("http")
                 ? link.url
                 : link.url.includes("@")
                   ? `mailto:${link.url}`
                   : `https://${link.url}`;
+          const isNativeProtocol = isPhone || isEmail || href.startsWith("mailto:");
           return (
-            <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="tc-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, cursor: "pointer", transition: "background 0.15s", textDecoration: "none", color: "inherit" }}>
+            <a key={i} href={href} {...(!isNativeProtocol && { target: "_blank", rel: "noopener noreferrer" })} className="tc-link" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", borderRadius: 12, cursor: "pointer", transition: "background 0.15s", textDecoration: "none", color: "inherit" }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Icon name={iconName} size={15} style={{ color: "#374151" }} />
               </div>
