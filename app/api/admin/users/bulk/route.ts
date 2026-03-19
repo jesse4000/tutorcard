@@ -55,8 +55,7 @@ export async function POST(request: Request) {
             error: error?.message,
           });
         } else {
-          // Default: delete — remove tutor profile first (cascades to child tables)
-          await supabaseAdmin.from("tutors").delete().eq("user_id", userId);
+          // Delete auth user — FK CASCADE handles tutor + child records
           const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
           results.push({
             userId,
