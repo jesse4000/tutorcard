@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: "TutorCard | Your professional identity, one link.",
-    template: "%s — TutorCard",
+    template: "%s | TutorCard",
   },
   description:
     "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
