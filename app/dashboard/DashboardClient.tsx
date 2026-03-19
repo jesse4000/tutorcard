@@ -1993,33 +1993,30 @@ export default function DashboardClient({
     const pinned = reviews.find(r => r.isPinned);
     return pinned ? pinned.id : null;
   });
-  const pinInFlight = useRef(false);
-
-  // Sync localPinId when reviews prop changes (e.g. server re-render),
-  // but skip during in-flight pin operations to preserve optimistic state
-  useEffect(() => {
-    if (!pinInFlight.current) {
-      const pinned = reviews.find(r => r.isPinned);
-      setLocalPinId(pinned ? pinned.id : null);
-    }
-  }, [reviews]);
 
   const handlePin = async (review: ReviewData) => {
     const prevPinId = localPinId;
     const newPinId = localPinId === review.id ? null : review.id;
     setLocalPinId(newPinId);
-    pinInFlight.current = true;
     try {
-      const res = await fetch("/api/reviews/pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewId: review.id, pin: newPinId !== null }),
-      });
-      if (!res.ok) setLocalPinId(prevPinId);
-    } catch {
+      const supabase = createClient();
+      // Unpin all reviews for this tutor
+      const { error: unpinErr } = await supabase
+        .from("reviews")
+        .update({ is_pinned: false })
+        .eq("tutor_id", tutor.id);
+      if (unpinErr) throw unpinErr;
+      // Pin the target review if toggling on
+      if (newPinId) {
+        const { error: pinErr } = await supabase
+          .from("reviews")
+          .update({ is_pinned: true })
+          .eq("id", review.id);
+        if (pinErr) throw pinErr;
+      }
+    } catch (err) {
+      console.error("Pin failed:", err);
       setLocalPinId(prevPinId);
-    } finally {
-      pinInFlight.current = false;
     }
   };
 
