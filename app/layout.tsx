@@ -13,8 +13,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://tutorcard.co";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "TutorCard — Your tutor card. Your referral network.",
-    template: "%s — TutorCard",
+    default: "TutorCard | Your professional identity, one link.",
+    template: "%s | TutorCard",
   },
   description:
     "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "TutorCard",
     locale: "en_US",
     url: SITE_URL,
-    title: "TutorCard — Your tutor card. Your referral network.",
+    title: "TutorCard | Your professional identity, one link.",
     description:
       "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
     images: [
@@ -31,13 +31,13 @@ export const metadata: Metadata = {
         url: "/og-default.png",
         width: 1200,
         height: 630,
-        alt: "TutorCard — Professional tutor profiles",
+        alt: "TutorCard | Professional tutor profiles",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TutorCard — Your tutor card. Your referral network.",
+    title: "TutorCard | Your professional identity, one link.",
     description:
       "One link that shows who you are and how to reach you — plus a community that notifies you the moment a student matches your specialty.",
     images: ["/og-default.png"],
