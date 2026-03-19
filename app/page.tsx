@@ -436,7 +436,7 @@ export default function TutorCardLanding() {
                 <div style={{ padding: "6px 10px" }}>
                   {[
                     { icon: "phone", label: "(555) 234-5678" },
-                    { icon: "msg", label: "sarah@sarahmitchell.com" },
+                    { icon: "msg", label: "sarah@sarahtestprep.com" },
                     { icon: "globe", label: "tutorcard.co/sarah-mitchell" },
                   ].map((row, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 8px", borderRadius: 10 }}>
