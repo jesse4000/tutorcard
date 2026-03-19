@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import RespondClient from "./RespondClient";
 
 export const metadata: Metadata = {
-  title: "Respond to Review Report — TutorCard",
+  title: "Respond to Review Report",
+  robots: { index: false, follow: false },
 };
 
 interface PageProps {

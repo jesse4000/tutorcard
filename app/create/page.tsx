@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import CreateClient from "./CreateClient";
+
+export const metadata: Metadata = {
+  title: "Create Your Card",
+  robots: { index: false, follow: false },
+};
 
 export default async function CreatePage() {
   const supabase = await createClient();

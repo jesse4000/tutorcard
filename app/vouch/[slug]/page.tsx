@@ -26,13 +26,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!tutor) return { title: "Card not found" };
 
   const name = `${tutor.first_name} ${tutor.last_name}`;
+  const description = `Vouch for ${name} on TutorCard — a one-click endorsement that shows parents you trust their work.`;
   return {
-    title: `Vouch for ${name} — TutorCard`,
-    description: `Vouch for ${name} on TutorCard — a one-click endorsement that shows parents you trust their work.`,
+    title: `Vouch for ${name}`,
+    description,
+    alternates: {
+      canonical: `/vouch/${slug}`,
+    },
     openGraph: {
       title: `Vouch for ${name} — TutorCard`,
-      description: `Vouch for ${name} on TutorCard`,
+      description,
       type: "profile",
+    },
+    twitter: {
+      card: "summary",
+      title: `Vouch for ${name} — TutorCard`,
+      description,
+    },
+    robots: {
+      index: false,
+      follow: true,
     },
   };
 }

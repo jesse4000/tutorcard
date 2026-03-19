@@ -9,7 +9,8 @@ import DashboardClient from "./DashboardClient";
 import type { ReviewData, VoucherData, BadgeData } from "../[slug]/types";
 
 export const metadata: Metadata = {
-  title: "Dashboard — TutorCard",
+  title: "Dashboard",
+  robots: { index: false, follow: false },
 };
 
 export default async function DashboardPage() {

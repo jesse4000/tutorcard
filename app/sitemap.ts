@@ -1,20 +1,27 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { MetadataRoute } from "next";
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createAdminClient();
-  const { data: tutors } = await supabase
-    .from("tutors")
-    .select("slug, updated_at");
+export const dynamic = "force-dynamic";
 
-  const tutorEntries: MetadataRoute.Sitemap = (tutors || []).map(
-    (t: { slug: string; updated_at?: string }) => ({
-      url: `https://tutorcard.co/${t.slug}`,
-      lastModified: t.updated_at || new Date().toISOString(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })
-  );
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let tutorEntries: MetadataRoute.Sitemap = [];
+  try {
+    const supabase = createAdminClient();
+    const { data: tutors } = await supabase
+      .from("tutors")
+      .select("slug, updated_at");
+
+    tutorEntries = (tutors || []).map(
+      (t: { slug: string; updated_at?: string }) => ({
+        url: `https://tutorcard.co/${t.slug}`,
+        lastModified: t.updated_at || new Date().toISOString(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })
+    );
+  } catch {
+    tutorEntries = [];
+  }
 
   return [
     {
@@ -22,6 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 1.0,
+    },
+    {
+      url: "https://tutorcard.co/for-associations",
+      changeFrequency: "monthly",
+      priority: 0.6,
     },
     {
       url: "https://tutorcard.co/privacy",

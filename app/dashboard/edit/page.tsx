@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import EditClient from "./EditClient";
 
 export const metadata: Metadata = {
-  title: "Edit Card — TutorCard",
+  title: "Edit Card",
+  robots: { index: false, follow: false },
 };
 
 export default async function EditPage() {
