@@ -5,9 +5,16 @@ function baseLayout(content: string): string {
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #111;">
       <div style="padding: 32px 24px;">
-        <div style="margin-bottom: 28px;">
-          <img src="${SITE_URL}/email-logo.svg" alt="tutorcard" width="140" height="28" style="display: block;" />
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
+          <tr>
+            <td style="width: 28px; height: 28px; background: #1a1a1a; border-radius: 7px; text-align: center; vertical-align: middle;" width="28" height="28">
+              <span style="font-size: 13px; font-weight: 700; color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;">tc</span>
+            </td>
+            <td style="padding-left: 8px; vertical-align: middle;">
+              <span style="font-size: 17px; font-weight: 700; color: #1a1a1a; font-family: 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.3px;">tutorcard</span>
+            </td>
+          </tr>
+        </table>
         ${content}
         <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
           <p style="font-size: 12px; color: #9ca3af; margin: 0;">
