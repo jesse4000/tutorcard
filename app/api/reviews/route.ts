@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, getTutorNotificationEmail } from "@/lib/email";
 import { newReviewEmail } from "@/lib/email-templates";
 
 export async function POST(request: Request) {
@@ -74,15 +74,16 @@ export async function POST(request: Request) {
 
     // Notify tutor about the new review
     try {
+      const tutorEmail = await getTutorNotificationEmail(tutorId);
       const { data: tutorData } = await supabase
         .from("tutors")
-        .select("first_name, last_name, email, user_id")
+        .select("first_name, last_name")
         .eq("id", tutorId)
         .single();
-      if (tutorData?.email) {
+      if (tutorEmail && tutorData) {
         const tutorName = `${tutorData.first_name} ${tutorData.last_name}`.trim();
         const tpl = newReviewEmail(tutorName, reviewerName, rating, exam || null, trimmedQuote);
-        await sendEmail({ to: tutorData.email, ...tpl });
+        await sendEmail({ to: tutorEmail, ...tpl });
       }
     } catch (emailErr) {
       console.error("Failed to send new review email:", emailErr);

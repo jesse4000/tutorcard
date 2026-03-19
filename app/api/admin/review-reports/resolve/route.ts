@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, getTutorNotificationEmail } from "@/lib/email";
 import { reviewReportResolvedEmail } from "@/lib/email-templates";
 
 export async function POST(request: Request) {
@@ -92,9 +92,10 @@ export async function POST(request: Request) {
 
     // Notify the tutor about the resolution
     try {
+      const tutorEmail = await getTutorNotificationEmail(report.tutor_id);
       const { data: tutor } = await admin
         .from("tutors")
-        .select("first_name, last_name, email")
+        .select("first_name, last_name")
         .eq("id", report.tutor_id)
         .single();
       const { data: review } = await admin
@@ -102,10 +103,10 @@ export async function POST(request: Request) {
         .select("reviewer_name")
         .eq("id", report.review_id)
         .single();
-      if (tutor?.email && review) {
+      if (tutorEmail && tutor && review) {
         const tutorName = `${tutor.first_name} ${tutor.last_name}`.trim();
         const tpl = reviewReportResolvedEmail(tutorName, newStatus as "revoked" | "denied", review.reviewer_name);
-        await sendEmail({ to: tutor.email, ...tpl });
+        await sendEmail({ to: tutorEmail, ...tpl });
       }
     } catch (emailErr) {
       console.error("Failed to send report resolution email:", emailErr);

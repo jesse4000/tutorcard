@@ -5,12 +5,16 @@ function baseLayout(content: string): string {
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #111;">
       <div style="padding: 32px 24px;">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 28px;">
-          <div style="width: 24px; height: 24px; border-radius: 6px; background: #111; display: flex; align-items: center; justify-content: center;">
-            <span style="font-size: 11px; font-weight: 700; color: white;">tc</span>
-          </div>
-          <span style="font-size: 15px; font-weight: 700; color: #111;">tutorcard</span>
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
+          <tr>
+            <td style="width: 28px; height: 28px; background: #1a1a1a; border-radius: 7px; text-align: center; vertical-align: middle;" width="28" height="28">
+              <span style="font-size: 13px; font-weight: 700; color: #ffffff; font-family: 'Helvetica Neue', Arial, sans-serif;">tc</span>
+            </td>
+            <td style="padding-left: 8px; vertical-align: middle;">
+              <span style="font-size: 17px; font-weight: 700; color: #1a1a1a; font-family: 'Helvetica Neue', Arial, sans-serif; letter-spacing: -0.3px;">tutorcard</span>
+            </td>
+          </tr>
+        </table>
         ${content}
         <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
           <p style="font-size: 12px; color: #9ca3af; margin: 0;">
@@ -58,9 +62,9 @@ export function welcomeEmail(tutorName: string, slug: string) {
       ${p("Your TutorCard is live. Parents and students can now find you, read your reviews, and reach out directly.")}
       ${p("Here's what to do next:")}
       <ul style="font-size: 15px; color: #374151; line-height: 1.8; margin: 0 0 20px; padding-left: 20px;">
-        <li><strong>Share your card</strong> — Send your link to parents and students</li>
-        <li><strong>Request reviews</strong> — Ask past students to leave a review</li>
-        <li><strong>Get vouched</strong> — Invite fellow tutors to vouch for you</li>
+        <li><strong>Share your card</strong> - Send your link to parents and students</li>
+        <li><strong>Request reviews</strong> - Ask past students to leave a review</li>
+        <li><strong>Get vouched</strong> - Invite fellow tutors to vouch for you</li>
       </ul>
       ${button("View your card", profileUrl)}
       ${muted(`Or manage everything from your <a href="${dashboardUrl}" style="color: #9ca3af;">dashboard</a>.`)}
@@ -196,7 +200,7 @@ export function reviewRequestEmail(
     html: baseLayout(`
       ${heading("Review request")}
       ${p(`<strong>${tutorName}</strong> would like you to leave a review on their TutorCard profile.`)}
-      ${p("It only takes a minute — your feedback helps other families find great tutors.")}
+      ${p("It only takes a minute - your feedback helps other families find great tutors.")}
       ${button("Leave a review", reviewUrl)}
       ${muted("If you don't know this person, you can safely ignore this email.")}
     `),
