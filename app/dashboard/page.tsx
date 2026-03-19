@@ -81,7 +81,7 @@ export default async function DashboardPage() {
       .from("review_reports")
       .select("review_id, status")
       .in("review_id", reviewIds)
-      .in("status", ["pending", "responded", "revoked", "denied"]);
+      .in("status", ["pending", "responded", "revoked"]);
     if (reportsRaw) {
       for (const rp of reportsRaw) {
         // Keep the most recent/active status per review
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
   }
 
   // Map reviews
-  const reviews: ReviewData[] = (reviewsRaw || []).map((r: Record<string, unknown>) => ({
+  const reviews: ReviewData[] = (reviewsRaw || []).filter((r: Record<string, unknown>) => !r.is_revoked).map((r: Record<string, unknown>) => ({
     id: r.id as string,
     reviewerName: r.reviewer_name as string,
     reviewerRole: (r.reviewer_role as string) || undefined,
