@@ -69,9 +69,15 @@ function AuthForm({ mode, onToggle, redirectTo }: { mode: string; onToggle: () =
     const supabase = createClient();
 
     if (isSignup) {
-      const { error: authError } = await supabase.auth.signUp({ email, password });
+      const { data, error: authError } = await supabase.auth.signUp({ email, password });
       if (authError) {
         setError(authError.message);
+        setLoading(false);
+        return;
+      }
+      // Supabase returns a fake success with empty identities when email already exists
+      if (data.user?.identities?.length === 0) {
+        setError("An account with this email already exists. Please sign in instead.");
         setLoading(false);
         return;
       }

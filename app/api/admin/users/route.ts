@@ -42,17 +42,8 @@ export async function DELETE(request: Request) {
 
     const supabaseAdmin = createAdminClient();
 
-    // Delete tutor profile first (cascades to reviews, vouches, badges, inquiries, etc.)
-    const { error: tutorError } = await supabaseAdmin
-      .from("tutors")
-      .delete()
-      .eq("user_id", userId);
-
-    if (tutorError) {
-      console.error("Delete tutor error:", tutorError);
-    }
-
-    // Then delete the auth user
+    // Delete the auth user — FK CASCADE on tutors.user_id will
+    // automatically remove the tutor profile and all child records
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (error) {
