@@ -134,45 +134,45 @@ export function buildProfilePageJsonLd(slug: string): Record<string, unknown> {
 
 /**
  * Build an SEO description for a tutor card.
- * Format: exam1, exam2, subject1 | View TutorCard
+ * Format: Full Name | Professional Headline | Location
+ * Exam/Subject, Exam/Subject | View TutorCard
  */
 export function buildSeoDescription(
   tutor: TutorSeoData,
   _reviewStats: ReviewStats
 ): { short: string; long: string } {
+  const name = `${tutor.firstName} ${tutor.lastName}`;
   const allExpertise = [
     ...(tutor.exams || []),
     ...(tutor.subjects || []),
   ];
+  const locations = tutor.locations || [];
 
-  let description: string;
-  if (allExpertise.length > 0) {
-    description = `${allExpertise.join(", ")} | View TutorCard`;
-  } else {
-    description = "View TutorCard";
+  // First line: Name | Title | Location
+  const firstLineParts: string[] = [name];
+  if (tutor.title) {
+    firstLineParts.push(tutor.title);
   }
+  if (locations.length > 0) {
+    firstLineParts.push(locations.slice(0, 3).join(", "));
+  }
+  const firstLine = firstLineParts.join(" | ");
+
+  // Second line: Exams/Subjects | View TutorCard
+  const secondLine = allExpertise.length > 0
+    ? `${allExpertise.join(", ")} | View TutorCard`
+    : "View TutorCard";
+
+  const description = `${firstLine}\n${secondLine}`;
 
   return { short: description, long: description };
 }
 
 /**
- * Build a keyword-rich SEO title for a tutor card.
- * Format: Full Name | Title | Location | TutorCard
+ * Build an SEO title for a tutor card.
+ * Format: Full Name | TutorCard
  */
 export function buildSeoTitle(tutor: TutorSeoData): string {
   const name = `${tutor.firstName} ${tutor.lastName}`;
-  const parts: string[] = [name];
-
-  if (tutor.title) {
-    parts.push(tutor.title);
-  }
-
-  const locations = tutor.locations || [];
-  if (locations.length > 0) {
-    parts.push(locations[0]);
-  }
-
-  parts.push("TutorCard");
-
-  return parts.join(" | ");
+  return `${name} | TutorCard`;
 }
