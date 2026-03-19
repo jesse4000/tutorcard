@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, forwardRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { toPng, toBlob } from "html-to-image";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +28,17 @@ interface TutorRow {
   profile_image_url: string | null;
 }
 
+interface InquiryData {
+  id: string;
+  senderName: string;
+  senderEmail: string;
+  senderPhone: string | null;
+  examsOfInterest: string[];
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
 interface DashboardClientProps {
   tutor: TutorRow | null;
   userEmail: string;
@@ -38,6 +49,7 @@ interface DashboardClientProps {
   vouchers: VoucherData[];
   badges: BadgeData[];
   inquiryCount: number;
+  inquiries: InquiryData[];
   inviteCodes: InviteCode[];
 }
 
@@ -51,6 +63,19 @@ interface InviteCode {
 }
 
 // ─── UTILITIES ──────────────────────────────────────────
+function getTimeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
 function isLight(hex: string): boolean {
   const r = parseInt(hex.slice(1, 3), 16),
     g = parseInt(hex.slice(3, 5), 16),
@@ -962,8 +987,8 @@ function FeaturedReview({ a, hasScores, imp }: { a: ReviewData; hasScores: boole
 }
 
 // ─── OWNER CARD ─────────────────────────────────────────
-function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, onShare, onSignature, featuredReview }: {
-  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; onShare: () => void; onSignature: () => void; featuredReview: ReviewData | null;
+function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, hasUnreadInquiries, onShare, onSignature, onInquiries, featuredReview }: {
+  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; hasUnreadInquiries: boolean; onShare: () => void; onSignature: () => void; onInquiries: () => void; featuredReview: ReviewData | null;
 }) {
   const t = toac(accent);
   const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
@@ -998,8 +1023,14 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
           <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 12.5 }}>
             <Icon name="star" size={11} style={{ color: "#f59e0b" }} /><span style={{ fontWeight: 600, color: "#111" }}>{averageRating != null ? averageRating.toFixed(1) : "-"}</span><span style={{ color: "#9ca3af" }}>({reviewCount})</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 12.5 }}>
+          <div
+            onClick={onInquiries}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 12.5, cursor: "pointer", transition: "background 0.15s", position: "relative" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#f9fafb")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
             <Icon name="mail" size={12} style={{ color: "#6b7280" }} /><span style={{ fontWeight: 600, color: "#111" }}>{inquiryCount}</span><span style={{ color: "#9ca3af" }}>{inquiryCount === 1 ? "inquiry" : "inquiries"}</span>
+            {hasUnreadInquiries && <span style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: "#3b82f6", border: "2px solid white" }} />}
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 5, marginTop: 12 }}>
@@ -1792,6 +1823,97 @@ function BadgeRow({ badge, wide }: { badge: BadgeData; wide: boolean }) {
   );
 }
 
+// ─── INQUIRY ROW ────────────────────────────────────────
+function InquiryRow({ inquiry }: { inquiry: InquiryData }) {
+  const [expanded, setExpanded] = useState(false);
+  const timeAgo = getTimeAgo(inquiry.createdAt);
+  return (
+    <div style={{ background: inquiry.read ? "#fff" : "#fafbff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "14px 16px", transition: "background 0.15s" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 14.5, fontWeight: 600, color: "#111" }}>{inquiry.senderName}</span>
+          {!inquiry.read && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#3b82f6", flexShrink: 0 }} />}
+        </div>
+        <span style={{ fontSize: 12, color: "#9ca3af", flexShrink: 0 }}>{timeAgo}</span>
+      </div>
+      <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 4 }}>
+        <a href={`mailto:${inquiry.senderEmail}`} style={{ color: "#6b7280", textDecoration: "none" }}>{inquiry.senderEmail}</a>
+        {inquiry.senderPhone && (
+          <>
+            <span style={{ color: "#d1d5db" }}>&middot;</span>
+            <a href={`tel:${inquiry.senderPhone.replace(/[^+\d]/g, "")}`} style={{ color: "#6b7280", textDecoration: "none" }}>{inquiry.senderPhone}</a>
+          </>
+        )}
+      </div>
+      {inquiry.examsOfInterest.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+          {inquiry.examsOfInterest.map(exam => (
+            <span key={exam} style={{ padding: "2px 8px", borderRadius: 5, fontSize: 11.5, fontWeight: 500, color: "#374151", background: "#f3f4f6" }}>{exam}</span>
+          ))}
+        </div>
+      )}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          background: "none", border: "none", padding: 0, cursor: "pointer",
+          fontSize: 13.5, color: "#374151", lineHeight: 1.5, textAlign: "left",
+          fontFamily: "'DM Sans', sans-serif", display: "block", width: "100%",
+        }}
+      >
+        {expanded ? (
+          <span style={{ whiteSpace: "pre-wrap" }}>{inquiry.message}</span>
+        ) : (
+          <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {inquiry.message}
+          </span>
+        )}
+      </button>
+      {inquiry.message.length > 100 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{ background: "none", border: "none", padding: "4px 0 0", cursor: "pointer", fontSize: 12, color: "#9ca3af", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── INQUIRIES POPUP ────────────────────────────────────
+function InquiriesPopup({ onClose, inquiries, onMarkRead }: { onClose: () => void; inquiries: InquiryData[]; onMarkRead: () => void }) {
+  useEffect(() => {
+    onMarkRead();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "fadeIn 0.15s ease" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "white", borderRadius: 20, width: "100%", maxWidth: 520, padding: "28px", animation: "scaleIn 0.2s ease", maxHeight: "90vh", overflow: "auto", margin: "0 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", margin: 0 }}>Inquiries</h3>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", padding: "2px 8px", borderRadius: 10 }}>{inquiries.length}</span>
+          </div>
+          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#6b7280" }}><Icon name="x" size={15} /></button>
+        </div>
+        {inquiries.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "32px 0" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+              <Icon name="mail" size={22} style={{ color: "#9ca3af" }} />
+            </div>
+            <p style={{ fontSize: 14, color: "#9ca3af", margin: 0 }}>No inquiries yet. They&apos;ll appear here when someone reaches out through your TutorCard.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {inquiries.map(inq => <InquiryRow key={inq.id} inquiry={inq} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN ───────────────────────────────────────────────
 export default function DashboardClient({
   tutor,
@@ -1803,11 +1925,13 @@ export default function DashboardClient({
   vouchers,
   badges,
   inquiryCount,
+  inquiries,
   inviteCodes,
 }: DashboardClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState("reviews");
-  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed" | "signature" | "shareReview">(null);
+  const [popup, setPopup] = useState<null | "share" | "review" | "vouch" | "invite" | "report" | "reportConfirmed" | "signature" | "shareReview" | "inquiries">(null);
   const [reportingReview, setReportingReview] = useState<ReviewData | null>(null);
   const [sharingReview, setSharingReview] = useState<ReviewData | null>(null);
   const [localReportStatuses, setLocalReportStatuses] = useState<Record<string, string>>({});
@@ -1829,6 +1953,12 @@ export default function DashboardClient({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("inquiries") === "true") {
+      setPopup("inquiries");
+    }
+  }, [searchParams]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -1877,6 +2007,17 @@ export default function DashboardClient({
     }
   };
 
+  const handleMarkInquiriesRead = async () => {
+    const unreadIds = inquiries.filter(i => !i.read).map(i => i.id);
+    if (unreadIds.length === 0) return;
+    try {
+      const supabase = createClient();
+      await supabase.from("inquiries").update({ read: true }).in("id", unreadIds);
+    } catch {
+      // silent — will reflect on next page load
+    }
+  };
+
   // Merge server report statuses with local (optimistic) ones
   const reviewsWithReportStatus = reviews.map(r => ({
     ...r,
@@ -1885,6 +2026,7 @@ export default function DashboardClient({
   }));
 
   const pinnedReview = reviewsWithReportStatus.find(r => r.isPinned) || null;
+  const hasUnreadInquiries = inquiries.some(i => !i.read);
 
   // No tutor — empty state
   if (!tutor) {
@@ -1986,7 +2128,7 @@ export default function DashboardClient({
         <main style={{ flex: 1 }}>
           {isMobile ? (
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
-              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} featuredReview={pinnedReview} />
+              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
                 <TabContent tab={tab} wide={false} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
@@ -2001,7 +2143,7 @@ export default function DashboardClient({
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
               <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
-                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} featuredReview={pinnedReview} />
+                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} />
               </div>
               <div style={{ flex: 1, minWidth: 0, height: cardHeight, display: "flex", flexDirection: "column" as const }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden", minHeight: 0 }}>
@@ -2035,6 +2177,7 @@ export default function DashboardClient({
       {popup === "reportConfirmed" && reportingReview && <ReportConfirmationPopup review={reportingReview} onClose={close} />}
       {popup === "signature" && <SignaturePopup onClose={close} tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} />}
       {popup === "shareReview" && sharingReview && <ShareReviewPopup review={sharingReview} tutor={tutor} accent={accent} onClose={close} />}
+      {popup === "inquiries" && <InquiriesPopup onClose={close} inquiries={inquiries} onMarkRead={handleMarkInquiriesRead} />}
     </>
   );
 }

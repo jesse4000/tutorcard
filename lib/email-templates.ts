@@ -112,22 +112,33 @@ export function newInquiryEmail(
   tutorName: string,
   senderName: string,
   senderEmail: string,
+  senderPhone: string | null,
   message: string,
   exams: string[],
 ) {
-  const examsLine = exams.length > 0
-    ? `<p style="font-size: 13px; color: #6b7280; margin: 0 0 8px;"><strong>Interested in:</strong> ${exams.join(", ")}</p>`
+  const phoneLine = senderPhone
+    ? `<p style="font-size: 14px; color: #374151; margin: 0 0 6px;"><strong>Phone:</strong> <a href="tel:${senderPhone.replace(/[^+\d]/g, "")}" style="color: #374151;">${senderPhone}</a></p>`
     : "";
+  const examsLine = exams.length > 0
+    ? `<p style="font-size: 14px; color: #374151; margin: 0;"><strong>Interested in:</strong> ${exams.join(", ")}</p>`
+    : "";
+  const responseInstruction = senderPhone
+    ? `Respond to ${senderName} directly &mdash; email them at <a href="mailto:${senderEmail}" style="color: #111; font-weight: 600;">${senderEmail}</a> or call/text them at <a href="tel:${senderPhone.replace(/[^+\d]/g, "")}" style="color: #111; font-weight: 600;">${senderPhone}</a>.`
+    : `Respond to ${senderName} directly &mdash; email them at <a href="mailto:${senderEmail}" style="color: #111; font-weight: 600;">${senderEmail}</a>.`;
   return {
     subject: `New inquiry from ${senderName}`,
     html: baseLayout(`
       ${heading("You have a new inquiry")}
-      ${p(`Hi ${tutorName}, <strong>${senderName}</strong> (${senderEmail}) sent you a message through your TutorCard.`)}
-      ${examsLine}
-      ${quote(message.length > 300 ? message.slice(0, 300) + "…" : message)}
-      ${p("Log in to your dashboard to view the full message and respond.")}
-      ${button("View inquiries", `${SITE_URL}/dashboard`)}
-      ${muted("You can reply directly to this person at " + senderEmail)}
+      ${p(`Hi ${tutorName}, someone reached out through your TutorCard.`)}
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin: 0 0 20px;">
+        <p style="font-size: 14px; color: #374151; margin: 0 0 6px;"><strong>Name:</strong> ${senderName}</p>
+        <p style="font-size: 14px; color: #374151; margin: 0 0 6px;"><strong>Email:</strong> <a href="mailto:${senderEmail}" style="color: #374151;">${senderEmail}</a></p>
+        ${phoneLine}
+        ${examsLine}
+      </div>
+      ${quote(message)}
+      ${p(responseInstruction)}
+      ${button("View all inquiries", `${SITE_URL}/dashboard?inquiries=true`)}
     `),
   };
 }
