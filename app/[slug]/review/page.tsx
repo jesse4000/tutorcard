@@ -26,13 +26,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!tutor) return { title: "Card not found" };
 
   const name = `${tutor.first_name} ${tutor.last_name}`;
+  const description = `Leave a review for ${name} on TutorCard — share your experience and help other parents find great tutors.`;
   return {
-    title: `Review ${name} — TutorCard`,
-    description: `Leave a review for ${name} on TutorCard — share your experience and help other parents find great tutors.`,
+    title: `Review ${name}`,
+    description,
+    alternates: {
+      canonical: `/${slug}/review`,
+    },
     openGraph: {
       title: `Review ${name} — TutorCard`,
-      description: `Leave a review for ${name} on TutorCard`,
+      description,
       type: "profile",
+    },
+    twitter: {
+      card: "summary",
+      title: `Review ${name} — TutorCard`,
+      description,
+    },
+    robots: {
+      index: false,
+      follow: true,
     },
   };
 }

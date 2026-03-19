@@ -6,7 +6,8 @@ import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import SuperAdminDashboard from "./SuperAdminDashboard";
 
 export const metadata: Metadata = {
-  title: "Admin — TutorCard",
+  title: "Admin",
+  robots: { index: false, follow: false },
 };
 
 function countInRange(

@@ -29,13 +29,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!tutor) return { title: "Card not found" };
 
   const name = `${tutor.first_name} ${tutor.last_name}`;
+  const title = tutor.title || "Tutor";
+  const exams = tutor.exams || [];
+  const locations = tutor.locations || [];
+  const description = `${name} — ${title}.${exams.length ? ` ${exams.join(", ")} tutor` : ""}${locations.length ? ` in ${locations[0]}` : ""}. View verified reviews, peer vouches, and credentials on TutorCard.`;
+
   return {
-    title: `${name} — TutorCard`,
-    description: tutor.title || `${name}'s tutor card on StudySpaces`,
+    title: name,
+    description,
+    alternates: {
+      canonical: `/${slug}`,
+    },
     openGraph: {
-      title: `${name} — TutorCard`,
-      description: tutor.title || `${name}'s tutor card on StudySpaces`,
+      title: `${name} — ${title}`,
+      description,
       type: "profile",
+      url: `/${slug}`,
+      images: tutor.profile_image_url
+        ? [{ url: tutor.profile_image_url, width: 400, height: 400, alt: name }]
+        : undefined,
+    },
+    twitter: {
+      card: tutor.profile_image_url ? "summary" : "summary_large_image",
+      title: `${name} — ${title}`,
+      description,
+      images: tutor.profile_image_url ? [tutor.profile_image_url] : undefined,
     },
   };
 }
@@ -169,19 +187,57 @@ export default async function ProfilePage({ params }: PageProps) {
     profileImageUrl: tutor.profile_image_url || "",
   };
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tutorcard.co";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: `${tutor.first_name} ${tutor.last_name}`,
+    url: `${siteUrl}/${tutor.slug}`,
+    jobTitle: tutor.title || "Tutor",
+    ...(tutor.profile_image_url && { image: tutor.profile_image_url }),
+    ...(tutor.locations?.length && {
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: tutor.locations[0],
+      },
+    }),
+    ...(tutor.business_name && {
+      worksFor: {
+        "@type": "Organization",
+        name: tutor.business_name,
+      },
+    }),
+    knowsAbout: [...(tutor.subjects || []), ...(tutor.exams || [])],
+    ...(averageRating && reviews.length > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: averageRating.toFixed(1),
+        reviewCount: reviews.length,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+  };
+
   return (
-    <ProfileClient
-      tutor={tutorData}
-      vouchCount={vouchCount ?? 0}
-      hasVouched={hasVouched}
-      currentTutorId={currentTutorId}
-      viewedTutorId={tutor.id}
-      isLoggedIn={!!user}
-      averageRating={averageRating}
-      reviewCount={reviews.length}
-      reviews={reviews}
-      vouchers={vouchers}
-      badges={badges}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProfileClient
+        tutor={tutorData}
+        vouchCount={vouchCount ?? 0}
+        hasVouched={hasVouched}
+        currentTutorId={currentTutorId}
+        viewedTutorId={tutor.id}
+        isLoggedIn={!!user}
+        averageRating={averageRating}
+        reviewCount={reviews.length}
+        reviews={reviews}
+        vouchers={vouchers}
+        badges={badges}
+      />
+    </>
   );
 }
