@@ -1,9 +1,10 @@
 import { ImageResponse } from "@vercel/og";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export const alt = "TutorCard Profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+export const dynamic = "force-dynamic";
 
 export default async function OgImage({
   params,
@@ -11,29 +12,33 @@ export default async function OgImage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
-  const { data: tutor } = await supabase
+  const { data: tutor, error } = await supabase
     .from("tutors")
     .select("*")
     .eq("slug", slug)
     .single();
 
-  if (!tutor) {
+  if (error || !tutor) {
+    console.error("OG image: tutor not found", { slug, error });
     return new ImageResponse(
       <div
         style={{
           width: "100%",
           height: "100%",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: "#f8fafc",
-          fontSize: 48,
+          fontSize: 32,
           color: "#64748b",
+          gap: 12,
         }}
       >
-        Card not found
+        <div style={{ display: "flex" }}>Card not found</div>
+        <div style={{ fontSize: 18, display: "flex" }}>slug: {slug}</div>
       </div>,
       { ...size }
     );
