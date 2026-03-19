@@ -1,32 +1,11 @@
 import { ImageResponse } from "@vercel/og";
+import { createAdminClient } from "@/lib/supabase/admin";
 
+export const runtime = "nodejs";
 export const alt = "TutorCard Profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const dynamic = "force-dynamic";
-
-async function fetchTutor(slug: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Try service role key first, fall back to anon key
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-
-  const res = await fetch(
-    `${url}/rest/v1/tutors?slug=eq.${encodeURIComponent(slug)}&select=*&limit=1`,
-    {
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-      },
-      cache: "no-store",
-    }
-  );
-  if (!res.ok) return null;
-  const rows = await res.json();
-  return rows?.[0] ?? null;
-}
 
 export default async function OgImage({
   params,
@@ -37,7 +16,13 @@ export default async function OgImage({
 
   let tutor: Record<string, unknown> | null = null;
   try {
-    tutor = await fetchTutor(slug);
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("tutors")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+    tutor = data;
   } catch (e) {
     console.error("OG image fetch error:", e);
   }
