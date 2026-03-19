@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         .single();
       if (tutorEmail && tutor) {
         const tutorName = `${tutor.first_name} ${tutor.last_name}`.trim();
-        const tpl = newInquiryEmail(tutorName, senderName, senderEmail, message, examsOfInterest || []);
+        const tpl = newInquiryEmail(tutorName, senderName, senderEmail, senderPhone || null, message, examsOfInterest || []);
         await sendEmail({ to: tutorEmail, ...tpl });
       }
     } catch (emailErr) {

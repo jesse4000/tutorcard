@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
   const tutor = tutors?.[0] || null;
 
   if (!tutor) {
-    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inviteCodes={[]} />;
+    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inquiries={[]} inviteCodes={[]} />;
   }
 
   // Parallel data fetching (same pattern as [slug]/page.tsx)
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
     { data: reviewsRaw },
     { data: badgesRaw },
     { data: vouchesRaw },
-    { count: inquiryCount },
+    { data: inquiriesRaw },
   ] = await Promise.all([
     supabase
       .from("vouches")
@@ -61,8 +62,9 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("inquiries")
-      .select("id", { count: "exact", head: true })
-      .eq("tutor_id", tutor.id),
+      .select("id, sender_name, sender_email, sender_phone, exams_of_interest, message, read, created_at")
+      .eq("tutor_id", tutor.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const admin = createAdminClient();
@@ -171,18 +173,34 @@ export default async function DashboardPage() {
     slug: (c.claimed_slug as string) || null,
   }));
 
+  const inquiries = (inquiriesRaw || []).map((inq: Record<string, unknown>) => ({
+    id: inq.id as string,
+    senderName: inq.sender_name as string,
+    senderEmail: inq.sender_email as string,
+    senderPhone: (inq.sender_phone as string) || null,
+    examsOfInterest: (inq.exams_of_interest as string[]) || [],
+    message: inq.message as string,
+    read: inq.read as boolean,
+    createdAt: inq.created_at as string,
+  }));
+
+  const inquiryCount = inquiries.length;
+
   return (
-    <DashboardClient
-      tutor={tutor}
-      userEmail={user.email || ""}
-      vouchCount={vouchCount ?? 0}
-      reviewCount={activeReviews.length}
-      averageRating={averageRating}
-      reviews={reviews}
-      vouchers={vouchers}
-      badges={badges}
-      inquiryCount={inquiryCount ?? 0}
-      inviteCodes={inviteCodes}
-    />
+    <Suspense>
+      <DashboardClient
+        tutor={tutor}
+        userEmail={user.email || ""}
+        vouchCount={vouchCount ?? 0}
+        reviewCount={activeReviews.length}
+        averageRating={averageRating}
+        reviews={reviews}
+        vouchers={vouchers}
+        badges={badges}
+        inquiryCount={inquiryCount}
+        inquiries={inquiries}
+        inviteCodes={inviteCodes}
+      />
+    </Suspense>
   );
 }
