@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import HomepageHeader from "@/components/HomepageHeader";
 import HomepageFooter from "@/components/HomepageFooter";
+import GetFoundSection from "@/components/GetFoundSection";
 
 const Icon = ({ name, size = 16, ...props }: { name: string; size?: number; [key: string]: unknown }) => {
   const d: Record<string, React.ReactNode> = {
@@ -289,6 +290,9 @@ export default function TutorCardLanding() {
           </div>
           {!isMobile && <MiniCard />}
         </section>
+
+        {/* ═══ GET FOUND ═══ */}
+        <GetFoundSection />
 
         {/* ═══ FEATURES ═══ */}
         <section style={{ maxWidth: 1120, margin: "0 auto", padding: isMobile ? "56px 20px" : "80px 32px" }}>
