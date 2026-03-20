@@ -42,10 +42,6 @@ export const metadata: Metadata = {
       "Professional tutor profiles with verified reviews, peer endorsements, and credentials. Easy to share.",
     images: ["/og-default.png"],
   },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
   robots: {
     index: true,
     follow: true,
