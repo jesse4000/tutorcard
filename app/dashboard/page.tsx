@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   const tutor = tutors?.[0] || null;
 
   if (!tutor) {
-    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inquiries={[]} inviteCodes={[]} />;
+    return <DashboardClient tutor={null} userEmail={user.email || ""} vouchCount={0} reviewCount={0} averageRating={null} reviews={[]} vouchers={[]} badges={[]} inquiryCount={0} inquiries={[]} inviteCodes={[]} totalViews={0} uniqueVisitors={0} />;
   }
 
   // Parallel data fetching (same pattern as [slug]/page.tsx)
@@ -41,6 +41,7 @@ export default async function DashboardPage() {
     { data: badgesRaw },
     { data: vouchesRaw },
     { data: inquiriesRaw },
+    { data: viewStatsRaw },
   ] = await Promise.all([
     supabase
       .from("vouches")
@@ -66,7 +67,11 @@ export default async function DashboardPage() {
       .select("id, sender_name, sender_email, sender_phone, exams_of_interest, message, read, created_at")
       .eq("tutor_id", tutor.id)
       .order("created_at", { ascending: false }),
+    supabase.rpc("get_card_view_stats", { p_tutor_id: tutor.id }),
   ]);
+
+  const totalViews = (viewStatsRaw as unknown as { total_views: number; unique_visitors: number }[])?.[0]?.total_views ?? 0;
+  const uniqueVisitors = (viewStatsRaw as unknown as { total_views: number; unique_visitors: number }[])?.[0]?.unique_visitors ?? 0;
 
   const admin = createAdminClient();
 
@@ -201,6 +206,8 @@ export default async function DashboardPage() {
         inquiryCount={inquiryCount}
         inquiries={inquiries}
         inviteCodes={inviteCodes}
+        totalViews={totalViews}
+        uniqueVisitors={uniqueVisitors}
       />
     </Suspense>
   );

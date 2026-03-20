@@ -51,6 +51,8 @@ interface DashboardClientProps {
   inquiryCount: number;
   inquiries: InquiryData[];
   inviteCodes: InviteCode[];
+  totalViews: number;
+  uniqueVisitors: number;
 }
 
 // ─── INVITE CODES ───────────────────────────────────────
@@ -987,8 +989,8 @@ function FeaturedReview({ a, hasScores, imp }: { a: ReviewData; hasScores: boole
 }
 
 // ─── OWNER CARD ─────────────────────────────────────────
-function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, hasUnreadInquiries, onShare, onSignature, onInquiries, featuredReview }: {
-  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; hasUnreadInquiries: boolean; onShare: () => void; onSignature: () => void; onInquiries: () => void; featuredReview: ReviewData | null;
+function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inquiryCount, hasUnreadInquiries, onShare, onSignature, onInquiries, featuredReview, totalViews, uniqueVisitors }: {
+  tutor: TutorRow; accent: string; vouchCount: number; averageRating: number | null; reviewCount: number; inquiryCount: number; hasUnreadInquiries: boolean; onShare: () => void; onSignature: () => void; onInquiries: () => void; featuredReview: ReviewData | null; totalViews: number; uniqueVisitors: number;
 }) {
   const t = toac(accent);
   const fullName = [tutor.first_name, tutor.last_name].filter(Boolean).join(" ");
@@ -1031,6 +1033,9 @@ function OwnerCard({ tutor, accent, vouchCount, averageRating, reviewCount, inqu
           >
             <Icon name="mail" size={12} style={{ color: "#6b7280" }} /><span style={{ fontWeight: 600, color: "#111" }}>{inquiryCount}</span><span style={{ color: "#9ca3af" }}>{inquiryCount === 1 ? "inquiry" : "inquiries"}</span>
             {hasUnreadInquiries && <span style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: "#3b82f6", border: "2px solid white" }} />}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 12.5 }}>
+            <Icon name="trendUp" size={12} style={{ color: "#6b7280" }} /><span style={{ fontWeight: 600, color: "#111" }}>{totalViews}</span><span style={{ color: "#9ca3af" }}>{totalViews === 1 ? "view" : "views"}</span><span style={{ color: "#d1d5db" }}>&middot;</span><span style={{ fontWeight: 600, color: "#111" }}>{uniqueVisitors}</span><span style={{ color: "#9ca3af" }}>unique</span>
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 5, marginTop: 12 }}>
@@ -1934,6 +1939,8 @@ export default function DashboardClient({
   inquiryCount,
   inquiries,
   inviteCodes,
+  totalViews,
+  uniqueVisitors,
 }: DashboardClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2148,7 +2155,7 @@ export default function DashboardClient({
         <main style={{ flex: 1 }}>
           {isMobile ? (
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
-              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} />
+              <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} totalViews={totalViews} uniqueVisitors={uniqueVisitors} />
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
                 <TabContent tab={tab} wide={false} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
@@ -2163,7 +2170,7 @@ export default function DashboardClient({
           ) : (
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
               <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
-                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} />
+                <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} totalViews={totalViews} uniqueVisitors={uniqueVisitors} />
               </div>
               <div style={{ flex: 1, minWidth: 0, height: cardHeight, display: "flex", flexDirection: "column" as const }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden", minHeight: 0 }}>

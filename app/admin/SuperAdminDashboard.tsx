@@ -9,6 +9,8 @@ interface AdminStats {
   totalReviews: number;
   totalVouches: number;
   totalInquiries: number;
+  totalCardViews: number;
+  uniqueCardViewers: number;
   signupsThisWeek: number;
   signupsLastWeek: number;
   reviewsThisWeek: number;
@@ -17,6 +19,8 @@ interface AdminStats {
   vouchesLastWeek: number;
   inquiriesThisWeek: number;
   inquiriesLastWeek: number;
+  viewsThisWeek: number;
+  viewsLastWeek: number;
 }
 
 interface AdminFunnel {
@@ -39,6 +43,8 @@ interface AdminTutor {
   vouches: number;
   badges: number;
   inquiries: number;
+  views: number;
+  uniqueVisitors: number;
   status: "active" | "inactive" | "incomplete";
   joined: string;
   slug: string;
@@ -506,10 +512,10 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
   };
 
   const exportCsv = () => {
-    const headers = ["Name", "Email", "Location", "Status", "Reviews", "Vouches", "Badges", "Inquiries", "Joined", "Slug"];
+    const headers = ["Name", "Email", "Location", "Status", "Reviews", "Vouches", "Badges", "Inquiries", "Views", "Unique Visitors", "Joined", "Slug"];
     const rows = filtered.map((t) => [
       t.name, t.email, t.location, t.isSuspended ? "Suspended" : t.status,
-      t.reviews, t.vouches, t.badges, t.inquiries,
+      t.reviews, t.vouches, t.badges, t.inquiries, t.views, t.uniqueVisitors,
       new Date(t.joined).toLocaleDateString("en-US"), t.slug,
     ]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -594,6 +600,7 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
             <StatCard label="Total reviews" value={stats.totalReviews} change={wkChange(stats.reviewsThisWeek, stats.reviewsLastWeek)} icon="star" color="#f59e0b" />
             <StatCard label="Total vouches" value={stats.totalVouches} change={wkChange(stats.vouchesThisWeek, stats.vouchesLastWeek)} icon="shield" color="#0d9488" />
             <StatCard label="Inquiries" value={stats.totalInquiries} change={wkChange(stats.inquiriesThisWeek, stats.inquiriesLastWeek)} icon="inbox" color="#059669" />
+            <StatCard label="Card views" value={stats.totalCardViews} change={wkChange(stats.viewsThisWeek, stats.viewsLastWeek)} icon="trendUp" color="#7c3aed" />
             {pendingReports > 0 && <StatCard label="Pending reports" value={pendingReports} icon="flag" color="#dc2626" />}
           </div>
 
@@ -670,6 +677,8 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
                     <SortHeader label="Vouches" sortField="vouches" />
                     <SortHeader label="Badges" sortField="badges" />
                     <SortHeader label="Inquiries" sortField="inquiries" />
+                    <SortHeader label="Views" sortField="views" />
+                    <SortHeader label="Unique" sortField="uniqueVisitors" />
                     <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", minWidth: 100 }}>Joined</th>
                     <th style={{ padding: "10px 24px 10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9ca3af", borderBottom: "1px solid #f3f4f6", width: 40 }}></th>
                   </tr>
@@ -697,6 +706,8 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.vouches}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.badges}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.inquiries}</td>
+                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.views}</td>
+                      <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 13, fontWeight: 600, color: "#111" }}>{t.uniqueVisitors}</td>
                       <td style={{ padding: "14px 12px", borderBottom: "1px solid #f9fafb", fontSize: 12.5, color: "#9ca3af" }}>{new Date(t.joined).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
                       <td style={{ padding: "14px 24px 14px 12px", borderBottom: "1px solid #f9fafb", position: "relative" }} onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => setOpenMenuId(openMenuId === t.id ? null : t.id)} style={{
@@ -907,6 +918,8 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
                   { label: "Vouches", value: t.vouches, icon: "shield" },
                   { label: "Badges", value: t.badges, icon: "award" },
                   { label: "Inquiries", value: t.inquiries, icon: "inbox" },
+                  { label: "Views", value: t.views, icon: "trendUp" },
+                  { label: "Unique", value: t.uniqueVisitors, icon: "trendUp" },
                 ].map((s) => (
                   <div key={s.label} style={{ flex: 1, background: "white", padding: "14px 16px", textAlign: "center" }}>
                     <p style={{ fontSize: 20, fontWeight: 800, color: "#111", margin: "0 0 2px" }}>{s.value}</p>
