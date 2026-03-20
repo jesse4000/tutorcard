@@ -51,8 +51,6 @@ interface DashboardClientProps {
   inquiryCount: number;
   inquiries: InquiryData[];
   inviteCodes: InviteCode[];
-  totalViews: number;
-  uniqueVisitors: number;
 }
 
 // ─── INVITE CODES ───────────────────────────────────────
@@ -1936,8 +1934,6 @@ export default function DashboardClient({
   inquiryCount,
   inquiries,
   inviteCodes,
-  totalViews,
-  uniqueVisitors,
 }: DashboardClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2153,14 +2149,6 @@ export default function DashboardClient({
           {isMobile ? (
             <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px 40px" }}>
               <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} />
-              <div style={{ marginTop: 10, background: "#f9fafb", borderRadius: 12, padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Icon name="trendUp" size={13} style={{ color: "#6b7280" }} /><span style={{ fontWeight: 600, color: "#111" }}>{totalViews}</span><span style={{ color: "#9ca3af" }}>{totalViews === 1 ? "view" : "views"}</span></span>
-                  <span style={{ color: "#d1d5db" }}>&middot;</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontWeight: 600, color: "#111" }}>{uniqueVisitors}</span><span style={{ color: "#9ca3af" }}>unique</span></span>
-                </div>
-                <span style={{ fontSize: 11, color: "#b0b5bd" }}>Only you can see this</span>
-              </div>
               <div style={{ marginTop: 20, background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "18px 20px" }}>
                 <TabBar tab={tab} setTab={setTab} />
                 <TabContent tab={tab} wide={false} reviews={reviewsWithReportStatus} vouchers={vouchers} badges={badges}
@@ -2176,14 +2164,6 @@ export default function DashboardClient({
             <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 32px 60px", display: "flex", gap: 28, alignItems: "flex-start" }}>
               <div ref={cardRef} style={{ flex: "0 0 360px", position: "sticky", top: 88 }}>
                 <OwnerCard tutor={tutor} accent={accent} vouchCount={vouchCount} averageRating={averageRating} reviewCount={reviewCount} inquiryCount={inquiryCount} hasUnreadInquiries={hasUnreadInquiries} onShare={() => setPopup("share")} onSignature={() => setPopup("signature")} onInquiries={() => setPopup("inquiries")} featuredReview={pinnedReview} />
-                <div style={{ marginTop: 10, background: "#f9fafb", borderRadius: 12, padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13 }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Icon name="trendUp" size={13} style={{ color: "#6b7280" }} /><span style={{ fontWeight: 600, color: "#111" }}>{totalViews}</span><span style={{ color: "#9ca3af" }}>{totalViews === 1 ? "view" : "views"}</span></span>
-                    <span style={{ color: "#d1d5db" }}>&middot;</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ fontWeight: 600, color: "#111" }}>{uniqueVisitors}</span><span style={{ color: "#9ca3af" }}>unique</span></span>
-                  </div>
-                  <span style={{ fontSize: 11, color: "#b0b5bd" }}>Only you can see this</span>
-                </div>
               </div>
               <div style={{ flex: 1, minWidth: 0, height: cardHeight, display: "flex", flexDirection: "column" as const }}>
                 <div style={{ background: "white", borderRadius: 20, boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08)", padding: "24px 28px", flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden", minHeight: 0 }}>
