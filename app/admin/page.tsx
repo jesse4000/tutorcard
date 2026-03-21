@@ -78,8 +78,9 @@ export default async function AdminPage() {
   const inquiries = inquiriesRaw || [];
   const reports = reportsRaw || [];
   const globalViewStats = (globalViewStatsRaw || [])[0] || { total_views: 0, unique_viewers: 0, views_this_week: 0, views_last_week: 0 };
-  const viewStatsMap = new Map(
-    (perTutorViewStats || []).map((r: { tutor_id: string; total_views: number; unique_visitors: number }) => [r.tutor_id, r])
+  type ViewStatRow = { tutor_id: string; total_views: number; unique_visitors: number };
+  const viewStatsMap = new Map<string, ViewStatRow>(
+    (perTutorViewStats || []).map((r: ViewStatRow) => [r.tutor_id, r])
   );
 
   // Log if review_reports query returned null (table may not exist)
