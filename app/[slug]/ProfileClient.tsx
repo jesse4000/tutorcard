@@ -50,7 +50,7 @@ export default function ProfileClient({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tutorId: viewedTutorId }),
-    }).catch(() => {});
+    }).catch((err) => console.error("Failed to record card view:", err));
   }, [viewedTutorId]);
 
   const [tab, setTab] = useState("reviews");
