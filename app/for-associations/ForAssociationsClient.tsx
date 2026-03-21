@@ -47,13 +47,13 @@ export default function ForAssociationsClient() {
         {/* Hero */}
         <section style={{ maxWidth: 760, margin: "0 auto", padding: isMobile ? "48px 20px 40px" : "72px 32px 56px", textAlign: "center" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: "white", border: "1px solid #e5e7eb", fontSize: 12.5, fontWeight: 500, color: "#6b7280", marginBottom: 20 }}>
-            <Icon name="shield" size={13} style={{ color: accent }} />For associations and organizations
+            <Icon name="shield" size={13} style={{ color: accent }} />For associations
           </div>
           <h1 style={{ fontSize: isMobile ? 30 : 42, fontWeight: 800, color: "#111", lineHeight: 1.1, letterSpacing: "-0.03em", margin: "0 0 16px" }}>
             Give your members a professional edge.
           </h1>
           <p style={{ fontSize: isMobile ? 16 : 18, color: "#6b7280", lineHeight: 1.55, margin: "0 auto 32px", maxWidth: 520 }}>
-            Partner with TutorCard to give every member in your organization a professional card with verified credentials, peer endorsements, and a shareable link parents trust — included with their membership, courtesy of your organization.
+            Partner with TutorCard to give every member in your association a professional card with verified credentials, peer endorsements, and a shareable link parents trust — included with their membership, courtesy of your association.
           </p>
           <a href="https://calendly.com/jesse-studyspaces/30min" target="_blank" rel="noopener noreferrer" className="cta-main" style={{ padding: "13px 28px", borderRadius: 14, border: "none", background: "#111", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
             Get in touch <Icon name="arrowRight" size={16} />
@@ -69,17 +69,17 @@ export default function ForAssociationsClient() {
                 What your members get
               </h2>
               <p style={{ fontSize: 16, color: "#6b7280", margin: "0 auto", maxWidth: 480, lineHeight: 1.5 }}>
-                Every member in your organization gets a TutorCard account at no cost — covered by your organization as a member benefit.
+                Every member in your association gets a TutorCard account at no cost — covered by your association as a member benefit.
               </p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 20 }}>
               {[
-                { icon: "gift", title: "Free access", desc: "Your members skip the $20/year fee entirely. Membership in your organization is their ticket in." },
-                { icon: "shield", title: "Association badge", desc: "A verified badge on their card showing they belong to your organization. Visible to every parent who views their profile." },
+                { icon: "gift", title: "Free access", desc: "Your members skip the $20/year fee entirely. Membership in your association is their ticket in." },
+                { icon: "shield", title: "Association badge", desc: "A verified badge on their card showing they belong to your association. Visible to every parent who views their profile." },
                 { icon: "star", title: "Verified credentials", desc: "Their certifications and memberships displayed prominently. Parents see proof, not claims." },
                 { icon: "trendUp", title: "Verified reviews", desc: "Structured score data from parents. Real outcomes tied to real tutors in your network." },
-                { icon: "users", title: "Peer vouches", desc: "One-click endorsements between members. Strengthens the trust layer across your entire organization." },
-                { icon: "award", title: "Shareable graphics", desc: "Members can download and share branded achievement graphics on socials. Your organization's name travels with them." },
+                { icon: "users", title: "Peer vouches", desc: "One-click endorsements between members. Strengthens the trust layer across your entire association." },
+                { icon: "award", title: "Shareable graphics", desc: "Members can download and share branded achievement graphics on socials. Your association's name travels with them." },
               ].map((item, i) => (
                 <div key={i} style={{ padding: "22px 20px", borderRadius: 14, background: "#fafafa", border: "1px solid #f0f0f0" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
@@ -104,9 +104,9 @@ export default function ForAssociationsClient() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 560, margin: "0 auto" }}>
               {[
-                { num: "1", title: "We set up your organization", desc: "We create your association profile on TutorCard with your logo, name, and a unique access code for your members." },
-                { num: "2", title: "Members sign up at no cost", desc: "They enter your organization's code during signup and get full access — the $20/year fee is covered by your organization. Your badge appears on their card automatically." },
-                { num: "3", title: "You get visibility", desc: "Every card with your badge links back to your organization. As your members share their cards, your reach grows with them." },
+                { num: "1", title: "We set up your association", desc: "We create your association profile on TutorCard with your logo, name, and a unique access code for your members." },
+                { num: "2", title: "Members sign up at no cost", desc: "They enter your association's code during signup and get full access — the $20/year fee is covered by your association. Your badge appears on their card automatically." },
+                { num: "3", title: "You get visibility", desc: "Every card with your badge links back to your association. As your members share their cards, your reach grows with them." },
               ].map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 16, padding: "20px", background: "white", borderRadius: 14, border: "1px solid #f0f0f0" }}>
                   <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#111", color: "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15, fontWeight: 700 }}>{step.num}</div>

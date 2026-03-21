@@ -1229,7 +1229,7 @@ function TabContent({ tab, wide, reviews, vouchers, badges, onReviewRequest, onV
                   "Search from a list of partnered associations",
                   "Request badge verification with one click",
                   "Display memberships and certifications on your card",
-                  "Badges are verified through the organization itself",
+                  "Badges are verified through the association itself",
                 ].map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: i < 3 ? 6 : 0 }}>
                     <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
