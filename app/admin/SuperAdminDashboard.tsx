@@ -565,7 +565,7 @@ export default function SuperAdminDashboard({ stats, funnel, tutors: initialTuto
           </div>
         </header>
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "20px 16px 40px" : "32px 32px 60px" }}>
+        <div style={{ maxWidth: 1600, margin: "0 auto", padding: isMobile ? "20px 16px 40px" : "32px 48px 60px" }}>
           {/* Page title */}
           <div style={{ marginBottom: 28 }}>
             <h1 style={{ fontSize: isMobile ? 24 : 30, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", margin: "0 0 4px" }}>Admin</h1>
