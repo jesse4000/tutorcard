@@ -308,7 +308,7 @@ export default function HomepageClient() {
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 28 : 32 }}>
             <Feature icon="trendUp" title="Verified Results" desc="Structured score improvements with parent quotes. Not just sentiment. 1180 to 1460 in 4 months speaks for itself." />
             <Feature icon="users" title="Peer Vouches" desc="One-click endorsements from fellow tutors. A vouch says 'I would send my own students to this person.' That is trust no review can match." />
-            <Feature icon="award" title="Achievement Badges" desc="Display your memberships, certifications, and credentials. Verified through the organization itself. A trust signal parents recognize instantly." />
+            <Feature icon="award" title="Achievement Badges" desc="Display your memberships, certifications, and credentials. Verified through the association itself. A trust signal parents recognize instantly." />
             <Feature icon="link" title="Links Hub" desc="Your website, Calendly, Zoom, socials, all in one tap. Put it in your email signature, Instagram bio, or on a physical business card." />
             <Feature icon="search" title="SEO Discovery" desc="Your card appears in searches like 'SAT tutors in Tampa.' Parents who have never heard of you can find you and see your verified track record." />
             <Feature icon="msg" title="Direct Inquiries" desc="Parents message you through your card. No commissions, no middlemen. You get their name, email, exam interest, and message. A pre-qualified lead." />
@@ -389,7 +389,7 @@ export default function HomepageClient() {
               icon="award" badge="Achievement Badges" flipped={false} isMobile={isMobile}
               title="Your credentials, finally visible"
               subtitle="Memberships and certifications, right on your card."
-              desc="You earned those certifications and paid for those memberships. Now they actually show up somewhere parents can see them. Badges are verified through the organization and displayed on your card. Simple, visible, credible."
+              desc="You earned those certifications and paid for those memberships. Now they actually show up somewhere parents can see them. Badges are verified through the association and displayed on your card. Simple, visible, credible."
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[
