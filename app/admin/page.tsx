@@ -62,7 +62,7 @@ export default async function AdminPage() {
     admin.from("reviews").select("id, tutor_id, reviewer_name, exam, rating, quote, created_at, is_revoked"),
     admin.from("vouches").select("id, voucher_tutor_id, vouched_tutor_id, created_at"),
     admin.from("badges").select("id, tutor_id, created_at"),
-    admin.from("inquiries").select("id, tutor_id, student_name, created_at"),
+    admin.from("inquiries").select("id, tutor_id, sender_name, created_at"),
     admin.from("review_reports").select("id, review_id, tutor_id, reason, reviewer_response, status, created_at, deadline_at, responded_at, resolved_at, resolved_by").order("created_at", { ascending: false }),
     admin.from("card_views").select("tutor_id, visitor_hash, created_at"),
   ]);
@@ -274,7 +274,7 @@ export default async function AdminPage() {
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5)
       .map((i) => ({
-        studentName: (i.student_name as string) || null,
+        studentName: (i.sender_name as string) || null,
         date: i.created_at,
       }));
 
