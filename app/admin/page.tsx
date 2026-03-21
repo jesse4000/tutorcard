@@ -56,6 +56,7 @@ export default async function AdminPage() {
     { data: badgesRaw },
     { data: inquiriesRaw },
     { data: reportsRaw },
+    { data: cardViewsRaw },
   ] = await Promise.all([
     admin.from("tutors").select("*"),
     admin.from("reviews").select("id, tutor_id, reviewer_name, exam, rating, quote, created_at, is_revoked"),
@@ -63,6 +64,7 @@ export default async function AdminPage() {
     admin.from("badges").select("id, tutor_id, created_at"),
     admin.from("inquiries").select("id, tutor_id, student_name, created_at"),
     admin.from("review_reports").select("id, review_id, tutor_id, reason, reviewer_response, status, created_at, deadline_at, responded_at, resolved_at, resolved_by").order("created_at", { ascending: false }),
+    admin.from("card_views").select("tutor_id, visitor_hash, created_at"),
   ]);
 
   const tutors = tutorsRaw || [];
@@ -71,6 +73,7 @@ export default async function AdminPage() {
   const badges = badgesRaw || [];
   const inquiries = inquiriesRaw || [];
   const reports = reportsRaw || [];
+  const cardViews = cardViewsRaw || [];
 
   // Log if review_reports query returned null (table may not exist)
   if (!reportsRaw && tutors.length > 0) {
@@ -99,6 +102,10 @@ export default async function AdminPage() {
     vouchesLastWeek: countInRange(vouches, 14, 7),
     inquiriesThisWeek: countInRange(inquiries, 7, 0),
     inquiriesLastWeek: countInRange(inquiries, 14, 7),
+    totalCardViews: cardViews.length,
+    uniqueCardViewers: new Set(cardViews.map((v) => v.visitor_hash as string)).size,
+    viewsThisWeek: countInRange(cardViews, 7, 0),
+    viewsLastWeek: countInRange(cardViews, 14, 7),
   };
 
   // --- Funnel ---
@@ -135,6 +142,15 @@ export default async function AdminPage() {
   const vouchesByTutor = countByTutor(vouches, "vouched_tutor_id");
   const badgesByTutor = countByTutor(badges);
   const inquiriesByTutor = countByTutor(inquiries);
+  const viewsByTutor = countByTutor(cardViews);
+
+  // Unique visitors per tutor
+  const uniqueVisitorsByTutor = new Map<string, Set<string>>();
+  for (const v of cardViews) {
+    const tid = v.tutor_id as string;
+    if (!uniqueVisitorsByTutor.has(tid)) uniqueVisitorsByTutor.set(tid, new Set());
+    uniqueVisitorsByTutor.get(tid)!.add(v.visitor_hash as string);
+  }
 
   // --- Last activity per tutor ---
   const lastActivityMap = new Map<string, number>();
@@ -182,6 +198,8 @@ export default async function AdminPage() {
       vouches: vouchesByTutor.get(t.id) || 0,
       badges: badgesByTutor.get(t.id) || 0,
       inquiries: inquiriesByTutor.get(t.id) || 0,
+      views: viewsByTutor.get(t.id) || 0,
+      uniqueVisitors: uniqueVisitorsByTutor.get(t.id)?.size || 0,
       status,
       joined: t.created_at,
       slug: t.slug as string,

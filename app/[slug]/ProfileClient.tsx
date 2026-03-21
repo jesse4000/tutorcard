@@ -43,6 +43,16 @@ export default function ProfileClient({
   badges,
 }: ProfileClientProps) {
   const router = useRouter();
+
+  // Record card view (fire-and-forget)
+  useEffect(() => {
+    fetch("/api/card-views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tutorId: viewedTutorId }),
+    }).catch(() => {});
+  }, [viewedTutorId]);
+
   const [tab, setTab] = useState("reviews");
   const [showInquiry, setShowInquiry] = useState(false);
   const [showReview, setShowReview] = useState(false);
