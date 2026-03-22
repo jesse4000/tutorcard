@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { autoRevokeExpiredReports } from "@/lib/auto-revoke";
 import SuperAdminDashboard from "./SuperAdminDashboard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin",
   robots: { index: false, follow: false },
@@ -56,7 +58,8 @@ export default async function AdminPage() {
     { data: badgesRaw },
     { data: inquiriesRaw },
     { data: reportsRaw },
-    { data: cardViewsRaw },
+    { data: perTutorViewStats },
+    { data: globalViewStatsRaw },
   ] = await Promise.all([
     admin.from("tutors").select("*"),
     admin.from("reviews").select("id, tutor_id, reviewer_name, exam, rating, quote, created_at, is_revoked"),
@@ -64,7 +67,8 @@ export default async function AdminPage() {
     admin.from("badges").select("id, tutor_id, created_at"),
     admin.from("inquiries").select("id, tutor_id, sender_name, created_at"),
     admin.from("review_reports").select("id, review_id, tutor_id, reason, reviewer_response, status, created_at, deadline_at, responded_at, resolved_at, resolved_by").order("created_at", { ascending: false }),
-    admin.from("card_views").select("tutor_id, visitor_hash, created_at"),
+    admin.rpc("get_admin_card_view_stats"),
+    admin.rpc("get_admin_card_view_global_stats"),
   ]);
 
   const tutors = tutorsRaw || [];
@@ -73,7 +77,11 @@ export default async function AdminPage() {
   const badges = badgesRaw || [];
   const inquiries = inquiriesRaw || [];
   const reports = reportsRaw || [];
-  const cardViews = cardViewsRaw || [];
+  const globalViewStats = (globalViewStatsRaw || [])[0] || { total_views: 0, unique_viewers: 0, views_this_week: 0, views_last_week: 0 };
+  type ViewStatRow = { tutor_id: string; total_views: number; unique_visitors: number };
+  const viewStatsMap = new Map<string, ViewStatRow>(
+    (perTutorViewStats || []).map((r: ViewStatRow) => [r.tutor_id, r])
+  );
 
   // Log if review_reports query returned null (table may not exist)
   if (!reportsRaw && tutors.length > 0) {
@@ -102,10 +110,10 @@ export default async function AdminPage() {
     vouchesLastWeek: countInRange(vouches, 14, 7),
     inquiriesThisWeek: countInRange(inquiries, 7, 0),
     inquiriesLastWeek: countInRange(inquiries, 14, 7),
-    totalCardViews: cardViews.length,
-    uniqueCardViewers: new Set(cardViews.map((v) => v.visitor_hash as string)).size,
-    viewsThisWeek: countInRange(cardViews, 7, 0),
-    viewsLastWeek: countInRange(cardViews, 14, 7),
+    totalCardViews: Number(globalViewStats.total_views),
+    uniqueCardViewers: Number(globalViewStats.unique_viewers),
+    viewsThisWeek: Number(globalViewStats.views_this_week),
+    viewsLastWeek: Number(globalViewStats.views_last_week),
   };
 
   // --- Funnel ---
@@ -142,15 +150,7 @@ export default async function AdminPage() {
   const vouchesByTutor = countByTutor(vouches, "vouched_tutor_id");
   const badgesByTutor = countByTutor(badges);
   const inquiriesByTutor = countByTutor(inquiries);
-  const viewsByTutor = countByTutor(cardViews);
-
-  // Unique visitors per tutor
-  const uniqueVisitorsByTutor = new Map<string, Set<string>>();
-  for (const v of cardViews) {
-    const tid = v.tutor_id as string;
-    if (!uniqueVisitorsByTutor.has(tid)) uniqueVisitorsByTutor.set(tid, new Set());
-    uniqueVisitorsByTutor.get(tid)!.add(v.visitor_hash as string);
-  }
+  // viewStatsMap already built above from get_admin_card_view_stats RPC
 
   // --- Last activity per tutor ---
   const lastActivityMap = new Map<string, number>();
@@ -198,8 +198,8 @@ export default async function AdminPage() {
       vouches: vouchesByTutor.get(t.id) || 0,
       badges: badgesByTutor.get(t.id) || 0,
       inquiries: inquiriesByTutor.get(t.id) || 0,
-      views: viewsByTutor.get(t.id) || 0,
-      uniqueVisitors: uniqueVisitorsByTutor.get(t.id)?.size || 0,
+      views: Number(viewStatsMap.get(t.id)?.total_views || 0),
+      uniqueVisitors: Number(viewStatsMap.get(t.id)?.unique_visitors || 0),
       status,
       joined: t.created_at,
       slug: t.slug as string,

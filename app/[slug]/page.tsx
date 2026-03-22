@@ -13,6 +13,8 @@ import {
 import ProfileClient from "./ProfileClient";
 import type { ReviewData, VoucherData, BadgeData } from "./types";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
