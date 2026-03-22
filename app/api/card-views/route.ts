@@ -27,13 +27,13 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient();
 
-    // Skip if same visitor viewed same tutor within last 30 minutes
+    // Short dedup guard (5s) to prevent double-fires from React strict mode
     const { data: recent } = await supabase
       .from("card_views")
       .select("id")
       .eq("tutor_id", tutorId)
       .eq("visitor_hash", visitorHash)
-      .gte("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString())
+      .gte("created_at", new Date(Date.now() - 5 * 1000).toISOString())
       .limit(1);
 
     if (recent && recent.length > 0) {
