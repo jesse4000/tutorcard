@@ -260,7 +260,7 @@ export default function HomepageClient() {
               padding: "5px 14px", borderRadius: 20, background: "white",
               border: "1px solid #e5e7eb", fontSize: 12.5, fontWeight: 500, color: "#6b7280", marginBottom: 20,
             }}>
-              Free for the first 100 tutors
+              🎉 FREE for the first 100
             </div>
             <h1 style={{
               fontSize: isMobile ? 34 : 48, fontWeight: 800,
