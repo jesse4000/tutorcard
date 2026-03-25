@@ -36,12 +36,13 @@ const SUBJECT_PRESETS = [
 ];
 const LOCATION_PRESETS = [
   "Online",
-  "New York City",
-  "New Jersey",
-  "Los Angeles",
-  "Boston",
-  "Chicago",
-  "Miami",
+  "New York, NY",
+  "Newark, NJ",
+  "Jersey City, NJ",
+  "Los Angeles, CA",
+  "Boston, MA",
+  "Chicago, IL",
+  "Miami, FL",
 ];
 
 const COLORS = [
